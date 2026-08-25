@@ -1,0 +1,12 @@
+import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
+const prisma = new PrismaClient();
+const users = await prisma.user.findMany({ select: { id:true, name:true, email:true, role:true, status:true, professionalTitle:true }});
+console.log("USERS:", JSON.stringify(users, null, 2));
+const fpCount = await prisma.freelancerProfile.count();
+const cpCount = await prisma.customerProfile.count();
+const skillCount = await prisma.skill.count();
+const catCount = await prisma.category.count();
+console.log("FreelancerProfiles:", fpCount, "CustomerProfiles:", cpCount, "Skills:", skillCount, "Categories:", catCount);
+await prisma["$disconnect"]();

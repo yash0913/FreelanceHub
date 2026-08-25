@@ -1,0 +1,507 @@
+// =============================================================================
+// FreelanceHub — Final Prisma Schema
+// STEP 1: Complete Relational Database Architecture
+// =============================================================================
+// IMPORTANT: The existing User model and all auth functionality are preserved.
+// This schema only ADDS new models — it does NOT break existing auth/admin code.
+// =============================================================================
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+/// User role — controls authorization throughout the platform
+enum Role {
+  CUSTOMER
+  FREELANCER
+  ADMIN
+}
+
+/// Account status — used by auth middleware and admin moderation
+enum Status {
+  ACTIVE
+  BLOCKED
+}
+
+/// Freelancer experience tier
+enum ExperienceLevel {
+  ENTRY
+  INTERMEDIATE
+  EXPERT
+}
+
+/// Freelancer work availability
+enum Availability {
+  FULL_TIME
+  PART_TIME
+  NOT_AVAILABLE
+}
+
+/// Lifecycle state of a client project posting
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+/// State of a freelancer's proposal on a project
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+/// State of a contract between client and freelancer
+enum ContractStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+/// Admin moderation state of a user-filed report
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+/// State of a payment record linked to a contract
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// =============================================================================
+// MODULE 0 — USER / AUTHENTICATION (PRESERVED EXACTLY)
+// =============================================================================
+
+/// Central identity and authentication entity.
+/// ALL roles (CUSTOMER, FREELANCER, ADMIN) are represented as User records.
+/// Do NOT create separate auth tables for each role.
+model User {
+  id                Int      @id @default(autoincrement())
+  name              String
+  email             String   @unique
+  passwordHash      String
+  role              Role     @default(CUSTOMER)
+  status            Status   @default(ACTIVE)
+  professionalTitle String?  // Optional — stored at User level for quick access on login/JWT
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // ── Role-specific profiles (1:0..1) ──────────────────────────────────────
+  customerProfile   CustomerProfile?
+  freelancerProfile FreelancerProfile?
+
+  // ── Projects posted by this user as a client (1:many) ────────────────────
+  projects          Project[]
+
+  // ── Messages sent by this user (1:many) ──────────────────────────────────
+  sentMessages      Message[]
+
+  // ── Conversations this user participates in ───────────────────────────────
+  conversations     ConversationParticipant[]
+
+  // ── Reviews written BY this user ─────────────────────────────────────────
+  reviewsGiven      Review[] @relation("ReviewerRelation")
+
+  // ── Reviews received by this user (as the reviewed party) ────────────────
+  reviewsReceived   Review[] @relation("ReviewedRelation")
+
+  // ── Reports filed BY this user ────────────────────────────────────────────
+  reportsFiled      Report[] @relation("ReporterRelation")
+
+  // ── Reports filed AGAINST this user ──────────────────────────────────────
+  reportsReceived   Report[] @relation("ReportedRelation")
+
+  // ── Reports resolved by this admin user ──────────────────────────────────
+  reportsResolved   Report[] @relation("ResolverRelation")
+
+  // ── Contracts as customer ─────────────────────────────────────────────────
+  contractsAsClient     Contract[] @relation("ContractClientRelation")
+
+  // ── Contracts as freelancer ───────────────────────────────────────────────
+  contractsAsFreelancer Contract[] @relation("ContractFreelancerRelation")
+
+  // ── Payments made as payer ────────────────────────────────────────────────
+  paymentsMade      Payment[] @relation("PayerRelation")
+
+  // ── Payments received ─────────────────────────────────────────────────────
+  paymentsReceived  Payment[] @relation("ReceiverRelation")
+
+  // ── Indexes ───────────────────────────────────────────────────────────────
+  @@index([role])
+  @@index([status])
+  @@index([role, status])
+}
+
+// =============================================================================
+// MODULE 1 — CUSTOMER PROFILE
+// =============================================================================
+
+/// Extended client/customer profile. Supplements User authentication record.
+/// One-to-one with User (CUSTOMER role).
+model CustomerProfile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  bio          String?  @db.Text
+  companyName  String?
+  location     String?
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// =============================================================================
+// MODULE 2 — FREELANCER PROFILE + PORTFOLIO
+// =============================================================================
+
+/// Detailed freelancer profile for marketplace visibility.
+/// One-to-one with User (FREELANCER role).
+model FreelancerProfile {
+  id              Int              @id @default(autoincrement())
+  userId          Int              @unique
+  bio             String?          @db.Text
+  hourlyRate      Decimal?         @db.Decimal(10, 2)
+  experienceLevel ExperienceLevel  @default(ENTRY)
+  location        String?
+  availability    Availability     @default(FULL_TIME)
+  profileImage    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills          FreelancerSkill[]
+  portfolioProjects PortfolioProject[]
+  proposals       Proposal[]
+
+  @@index([userId])
+  @@index([experienceLevel])
+  @@index([availability])
+  @@index([hourlyRate])
+  @@index([location])
+}
+
+// =============================================================================
+// MODULE 2 — SKILLS (Normalized lookup table)
+// =============================================================================
+
+/// Normalized skill entity. Shared across freelancers and projects.
+model Skill {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  createdAt   DateTime @default(now())
+
+  freelancers FreelancerSkill[]
+  projects    ProjectSkill[]
+  portfolios  PortfolioProjectSkill[]
+
+  @@index([name])
+}
+
+/// Junction table: FreelancerProfile <-> Skill (many-to-many)
+model FreelancerSkill {
+  freelancerProfileId Int
+  skillId             Int
+  assignedAt          DateTime @default(now())
+
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  skill             Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([freelancerProfileId, skillId])
+  @@index([skillId])
+  @@index([freelancerProfileId])
+}
+
+// =============================================================================
+// MODULE 2 — PORTFOLIO
+// =============================================================================
+
+/// Individual portfolio work item belonging to a freelancer.
+model PortfolioProject {
+  id                  Int      @id @default(autoincrement())
+  freelancerProfileId Int
+  title               String
+  description         String?  @db.Text
+  projectUrl          String?
+  imageUrl            String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  freelancerProfile   FreelancerProfile       @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  skills              PortfolioProjectSkill[]
+
+  @@index([freelancerProfileId])
+}
+
+/// Junction table: PortfolioProject <-> Skill (many-to-many)
+model PortfolioProjectSkill {
+  portfolioProjectId Int
+  skillId            Int
+
+  portfolioProject PortfolioProject @relation(fields: [portfolioProjectId], references: [id], onDelete: Cascade)
+  skill            Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([portfolioProjectId, skillId])
+  @@index([skillId])
+  @@index([portfolioProjectId])
+}
+
+// =============================================================================
+// MODULE 3 — PROJECT / JOB POSTING
+// =============================================================================
+
+/// Normalized project category lookup table.
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+
+  projects  Project[]
+
+  @@index([name])
+}
+
+/// A client's posted freelance project/job.
+model Project {
+  id              Int             @id @default(autoincrement())
+  clientId        Int
+  categoryId      Int?
+  title           String
+  description     String          @db.Text
+  budget          Decimal?        @db.Decimal(10, 2)
+  deadline        DateTime?
+  experienceLevel ExperienceLevel @default(ENTRY)
+  status          ProjectStatus   @default(OPEN)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  client          User            @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  category        Category?       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  requiredSkills  ProjectSkill[]
+  proposals       Proposal[]
+  contract        Contract?
+  review          Review?
+
+  @@index([clientId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([budget])
+  @@index([experienceLevel])
+  @@index([deadline])
+  @@index([status, categoryId])
+}
+
+/// Junction table: Project <-> Skill (many-to-many)
+model ProjectSkill {
+  projectId Int
+  skillId   Int
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+  @@index([skillId])
+  @@index([projectId])
+}
+
+// =============================================================================
+// MODULE 5 — PROPOSALS
+// =============================================================================
+
+/// A freelancer's proposal/bid on a client project.
+model Proposal {
+  id                  Int            @id @default(autoincrement())
+  projectId           Int
+  freelancerProfileId Int
+  coverLetter         String?        @db.Text
+  proposedPrice       Decimal        @db.Decimal(10, 2)
+  estimatedDays       Int?
+  status              ProposalStatus @default(PENDING)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  project           Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Restrict)
+  contract          Contract?
+
+  @@unique([projectId, freelancerProfileId])
+  @@index([projectId])
+  @@index([freelancerProfileId])
+  @@index([status])
+  @@index([proposedPrice])
+}
+
+// =============================================================================
+// MODULE 8 — CONTRACT / PROJECT MANAGEMENT
+// =============================================================================
+
+/// Active working engagement between client and freelancer.
+model Contract {
+  id           Int            @id @default(autoincrement())
+  projectId    Int            @unique
+  proposalId   Int            @unique
+  clientId     Int
+  freelancerId Int
+  agreedAmount Decimal        @db.Decimal(10, 2)
+  startDate    DateTime       @default(now())
+  endDate      DateTime?
+  status       ContractStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  client     User     @relation("ContractClientRelation", fields: [clientId], references: [id], onDelete: Restrict)
+  freelancer User     @relation("ContractFreelancerRelation", fields: [freelancerId], references: [id], onDelete: Restrict)
+  review     Review?
+  payment    Payment?
+
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([status])
+}
+
+// =============================================================================
+// MODULE 7 — MESSAGING
+// =============================================================================
+
+/// A conversation thread between users.
+model Conversation {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+/// Junction table: Conversation <-> User (many-to-many)
+model ConversationParticipant {
+  conversationId Int
+  userId         Int
+  joinedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+/// An individual message within a conversation.
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  senderId       Int
+  content        String       @db.Text
+  isRead         Boolean      @default(false)
+  sentAt         DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([sentAt])
+  @@index([isRead])
+}
+
+// =============================================================================
+// MODULE 9 — REVIEWS & RATINGS
+// =============================================================================
+
+/// A review submitted after a completed contract.
+model Review {
+  id             Int      @id @default(autoincrement())
+  projectId      Int      @unique
+  contractId     Int      @unique
+  reviewerId     Int
+  reviewedUserId Int
+  rating         Int      // Application enforces 1-5 range
+  comment        String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  contract       Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  reviewer       User     @relation("ReviewerRelation", fields: [reviewerId], references: [id], onDelete: Restrict)
+  reviewedUser   User     @relation("ReviewedRelation", fields: [reviewedUserId], references: [id], onDelete: Restrict)
+
+  @@index([reviewedUserId])
+  @@index([reviewerId])
+  @@index([rating])
+  @@index([projectId])
+  @@index([contractId])
+}
+
+// =============================================================================
+// MODULE 11 — REPORTS / COMPLAINTS / MODERATION
+// =============================================================================
+
+/// A moderation report filed by one user against another.
+model Report {
+  id             Int          @id @default(autoincrement())
+  reporterId     Int
+  reportedUserId Int
+  resolvedById   Int?
+  reason         String
+  description    String?      @db.Text
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  resolvedAt     DateTime?
+
+  reporter       User         @relation("ReporterRelation", fields: [reporterId], references: [id], onDelete: Restrict)
+  reportedUser   User         @relation("ReportedRelation", fields: [reportedUserId], references: [id], onDelete: Restrict)
+  resolvedBy     User?        @relation("ResolverRelation", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+  @@index([resolvedById])
+}
+
+// =============================================================================
+// OPTIONAL — PAYMENT RECORDS
+// =============================================================================
+
+/// Simple in-system payment record linked to a contract.
+/// Not integrated with external payment gateway.
+model Payment {
+  id           Int           @id @default(autoincrement())
+  contractId   Int           @unique
+  payerId      Int
+  receiverId   Int
+  amount       Decimal       @db.Decimal(10, 2)
+  status       PaymentStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  contract     Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  payer        User          @relation("PayerRelation", fields: [payerId], references: [id], onDelete: Restrict)
+  receiver     User          @relation("ReceiverRelation", fields: [receiverId], references: [id], onDelete: Restrict)
+
+  @@index([contractId])
+  @@index([payerId])
+  @@index([receiverId])
+  @@index([status])
+}
