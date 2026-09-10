@@ -20,10 +20,18 @@ export const authenticateToken = async (req, res, next) => {
   try {
     const secret = process.env.JWT_SECRET || 'your-default-jwt-secret-key-change-in-production'
     const decoded = jwt.verify(token, secret)
+    const userId = decoded.userId || decoded.id
+
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid session token payload' 
+      })
+    }
 
     // Query MySQL to verify current status
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
+      where: { id: userId }
     })
 
     if (!user) {

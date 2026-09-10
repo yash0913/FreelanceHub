@@ -70,7 +70,9 @@ export const listProjects = async (req, res) => {
     const q = String(req.query.q || '').trim()
     const categoryId = idOf(req.query.categoryId)
     const skillId = idOf(req.query.skillId)
-    const status = req.query.status && ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(req.query.status) ? req.query.status : undefined
+    const status = req.query.status === 'ALL'
+      ? undefined
+      : (req.query.status && ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(req.query.status) ? req.query.status : 'OPEN')
     const experienceLevel = req.query.experienceLevel && ['ENTRY', 'INTERMEDIATE', 'EXPERT'].includes(req.query.experienceLevel) ? req.query.experienceLevel : undefined
     const minBudget = numberOf(req.query.minBudget)
     const maxBudget = numberOf(req.query.maxBudget)
@@ -94,7 +96,7 @@ export const listProjects = async (req, res) => {
 export const getProject = async (req, res) => {
   try {
     const id = idOf(req.params.id)
-    if (!id) return fail(res, 'Invalid project id')
+    if (!id) return fail(res, 'Invalid project id', 400)
     const project = await prisma.project.findUnique({ where: { id }, include: projectInclude })
     if (!project) return fail(res, 'Project not found', 404)
     return respond(res, project)
@@ -105,6 +107,7 @@ export const listProjectProposals = async (req, res) => {
   try {
     if (!requireUser(req, res, ['CUSTOMER', 'ADMIN'])) return
     const projectId = idOf(req.params.id)
+    if (!projectId) return fail(res, 'Invalid project id', 400)
     const project = await prisma.project.findUnique({ where: { id: projectId }, select: { clientId: true } })
     if (!project) return fail(res, 'Project not found', 404)
     if (req.user.role !== 'ADMIN' && project.clientId !== req.user.id) return fail(res, 'You can only view proposals on your own projects', 403)
@@ -190,9 +193,29 @@ export const listMyProjects = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     if (!requireUser(req, res, ['CUSTOMER'])) return
-    const { title, description, budget, deadline, categoryId, experienceLevel, skillIds } = req.body
+    const { title, description, budget, deadline, categoryId, experienceLevel, skillIds, status } = req.body
     if (!title?.trim() || !description?.trim()) return fail(res, 'Title and description are required')
-    const project = await prisma.project.create({ data: { clientId: req.user.id, title: title.trim(), description: description.trim(), ...(budget !== '' && budget !== undefined ? { budget: Number(budget) } : {}), ...(deadline ? { deadline: new Date(deadline) } : {}), ...(categoryId ? { categoryId: idOf(categoryId) } : {}), ...(experienceLevel ? { experienceLevel } : {}), ...(Array.isArray(skillIds) && skillIds.length ? { requiredSkills: { create: [...new Set(skillIds.map(Number).filter(Boolean))].map(skillId => ({ skill: { connect: { id: skillId } } })) } } : {}) }, include: projectInclude })
+    const allowedStatus = ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']
+    const project = await prisma.project.create({
+      data: {
+        clientId: req.user.id,
+        title: title.trim(),
+        description: description.trim(),
+        ...(budget !== '' && budget !== undefined ? { budget: Number(budget) } : {}),
+        ...(deadline ? { deadline: new Date(deadline) } : {}),
+        ...(categoryId ? { categoryId: idOf(categoryId) } : {}),
+        ...(experienceLevel ? { experienceLevel } : {}),
+        status: status && allowedStatus.includes(status) ? status : 'OPEN',
+        ...(Array.isArray(skillIds) && skillIds.length ? {
+          requiredSkills: {
+            create: [...new Set(skillIds.map(Number).filter(Boolean))].map(skillId => ({
+              skill: { connect: { id: skillId } }
+            }))
+          }
+        } : {})
+      },
+      include: projectInclude
+    })
     return respond(res, project, 'Project published', 201)
   } catch (error) { console.error(error); return fail(res, 'Unable to create project. Check the selected category and skills.', 400) }
 }
@@ -201,12 +224,36 @@ export const updateProject = async (req, res) => {
   try {
     if (!requireUser(req, res, ['CUSTOMER', 'ADMIN'])) return
     const id = idOf(req.params.id)
+    if (!id) return fail(res, 'Invalid project id', 400)
     const existing = await prisma.project.findUnique({ where: { id } })
     if (!existing) return fail(res, 'Project not found', 404)
     if (req.user.role !== 'ADMIN' && existing.clientId !== req.user.id) return fail(res, 'You can only edit your own projects', 403)
-    const { title, description, budget, deadline, categoryId, experienceLevel, status } = req.body
+    const { title, description, budget, deadline, categoryId, experienceLevel, status, skillIds } = req.body
     const allowedStatus = ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']
-    const project = await prisma.project.update({ where: { id }, data: { ...(title !== undefined ? { title: String(title).trim() } : {}), ...(description !== undefined ? { description: String(description).trim() } : {}), ...(budget !== undefined && budget !== '' ? { budget: Number(budget) } : {}), ...(deadline !== undefined ? { deadline: deadline ? new Date(deadline) : null } : {}), ...(categoryId !== undefined ? { categoryId: categoryId ? idOf(categoryId) : null } : {}), ...(experienceLevel ? { experienceLevel } : {}), ...(status && allowedStatus.includes(status) ? { status } : {}) }, include: projectInclude })
+
+    if (Array.isArray(skillIds)) {
+      await prisma.projectSkill.deleteMany({ where: { projectId: id } })
+      const cleanSkills = [...new Set(skillIds.map(Number).filter(Boolean))]
+      if (cleanSkills.length) {
+        await prisma.projectSkill.createMany({
+          data: cleanSkills.map(skillId => ({ projectId: id, skillId }))
+        })
+      }
+    }
+
+    const project = await prisma.project.update({
+      where: { id },
+      data: {
+        ...(title !== undefined ? { title: String(title).trim() } : {}),
+        ...(description !== undefined ? { description: String(description).trim() } : {}),
+        ...(budget !== undefined && budget !== '' ? { budget: Number(budget) } : {}),
+        ...(deadline !== undefined ? { deadline: deadline ? new Date(deadline) : null } : {}),
+        ...(categoryId !== undefined ? { categoryId: categoryId ? idOf(categoryId) : null } : {}),
+        ...(experienceLevel ? { experienceLevel } : {}),
+        ...(status && allowedStatus.includes(status) ? { status } : {})
+      },
+      include: projectInclude
+    })
     return respond(res, project, 'Project updated')
   } catch (error) { console.error(error); return fail(res, 'Unable to update project', 400) }
 }
@@ -224,6 +271,7 @@ export const createProposal = async (req, res) => {
   try {
     if (!requireUser(req, res, ['FREELANCER'])) return
     const projectId = idOf(req.params.projectId)
+    if (!projectId) return fail(res, 'Invalid project id', 400)
     const { proposedPrice, estimatedDays, coverLetter } = req.body
     const profile = await prisma.freelancerProfile.findUnique({ where: { userId: req.user.id } })
     const project = await prisma.project.findUnique({ where: { id: projectId } })

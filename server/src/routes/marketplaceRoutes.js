@@ -15,7 +15,18 @@ const router = Router()
 router.get('/categories', listCategories)
 router.get('/skills', listSkills)
 router.get('/projects', listProjects)
+
+// Specific project endpoints registered before wildcard /projects/:id
+router.get('/projects/mine', authenticateToken, listMyProjects)
+router.get('/projects/:id/proposals', authenticateToken, listProjectProposals)
+router.post('/projects/:projectId/proposals', authenticateToken, createProposal)
+router.post('/projects', authenticateToken, createProject)
+router.patch('/projects/:id', authenticateToken, updateProject)
+
+// Public project detail endpoint
 router.get('/projects/:id', getProject)
+
+// Freelancer endpoints
 router.get('/freelancers', listFreelancers)
 router.get('/freelancers/:id', getFreelancer)
 
@@ -23,12 +34,7 @@ router.get('/freelancers/:id', getFreelancer)
 router.use(authenticateToken)
 router.get('/profile', getProfile)
 router.patch('/profile', updateProfile)
-router.get('/projects/mine', listMyProjects)
-router.get('/projects/:id/proposals', listProjectProposals)
-router.post('/projects', createProject)
-router.patch('/projects/:id', updateProject)
 router.get('/proposals/mine', listMyProposals)
-router.post('/projects/:projectId/proposals', createProposal)
 router.patch('/proposals/:id', updateProposal)
 router.get('/contracts/mine', listContracts)
 router.patch('/contracts/:id', updateContract)

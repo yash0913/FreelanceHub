@@ -104,22 +104,30 @@ function ErrorState({ message }) {
 }
 
 function useFetch(url, params = {}, deps = []) {
-  const [state, setState] = useState({ data: null, loading: true, error: '' })
+  const [state, setState] = useState({ data: null, loading: Boolean(url), error: '' })
+  const [reloadKey, setReloadKey] = useState(0)
+  const refetch = () => setReloadKey((k) => k + 1)
+  const setData = (updater) => setState((prev) => ({
+    ...prev,
+    data: typeof updater === 'function' ? updater(prev.data) : updater
+  }))
+
   useEffect(() => {
     let active = true
     if (!url) {
       setState({ data: null, loading: false, error: '' })
       return () => { active = false }
     }
-    setState({ data: null, loading: true, error: '' })
+    setState((prev) => ({ ...prev, loading: true, error: '' }))
     api.get(url, { params }).then((response) => {
       if (active) setState({ data: unwrap(response), loading: false, error: '' })
     }).catch((error) => {
       if (active) setState({ data: null, loading: false, error: apiError(error) })
     })
     return () => { active = false }
-  }, [url, JSON.stringify(params), ...deps])
-  return state
+  }, [url, JSON.stringify(params), reloadKey, ...deps])
+
+  return { ...state, refetch, setData }
 }
 
 function Button({ children, variant = 'primary', className = '', ...props }) {
@@ -232,12 +240,19 @@ function DashboardPage() {
 
 
 function ActivityRow({ item, type }) {
+  const { user } = useAuth()
   const project = type === 'project' ? item : item.project
-  return <Link to={`/project/${project?.id || item.projectId}`} className="activity-row"><div className="activity-avatar"><FolderKanban size={17} /></div><div className="activity-copy"><strong>{project?.title || 'Untitled project'}</strong><span>{type === 'proposal' ? `Proposed ${currency(item.proposedPrice)}` : `${project?.category?.name || 'Marketplace'} · ${dateLabel(project?.createdAt)}`}</span></div><StatusBadge value={item.status || project?.status || 'OPEN'} /><ChevronRight size={16} className="row-chevron" /></Link>
+  const targetId = project?.id || item.projectId
+  const destination = user?.role === 'CUSTOMER' && targetId ? `/customer/projects/${targetId}` : `/project/${targetId || ''}`
+  return <Link to={destination} className="activity-row"><div className="activity-avatar"><FolderKanban size={17} /></div><div className="activity-copy"><strong>{project?.title || 'Untitled project'}</strong><span>{type === 'proposal' ? `Proposed ${currency(item.proposedPrice)}` : `${project?.category?.name || 'Marketplace'} · ${dateLabel(project?.createdAt)}`}</span></div><StatusBadge value={item.status || project?.status || 'OPEN'} /><ChevronRight size={16} className="row-chevron" /></Link>
 }
 
 function ProjectCard({ project }) {
-  return <Link className="project-card" to={`/project/${project.id}`}><div className="card-topline"><span className="category-label">{project.category?.name || 'Independent project'}</span><StatusBadge value={project.status} /></div><h3>{project.title}</h3><p>{String(project.description || '').slice(0, 110)}{String(project.description || '').length > 110 ? '…' : ''}</p><div className="tag-row">{(project.requiredSkills || []).slice(0, 3).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div><div className="card-footer"><span><strong>{currency(project.budget)}</strong><small> budget</small></span><span>{project._count?.proposals ?? 0} proposals <ChevronRight size={14} /></span></div></Link>
+  const { user } = useAuth()
+  const detailUrl = user?.role === 'CUSTOMER' && project.client?.id === user.id
+    ? `/customer/projects/${project.id}`
+    : `/project/${project.id}`
+  return <Link className="project-card" to={detailUrl}><div className="card-topline"><span className="category-label">{project.category?.name || 'Independent project'}</span><StatusBadge value={project.status} /></div><h3>{project.title}</h3><p>{String(project.description || '').slice(0, 110)}{String(project.description || '').length > 110 ? '…' : ''}</p><div className="tag-row">{(project.requiredSkills || []).slice(0, 3).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div><div className="card-footer"><span><strong>{currency(project.budget)}</strong><small> budget</small></span><span>{project._count?.proposals ?? 0} proposals <ChevronRight size={14} /></span></div></Link>
 }
 
 function FreelancerCard({ profile }) {
@@ -250,50 +265,795 @@ function Filters({ kind, values, setValues, categories, skills }) {
 
 function ProjectsPage({ mine = false }) {
   const { user } = useAuth()
-  const [searchParams] = useSearchParams()
-  const [values, setValues] = useState({ q: '', categoryId: searchParams.get('categoryId') || '', skillId: '', sort: '' })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [values, setValues] = useState({ q: '', categoryId: searchParams.get('categoryId') || '', skillId: '', sort: '', status: 'OPEN' })
+  const [myFilter, setMyFilter] = useState({ status: 'ALL', q: '' })
   const [showForm, setShowForm] = useState(searchParams.get('new') === '1')
   const categories = useFetch('/categories')
   const skills = useFetch('/skills')
   const state = useFetch(mine ? '/projects/mine' : '/projects', mine ? {} : values, [mine, values])
   const [message, setMessage] = useState('')
-  if (mine) return <><PageIntro eyebrow="Customer workspace" title="Your project desk." description="Publish clear briefs, track progress, and find the right partner for every outcome." action={<Button onClick={() => setShowForm(!showForm)}>{showForm ? <X size={17} /> : <Plus size={17} />} {showForm ? 'Close form' : 'New project'}</Button>} />{message && <div className="success-banner"><Check size={17} />{message}</div>}{showForm && <ProjectForm categories={categories.data} skills={skills.data} onDone={(text) => { setShowForm(false); setMessage(text) }} />}{state.loading ? <LoadingInline /> : state.error ? <ErrorState message={state.error} /> : state.data?.length ? <div className="project-list">{state.data.map((project) => <ProjectRow key={project.id} project={project} />)}</div> : <EmptyState title="No projects yet" description="Publish your first brief and make your next hire easier." action={<Button onClick={() => setShowForm(true)}><Plus size={16} /> Publish a project</Button>} />}</>
-  return <><PageIntro eyebrow="Open marketplace" title="Find work worth doing." description="Search the live project marketplace by category, skill, and budget signal." action={user ? <Link className="button button-ghost" to={getHome(user)}>Back to workspace <ArrowRight size={15} /></Link> : null} /><Filters kind="projects" values={values} setValues={setValues} categories={categories.data} skills={skills.data} />{state.loading ? <LoadingInline /> : state.error ? <ErrorState message={state.error} /> : <><div className="result-summary"><span><strong>{state.data?.pagination?.total ?? state.data?.length ?? 0}</strong> opportunities</span><span className="muted">Sorted by marketplace activity</span></div><div className="public-grid project-results">{state.data?.items?.length ? state.data.items.map((project) => <ProjectCard key={project.id} project={project} />) : <EmptyState title="No projects match those filters" description="Try a broader search or check back soon for new briefs." />}</div></>}</>
+
+  const handleCreated = (createdProject, text) => {
+    setShowForm(false)
+    setMessage(text)
+    if (searchParams.get('new')) {
+      searchParams.delete('new')
+      setSearchParams(searchParams, { replace: true })
+    }
+    if (createdProject && createdProject.id) {
+      state.setData((prev) => {
+        if (!Array.isArray(prev)) return [createdProject]
+        return [createdProject, ...prev.filter((p) => p.id !== createdProject.id)]
+      })
+    }
+    state.refetch()
+  }
+
+  if (mine) {
+    const rawList = Array.isArray(state.data) ? state.data : []
+    const filteredList = rawList.filter((project) => {
+      if (myFilter.status !== 'ALL' && project.status !== myFilter.status) return false
+      if (myFilter.q) {
+        const query = myFilter.q.toLowerCase()
+        const titleMatch = project.title?.toLowerCase().includes(query)
+        const descMatch = project.description?.toLowerCase().includes(query)
+        if (!titleMatch && !descMatch) return false
+      }
+      return true
+    })
+
+    return (
+      <>
+        <PageIntro
+          eyebrow="Customer workspace"
+          title="Your project desk."
+          description="Publish clear briefs, track proposals, and manage your engagements from one place."
+          action={
+            <Button onClick={() => setShowForm(!showForm)}>
+              {showForm ? <X size={17} /> : <Plus size={17} />} {showForm ? 'Close form' : 'New project'}
+            </Button>
+          }
+        />
+        {message && (
+          <div className="success-banner" style={{ marginBottom: '20px' }}>
+            <Check size={17} />
+            <span>{message}</span>
+            <button onClick={() => setMessage('')} style={{ marginLeft: 'auto', background: 'transparent', border: 0, cursor: 'pointer' }}><X size={15} /></button>
+          </div>
+        )}
+        {showForm && (
+          <ProjectForm
+            categories={categories.data}
+            skills={skills.data}
+            onDone={handleCreated}
+            onCancel={() => setShowForm(false)}
+          />
+        )}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+            {[
+              ['ALL', 'All projects'],
+              ['OPEN', 'Open'],
+              ['IN_PROGRESS', 'In progress'],
+              ['COMPLETED', 'Completed'],
+              ['CANCELLED', 'Cancelled']
+            ].map(([statusKey, label]) => {
+              const count = statusKey === 'ALL' ? rawList.length : rawList.filter((p) => p.status === statusKey).length
+              const isActive = myFilter.status === statusKey
+              return (
+                <button
+                  key={statusKey}
+                  type="button"
+                  onClick={() => setMyFilter((f) => ({ ...f, status: statusKey }))}
+                  className={`button button-small ${isActive ? 'button-dark' : 'button-outline'}`}
+                  style={{ borderRadius: '20px', fontSize: '12px' }}
+                >
+                  {label} <span style={{ opacity: 0.65, marginLeft: '4px' }}>({count})</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="search-filter" style={{ minWidth: '220px', maxWidth: '320px', height: '36px', minHeight: '36px' }}>
+            <Search size={15} />
+            <input
+              placeholder="Search your projects…"
+              value={myFilter.q}
+              onChange={(e) => setMyFilter((f) => ({ ...f, q: e.target.value }))}
+            />
+            {myFilter.q && (
+              <button type="button" onClick={() => setMyFilter((f) => ({ ...f, q: '' }))} style={{ background: 'transparent', border: 0, cursor: 'pointer', padding: 0 }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {state.loading ? (
+          <LoadingInline />
+        ) : state.error ? (
+          <ErrorState message={state.error} />
+        ) : filteredList.length ? (
+          <div className="project-list">
+            {filteredList.map((project) => (
+              <ProjectRow key={project.id} project={project} />
+            ))}
+          </div>
+        ) : rawList.length ? (
+          <EmptyState
+            title="No matching projects"
+            description="No projects match the selected status or search filter."
+            action={<Button variant="outline" onClick={() => setMyFilter({ status: 'ALL', q: '' })}>Clear filters</Button>}
+          />
+        ) : (
+          <EmptyState
+            title="No projects yet"
+            description="Publish your first project brief and discover top independent talent."
+            action={<Button onClick={() => setShowForm(true)}><Plus size={16} /> Post a project</Button>}
+          />
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <PageIntro
+        eyebrow="Open marketplace"
+        title="Find work worth doing."
+        description="Search the live project marketplace by category, skill, and budget signal."
+        action={user ? <Link className="button button-ghost" to={getHome(user)}>Back to workspace <ArrowRight size={15} /></Link> : null}
+      />
+      <Filters kind="projects" values={values} setValues={setValues} categories={categories.data} skills={skills.data} />
+      {state.loading ? (
+        <LoadingInline />
+      ) : state.error ? (
+        <ErrorState message={state.error} />
+      ) : (
+        <>
+          <div className="result-summary">
+            <span><strong>{state.data?.pagination?.total ?? state.data?.length ?? 0}</strong> opportunities</span>
+            <span className="muted">Sorted by marketplace activity</span>
+          </div>
+          <div className="public-grid project-results">
+            {state.data?.items?.length ? (
+              state.data.items.map((project) => <ProjectCard key={project.id} project={project} />)
+            ) : (
+              <EmptyState title="No projects match those filters" description="Try a broader search or check back soon for new briefs." />
+            )}
+          </div>
+        </>
+      )}
+    </>
+  )
 }
 
 function ProjectRow({ project }) {
-  return <Link className="project-row" to={`/project/${project.id}`}><div className="project-row-icon"><FolderKanban size={18} /></div><div className="project-row-copy"><strong>{project.title}</strong><span>{project.category?.name || 'Uncategorized'} · Updated {dateLabel(project.updatedAt)}</span></div><div className="project-row-budget"><strong>{currency(project.budget)}</strong><span>{project._count?.proposals ?? 0} proposals</span></div><StatusBadge value={project.status} /><ChevronRight size={17} /></Link>
+  return (
+    <Link className="project-row" to={`/customer/projects/${project.id}`}>
+      <div className="project-row-icon"><FolderKanban size={18} /></div>
+      <div className="project-row-copy">
+        <strong>{project.title}</strong>
+        <span>
+          {project.category?.name || 'Uncategorized'} · Posted {dateLabel(project.createdAt)}
+          {project.requiredSkills?.length ? ` · ${project.requiredSkills.map(({ skill }) => skill.name).slice(0, 3).join(', ')}` : ''}
+        </span>
+      </div>
+      <div className="project-row-budget">
+        <strong>{currency(project.budget)}</strong>
+        <span>{project._count?.proposals ?? 0} proposal{project._count?.proposals === 1 ? '' : 's'}</span>
+      </div>
+      <StatusBadge value={project.status} />
+      <ChevronRight size={17} />
+    </Link>
+  )
 }
 
-function ProjectForm({ categories, skills, onDone }) {
-  const [form, setForm] = useState({ title: '', description: '', budget: '', deadline: '', categoryId: '', experienceLevel: 'INTERMEDIATE', skillIds: [] })
-  const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
+function ProjectForm({ categories, skills, onDone, initialData = null, isEditing = false, onCancel }) {
+  const [form, setForm] = useState({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    budget: initialData?.budget ? String(initialData.budget) : '',
+    deadline: initialData?.deadline ? String(initialData.deadline).slice(0, 10) : '',
+    categoryId: initialData?.categoryId ? String(initialData.categoryId) : '',
+    experienceLevel: initialData?.experienceLevel || 'INTERMEDIATE',
+    skillIds: initialData?.requiredSkills ? initialData.requiredSkills.map(({ skill }) => skill.id) : []
+  })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
   const update = (key) => (event) => setForm({ ...form, [key]: event.target.value })
-  const toggleSkill = (id) => setForm({ ...form, skillIds: form.skillIds.includes(id) ? form.skillIds.filter((item) => item !== id) : [...form.skillIds, id] })
-  const submit = async (event) => { event.preventDefault(); setSaving(true); setError(''); try { await api.post('/projects', form); onDone('Project published to the marketplace.') } catch (err) { setError(apiError(err)) } finally { setSaving(false) } }
-  return <form className="panel form-panel" onSubmit={submit}><div className="panel-heading"><div><span className="panel-eyebrow">Project brief</span><h2>Make the right people lean in.</h2></div><span className="required-note">All fields with * are required</span></div>{error && <ErrorState message={error} />}<div className="form-grid"><Input label="Project title *" placeholder="e.g. Build a customer insights dashboard" value={form.title} onChange={update('title')} required /><Select label="Category" value={form.categoryId} onChange={update('categoryId')}><option value="">Select a category</option>{(categories || []).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</Select><Textarea label="Description *" placeholder="Share the outcome, context, and what success looks like." value={form.description} onChange={update('description')} required /><div className="form-grid-two"><Input label="Budget (INR)" type="number" min="0" placeholder="75000" value={form.budget} onChange={update('budget')} /><Input label="Target deadline" type="date" value={form.deadline} onChange={update('deadline')} /></div><Select label="Experience level" value={form.experienceLevel} onChange={update('experienceLevel')}><option value="ENTRY">Entry</option><option value="INTERMEDIATE">Intermediate</option><option value="EXPERT">Expert</option></Select></div><div className="field"><span>Required skills</span><div className="check-grid">{(skills || []).slice(0, 16).map((skill) => <button type="button" className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => toggleSkill(skill.id)}><Check size={13} />{skill.name}</button>)}</div></div><div className="form-actions"><Button type="submit" disabled={saving}>{saving ? 'Publishing…' : 'Publish project'} <ArrowRight size={16} /></Button></div></form>
+  const toggleSkill = (id) => setForm({
+    ...form,
+    skillIds: form.skillIds.includes(id) ? form.skillIds.filter((item) => item !== id) : [...form.skillIds, id]
+  })
+
+  const submit = async (event) => {
+    event.preventDefault()
+    if (!form.title.trim() || !form.description.trim()) {
+      setError('Title and description are required.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    try {
+      if (isEditing && initialData?.id) {
+        const response = await api.patch(`/projects/${initialData.id}`, form)
+        const updated = unwrap(response)
+        onDone(updated, 'Project updated successfully.')
+      } else {
+        const response = await api.post('/projects', form)
+        const created = unwrap(response)
+        onDone(created, 'Project published to the marketplace.')
+      }
+    } catch (err) {
+      setError(apiError(err))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form className="panel form-panel" onSubmit={submit} style={{ marginBottom: '24px' }}>
+      <div className="panel-heading">
+        <div>
+          <span className="panel-eyebrow">{isEditing ? 'Update Project' : 'Project brief'}</span>
+          <h2>{isEditing ? 'Edit project brief' : 'Make the right people lean in.'}</h2>
+        </div>
+        <span className="required-note">All fields with * are required</span>
+      </div>
+      {error && <ErrorState message={error} />}
+      <div className="form-grid">
+        <Input
+          label="Project title *"
+          placeholder="e.g. Build a customer insights dashboard"
+          value={form.title}
+          onChange={update('title')}
+          required
+        />
+        <Select label="Category" value={form.categoryId} onChange={update('categoryId')}>
+          <option value="">Select a category</option>
+          {(categories || []).map((category) => (
+            <option key={category.id} value={category.id}>{category.name}</option>
+          ))}
+        </Select>
+        <Textarea
+          label="Description *"
+          placeholder="Share the outcome, context, and what success looks like."
+          value={form.description}
+          onChange={update('description')}
+          required
+        />
+        <div className="form-grid-two">
+          <Input
+            label="Budget (INR)"
+            type="number"
+            min="0"
+            placeholder="75000"
+            value={form.budget}
+            onChange={update('budget')}
+          />
+          <Input
+            label="Target deadline"
+            type="date"
+            value={form.deadline}
+            onChange={update('deadline')}
+          />
+        </div>
+        <Select label="Experience level" value={form.experienceLevel} onChange={update('experienceLevel')}>
+          <option value="ENTRY">Entry</option>
+          <option value="INTERMEDIATE">Intermediate</option>
+          <option value="EXPERT">Expert</option>
+        </Select>
+      </div>
+      <div className="field" style={{ marginTop: '16px' }}>
+        <span>Required skills</span>
+        <div className="check-grid">
+          {(skills || []).slice(0, 18).map((skill) => (
+            <button
+              type="button"
+              className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`}
+              key={skill.id}
+              onClick={() => toggleSkill(skill.id)}
+            >
+              <Check size={13} />
+              {skill.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="form-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+        <Button type="submit" disabled={saving}>
+          {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Publish project'} <ArrowRight size={16} />
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
+    </form>
+  )
 }
 
-function ProjectDetail() {
-  const { id } = useParams(); const { user } = useAuth(); const state = useFetch(`/projects/${id}`); const proposalState = useFetch(user?.role === 'CUSTOMER' ? `/projects/${id}/proposals` : ''); const [message, setMessage] = useState('')
+function CustomerProjectDetail({ projectId }) {
+  const { user } = useAuth()
+  const validId = Number.isInteger(Number(projectId)) && Number(projectId) > 0 ? Number(projectId) : null
+  const state = useFetch(validId ? `/projects/${validId}` : '')
+  const proposalState = useFetch(validId ? `/projects/${validId}/proposals` : '')
+  const categories = useFetch('/categories')
+  const skills = useFetch('/skills')
+  const [isEditing, setIsEditing] = useState(false)
+  const [message, setMessage] = useState('')
+  const [statusBusy, setStatusBusy] = useState(false)
+
+  if (!validId) {
+    return (
+      <>
+        <Link className="back-link" to="/customer/projects">
+          <ArrowRight size={15} className="back-arrow" /> Back to My Projects
+        </Link>
+        <div className="panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <EmptyState
+            icon={FolderKanban}
+            title="Project not found"
+            description="The requested project identifier is invalid or does not exist."
+            action={<Link className="button button-primary" to="/customer/projects">Back to My Projects</Link>}
+          />
+        </div>
+      </>
+    )
+  }
+
   if (state.loading) return <LoadingInline />
-  if (state.error) return <ErrorState message={state.error} />
+
+  if (state.error || !state.data) {
+    return (
+      <>
+        <Link className="back-link" to="/customer/projects">
+          <ArrowRight size={15} className="back-arrow" /> Back to My Projects
+        </Link>
+        <div className="panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <EmptyState
+            icon={FolderKanban}
+            title="Project not found"
+            description="We could not find this project in your workspace. It may have been deleted or does not exist."
+            action={<Link className="button button-primary" to="/customer/projects">Back to My Projects</Link>}
+          />
+        </div>
+      </>
+    )
+  }
+
   const project = state.data
   const proposals = proposalState.data || []
-  return <><Link className="back-link" to={user ? getHome(user) : '/projects'}><ArrowRight size={15} className="back-arrow" /> Back to marketplace</Link><div className="detail-layout"><div><div className="detail-kicker"><span className="category-label">{project.category?.name || 'Marketplace project'}</span><StatusBadge value={project.status} /></div><h1 className="detail-title">{project.title}</h1><p className="detail-description">{project.description}</p><div className="detail-tags">{(project.requiredSkills || []).map(({ skill }) => <span key={skill.id}><Tag size={14} />{skill.name}</span>)}</div><div className="detail-meta-grid"><div><span>Budget</span><strong>{currency(project.budget)}</strong></div><div><span>Experience</span><strong>{titleCase(project.experienceLevel)}</strong></div><div><span>Deadline</span><strong>{dateLabel(project.deadline)}</strong></div><div><span>Posted</span><strong>{dateLabel(project.createdAt)}</strong></div></div><section className="panel proposal-panel"><div className="panel-heading"><div><span className="panel-eyebrow">{user?.role === 'CUSTOMER' ? 'Incoming proposals' : 'Make your move'}</span><h2>{user?.role === 'CUSTOMER' ? `${proposals.length} people are interested` : 'Send a proposal'}</h2></div></div>{message && <div className="success-banner"><Check size={17} />{message}</div>}{user?.role === 'FREELANCER' && project.status === 'OPEN' ? <ProposalForm projectId={project.id} onDone={setMessage} /> : user?.role === 'CUSTOMER' && proposals.length ? <div className="proposal-list">{proposals.map((proposal) => <ProposalRow key={proposal.id} proposal={proposal} customer onDone={setMessage} />)}</div> : !user ? <div className="inline-callout">Sign in as a freelancer to send a proposal. <Link to="/login">Sign in <ArrowRight size={14} /></Link></div> : <EmptyState title="No action needed right now" description="The available actions for this project will appear here." />}</section></div><aside className="detail-side"><div className="profile-mini"><Avatar name={project.client?.name} /><div><strong>{project.client?.name || 'Customer'}</strong><span>Project owner</span></div></div><div className="side-divider" /><span className="panel-eyebrow">About this customer</span><p>{project.client?.customerProfile?.companyName || 'Independent customer'}{project.client?.customerProfile?.location ? ` · ${project.client.customerProfile.location}` : ''}</p><Button variant="outline" className="button-full" onClick={async () => { if (!user) return; try { const response = await api.post('/conversations', { participantId: project.client.id }); window.location.assign(`${getHome(user).split('/').slice(0, 2).join('/')}/messages`) } catch (err) { setMessage(apiError(err)) } }}><MessageSquare size={16} /> Message customer</Button></aside></div></>
+
+  if (user && user.role !== 'ADMIN' && project.client?.id !== user.id) {
+    return (
+      <>
+        <Link className="back-link" to="/customer/projects">
+          <ArrowRight size={15} className="back-arrow" /> Back to My Projects
+        </Link>
+        <div className="panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <EmptyState
+            icon={ShieldCheck}
+            title="Access restricted"
+            description="You can only manage projects that belong to your customer account."
+            action={<Link className="button button-primary" to="/customer/projects">Back to My Projects</Link>}
+          />
+        </div>
+      </>
+    )
+  }
+
+  const handleStatusChange = async (newStatus) => {
+    setStatusBusy(true)
+    try {
+      await api.patch(`/projects/${validId}`, { status: newStatus })
+      setMessage(`Project status updated to ${titleCase(newStatus)}.`)
+      state.refetch()
+    } catch (err) {
+      setMessage(apiError(err))
+    } finally {
+      setStatusBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <Link className="back-link" to="/customer/projects">
+        <ArrowRight size={15} className="back-arrow" /> Back to My Projects
+      </Link>
+
+      {message && (
+        <div className="success-banner" style={{ marginBottom: '20px' }}>
+          <Check size={17} />
+          <span>{message}</span>
+          <button onClick={() => setMessage('')} style={{ marginLeft: 'auto', background: 'transparent', border: 0, cursor: 'pointer' }}><X size={15} /></button>
+        </div>
+      )}
+
+      {isEditing ? (
+        <ProjectForm
+          categories={categories.data}
+          skills={skills.data}
+          initialData={project}
+          isEditing={true}
+          onDone={(updated, text) => {
+            setIsEditing(false)
+            setMessage(text)
+            state.refetch()
+          }}
+          onCancel={() => setIsEditing(false)}
+        />
+      ) : (
+        <div className="detail-layout">
+          <div>
+            <div className="detail-kicker">
+              <span className="category-label">{project.category?.name || 'Customer Project'}</span>
+              <StatusBadge value={project.status} />
+            </div>
+            <h1 className="detail-title">{project.title}</h1>
+            <p className="detail-description">{project.description}</p>
+            <div className="detail-tags">
+              {(project.requiredSkills || []).map(({ skill }) => (
+                <span key={skill.id}><Tag size={14} />{skill.name}</span>
+              ))}
+            </div>
+            <div className="detail-meta-grid">
+              <div><span>Budget</span><strong>{currency(project.budget)}</strong></div>
+              <div><span>Experience</span><strong>{titleCase(project.experienceLevel)}</strong></div>
+              <div><span>Deadline</span><strong>{dateLabel(project.deadline)}</strong></div>
+              <div><span>Posted</span><strong>{dateLabel(project.createdAt)}</strong></div>
+            </div>
+
+            <section className="panel proposal-panel">
+              <div className="panel-heading">
+                <div>
+                  <span className="panel-eyebrow">Incoming proposals</span>
+                  <h2>{proposals.length} applicant{proposals.length === 1 ? '' : 's'} interested</h2>
+                </div>
+              </div>
+
+              {proposalState.loading ? (
+                <LoadingInline />
+              ) : proposals.length ? (
+                <div className="proposal-list">
+                  {proposals.map((proposal) => (
+                    <ProposalRow
+                      key={proposal.id}
+                      proposal={proposal}
+                      customer
+                      onDone={(text) => {
+                        setMessage(text)
+                        proposalState.refetch()
+                        state.refetch()
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={BriefcaseBusiness}
+                  title="No proposals yet"
+                  description="When independent talent discovers your project in Find Work, their proposals will appear here."
+                />
+              )}
+            </section>
+          </div>
+
+          <aside className="detail-side">
+            <div className="panel-eyebrow" style={{ marginBottom: '12px' }}>Project Management</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <Button variant="outline" className="button-full" onClick={() => setIsEditing(true)}>
+                Edit project brief
+              </Button>
+
+              {project.status === 'OPEN' && (
+                <Button
+                  variant="outline"
+                  className="button-full"
+                  disabled={statusBusy}
+                  onClick={() => handleStatusChange('CANCELLED')}
+                >
+                  Close / Cancel project
+                </Button>
+              )}
+
+              {project.status === 'CANCELLED' && (
+                <Button
+                  variant="primary"
+                  className="button-full"
+                  disabled={statusBusy}
+                  onClick={() => handleStatusChange('OPEN')}
+                >
+                  Reopen project
+                </Button>
+              )}
+
+              {project.status === 'IN_PROGRESS' && (
+                <Button
+                  variant="primary"
+                  className="button-full"
+                  disabled={statusBusy}
+                  onClick={() => handleStatusChange('COMPLETED')}
+                >
+                  Mark project completed
+                </Button>
+              )}
+            </div>
+
+            <div className="side-divider" />
+            <span className="panel-eyebrow">Project Identifier</span>
+            <p style={{ fontSize: '12px', color: 'var(--ink)', fontWeight: 600, marginTop: '6px' }}>
+              Canonical Project #{project.id}
+            </p>
+            <Link
+              className="text-link"
+              to={`/project/${project.id}`}
+              style={{ fontSize: '12px', marginTop: '6px' }}
+            >
+              View public marketplace preview <ArrowRight size={13} />
+            </Link>
+          </aside>
+        </div>
+      )}
+    </>
+  )
+}
+
+function ProjectDetail({ projectId: propId }) {
+  const { id: paramId } = useParams()
+  const { user } = useAuth()
+  const rawId = propId || paramId
+  const validId = Number.isInteger(Number(rawId)) && Number(rawId) > 0 ? Number(rawId) : null
+  const state = useFetch(validId ? `/projects/${validId}` : '')
+  const proposalState = useFetch(validId && user?.role === 'CUSTOMER' ? `/projects/${validId}/proposals` : '')
+  const [message, setMessage] = useState('')
+
+  if (!validId) {
+    return (
+      <>
+        <Link className="back-link" to={user ? getHome(user) : '/projects'}>
+          <ArrowRight size={15} className="back-arrow" /> Back to marketplace
+        </Link>
+        <div className="panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <EmptyState
+            icon={FolderKanban}
+            title="Project not found"
+            description="The requested project identifier is invalid or does not exist."
+            action={<Link className="button button-primary" to={user ? getHome(user) : '/projects'}>Back to marketplace</Link>}
+          />
+        </div>
+      </>
+    )
+  }
+
+  if (state.loading) return <LoadingInline />
+
+  if (state.error || !state.data) {
+    return (
+      <>
+        <Link className="back-link" to={user ? getHome(user) : '/projects'}>
+          <ArrowRight size={15} className="back-arrow" /> Back to marketplace
+        </Link>
+        <div className="panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <EmptyState
+            icon={FolderKanban}
+            title="Project not found"
+            description="We could not find this project. It may have been closed or does not exist."
+            action={<Link className="button button-primary" to={user ? getHome(user) : '/projects'}>Back to marketplace</Link>}
+          />
+        </div>
+      </>
+    )
+  }
+
+  const project = state.data
+  const proposals = proposalState.data || []
+  const isOwner = user && user.id === project.client?.id
+
+  return (
+    <>
+      <Link className="back-link" to={user ? (user.role === 'FREELANCER' ? '/freelancer/projects' : getHome(user)) : '/projects'}>
+        <ArrowRight size={15} className="back-arrow" /> {user?.role === 'FREELANCER' ? 'Back to Find Work' : 'Back to marketplace'}
+      </Link>
+
+      {isOwner && (
+        <div className="inline-callout" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>You posted this project. Manage applicants, edit brief, or update status in your Customer Workspace.</span>
+          <Link className="button button-primary button-small" to={`/customer/projects/${project.id}`}>
+            Manage in workspace <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
+      <div className="detail-layout">
+        <div>
+          <div className="detail-kicker">
+            <span className="category-label">{project.category?.name || 'Marketplace project'}</span>
+            <StatusBadge value={project.status} />
+          </div>
+          <h1 className="detail-title">{project.title}</h1>
+          <p className="detail-description">{project.description}</p>
+          <div className="detail-tags">
+            {(project.requiredSkills || []).map(({ skill }) => (
+              <span key={skill.id}><Tag size={14} />{skill.name}</span>
+            ))}
+          </div>
+          <div className="detail-meta-grid">
+            <div><span>Budget</span><strong>{currency(project.budget)}</strong></div>
+            <div><span>Experience</span><strong>{titleCase(project.experienceLevel)}</strong></div>
+            <div><span>Deadline</span><strong>{dateLabel(project.deadline)}</strong></div>
+            <div><span>Posted</span><strong>{dateLabel(project.createdAt)}</strong></div>
+          </div>
+
+          <section className="panel proposal-panel">
+            <div className="panel-heading">
+              <div>
+                <span className="panel-eyebrow">
+                  {isOwner ? 'Incoming proposals' : user?.role === 'FREELANCER' ? 'Submit proposal' : 'Platform Opportunity'}
+                </span>
+                <h2>
+                  {isOwner
+                    ? `${proposals.length} applicant${proposals.length === 1 ? '' : 's'} interested`
+                    : user?.role === 'FREELANCER'
+                    ? (project.status === 'OPEN' ? 'Apply for this project' : 'Project status')
+                    : 'Project proposals'}
+                </h2>
+              </div>
+            </div>
+
+            {message && <div className="success-banner"><Check size={17} />{message}</div>}
+
+            {user?.role === 'FREELANCER' && project.status === 'OPEN' ? (
+              <ProposalForm
+                projectId={project.id}
+                onDone={(text) => {
+                  setMessage(text)
+                  state.refetch()
+                }}
+              />
+            ) : user?.role === 'FREELANCER' && project.status !== 'OPEN' ? (
+              <div className="inline-callout">
+                This project is currently <StatusBadge value={project.status} /> and no longer accepting new proposals.
+              </div>
+            ) : isOwner && proposals.length ? (
+              <div className="proposal-list">
+                {proposals.map((proposal) => (
+                  <ProposalRow
+                    key={proposal.id}
+                    proposal={proposal}
+                    customer
+                    onDone={(text) => {
+                      setMessage(text)
+                      proposalState.refetch()
+                      state.refetch()
+                    }}
+                  />
+                ))}
+              </div>
+            ) : !user ? (
+              <div className="inline-callout">
+                Sign in as a freelancer to submit a proposal for this project.{' '}
+                <Link to="/login">Sign in <ArrowRight size={14} /></Link>
+              </div>
+            ) : (
+              <EmptyState
+                title="No proposals yet"
+                description="When proposals are submitted, they will be visible here."
+              />
+            )}
+          </section>
+        </div>
+
+        <aside className="detail-side">
+          <div className="profile-mini">
+            <Avatar name={project.client?.name} />
+            <div>
+              <strong>{project.client?.name || 'Customer'}</strong>
+              <span>Project owner</span>
+            </div>
+          </div>
+          <div className="side-divider" />
+          <span className="panel-eyebrow">About this customer</span>
+          <p>
+            {project.client?.customerProfile?.companyName || 'Independent customer'}
+            {project.client?.customerProfile?.location ? ` · ${project.client.customerProfile.location}` : ''}
+          </p>
+          {user && user.id !== project.client?.id && (
+            <Button
+              variant="outline"
+              className="button-full"
+              onClick={async () => {
+                try {
+                  await api.post('/conversations', { participantId: project.client.id })
+                  window.location.assign(`${getHome(user).split('/').slice(0, 2).join('/')}/messages`)
+                } catch (err) {
+                  setMessage(apiError(err))
+                }
+              }}
+            >
+              <MessageSquare size={16} /> Message customer
+            </Button>
+          )}
+        </aside>
+      </div>
+    </>
+  )
 }
 
 function ProposalForm({ projectId, onDone }) {
-  const [form, setForm] = useState({ proposedPrice: '', estimatedDays: '', coverLetter: '' }); const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ proposedPrice: '', estimatedDays: '', coverLetter: '' })
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
   const update = (key) => (event) => setForm({ ...form, [key]: event.target.value })
-  const submit = async (event) => { event.preventDefault(); setSaving(true); setError(''); try { await api.post(`/projects/${projectId}/proposals`, form); onDone('Proposal submitted successfully.') } catch (err) { setError(apiError(err)) } finally { setSaving(false) } }
-  return <form onSubmit={submit}><div className="form-grid-two"><Input label="Your proposed price (INR)" type="number" min="1" value={form.proposedPrice} onChange={update('proposedPrice')} placeholder="85000" required /><Input label="Estimated days" type="number" min="1" value={form.estimatedDays} onChange={update('estimatedDays')} placeholder="14" /></div><Textarea label="Cover letter" value={form.coverLetter} onChange={update('coverLetter')} placeholder="Tell the customer how you would approach this work." />{error && <ErrorState message={error} />}<Button disabled={saving}>{saving ? 'Submitting…' : 'Submit proposal'} <ArrowRight size={16} /></Button></form>
+  const submit = async (event) => {
+    event.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      await api.post(`/projects/${projectId}/proposals`, form)
+      onDone('Proposal submitted successfully.')
+    } catch (err) {
+      setError(apiError(err))
+    } finally {
+      setSaving(false)
+    }
+  }
+  return (
+    <form onSubmit={submit}>
+      <div className="form-grid-two">
+        <Input label="Your proposed price (INR)" type="number" min="1" value={form.proposedPrice} onChange={update('proposedPrice')} placeholder="85000" required />
+        <Input label="Estimated days" type="number" min="1" value={form.estimatedDays} onChange={update('estimatedDays')} placeholder="14" />
+      </div>
+      <Textarea label="Cover letter" value={form.coverLetter} onChange={update('coverLetter')} placeholder="Tell the customer how you would approach this work." />
+      {error && <ErrorState message={error} />}
+      <Button disabled={saving}>{saving ? 'Submitting…' : 'Submit proposal'} <ArrowRight size={16} /></Button>
+    </form>
+  )
 }
 
 function ProposalRow({ proposal, customer = false, onDone }) {
   const [busy, setBusy] = useState(false)
-  const action = async (status) => { setBusy(true); try { await api.patch(`/proposals/${proposal.id}`, { status }); onDone(status === 'ACCEPTED' ? 'Proposal accepted. A contract was created.' : status === 'REJECTED' ? 'Proposal rejected.' : 'Proposal withdrawn.') } catch (err) { onDone(apiError(err)) } finally { setBusy(false) } }
-  return <div className="proposal-row"><Avatar name={proposal.freelancerProfile?.user?.name} size="sm" /><div className="proposal-row-copy"><strong>{proposal.freelancerProfile?.user?.name || proposal.project?.title || 'Proposal'}</strong><span>{customer ? `${proposal.freelancerProfile?.user?.professionalTitle || 'Freelancer'} · ${currency(proposal.proposedPrice)}` : `${proposal.project?.title || 'Project'} · ${currency(proposal.proposedPrice)}`}</span>{proposal.coverLetter && <p>{proposal.coverLetter}</p>}</div><StatusBadge value={proposal.status} />{customer && proposal.status === 'PENDING' && <div className="row-actions"><button disabled={busy} className="icon-button success-icon" onClick={() => action('ACCEPTED')}><Check size={16} /></button><button disabled={busy} className="icon-button danger-icon" onClick={() => action('REJECTED')}><X size={16} /></button></div>}{!customer && proposal.status === 'PENDING' && <Button variant="outline" className="button-small" disabled={busy} onClick={() => action('WITHDRAWN')}>Withdraw</Button>}</div>
+  const action = async (status) => {
+    setBusy(true)
+    try {
+      await api.patch(`/proposals/${proposal.id}`, { status })
+      onDone(status === 'ACCEPTED' ? 'Proposal accepted. A contract was created.' : status === 'REJECTED' ? 'Proposal rejected.' : 'Proposal withdrawn.')
+    } catch (err) {
+      onDone(apiError(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div className="proposal-row">
+      <Avatar name={proposal.freelancerProfile?.user?.name} size="sm" />
+      <div className="proposal-row-copy">
+        <strong>{proposal.freelancerProfile?.user?.name || proposal.project?.title || 'Proposal'}</strong>
+        <span>{customer ? `${proposal.freelancerProfile?.user?.professionalTitle || 'Freelancer'} · ${currency(proposal.proposedPrice)}` : `${proposal.project?.title || 'Project'} · ${currency(proposal.proposedPrice)}`}</span>
+        {proposal.coverLetter && <p>{proposal.coverLetter}</p>}
+      </div>
+      <StatusBadge value={proposal.status} />
+      {customer && proposal.status === 'PENDING' && (
+        <div className="row-actions">
+          <button disabled={busy} className="icon-button success-icon" onClick={() => action('ACCEPTED')} title="Accept proposal">
+            <Check size={16} />
+          </button>
+          <button disabled={busy} className="icon-button danger-icon" onClick={() => action('REJECTED')} title="Reject proposal">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      {!customer && proposal.status === 'PENDING' && (
+        <Button variant="outline" className="button-small" disabled={busy} onClick={() => action('WITHDRAWN')}>
+          Withdraw
+        </Button>
+      )}
+    </div>
+  )
 }
 
 function FreelancersPage() {
@@ -415,11 +1175,13 @@ function DataPage({ kind, endpoint, title, description, renderItem, emptyTitle, 
 }
 
 function ProposalsPage() {
-  return <DataPage kind="proposals" endpoint="/proposals/mine" title="Proposals for your projects." description="Review incoming freelancer proposals and decide which relationships to move forward." emptyTitle="No proposals yet" emptyDescription="Proposals received on your open projects will appear here." renderItem={(proposal) => <><Avatar name={proposal.freelancerProfile?.user?.name} size="sm" /><div className="data-row-copy"><strong>{proposal.freelancerProfile?.user?.name || 'Freelancer'}</strong><span>{proposal.project?.title || 'Project'} · {currency(proposal.proposedPrice)}{proposal.estimatedDays ? ` · ${proposal.estimatedDays} days` : ''}</span><small>{proposal.coverLetter || 'No cover letter provided.'}</small></div><StatusBadge value={proposal.status} /><Link className="button button-outline button-small" to={`/project/${proposal.projectId}`}>View</Link></>}/>
+  const { user } = useAuth()
+  return <DataPage kind="proposals" endpoint="/proposals/mine" title="Proposals for your projects." description="Review incoming freelancer proposals and decide which relationships to move forward." emptyTitle="No proposals yet" emptyDescription="Proposals received on your open projects will appear here." renderItem={(proposal) => <><Avatar name={proposal.freelancerProfile?.user?.name} size="sm" /><div className="data-row-copy"><strong>{proposal.freelancerProfile?.user?.name || 'Freelancer'}</strong><span>{proposal.project?.title || 'Project'} · {currency(proposal.proposedPrice)}{proposal.estimatedDays ? ` · ${proposal.estimatedDays} days` : ''}</span><small>{proposal.coverLetter || 'No cover letter provided.'}</small></div><StatusBadge value={proposal.status} /><Link className="button button-outline button-small" to={user?.role === 'CUSTOMER' ? `/customer/projects/${proposal.projectId}` : `/project/${proposal.projectId}`}>View</Link></>}/>
 }
 
 function ContractsPage() {
-  return <DataPage kind="contracts" endpoint="/contracts/mine" title="Contracts and engagements." description="Keep agreed scope, counterparties, and delivery status in one clear view." emptyTitle="No contracts yet" emptyDescription="Accepted proposals will create contracts that appear here." renderItem={(contract) => <><Avatar name={contract.freelancer?.name} size="sm" /><div className="data-row-copy"><strong>{contract.project?.title || 'Contract'}</strong><span>{contract.freelancer?.name || 'Freelancer'} · {currency(contract.agreedAmount)}</span><small>{dateLabel(contract.startDate)}{contract.endDate ? ` — ${dateLabel(contract.endDate)}` : ''}</small></div><StatusBadge value={contract.status} /><Link className="button button-outline button-small" to={`/project/${contract.projectId}`}>Open</Link></>}/>
+  const { user } = useAuth()
+  return <DataPage kind="contracts" endpoint="/contracts/mine" title="Contracts and engagements." description="Keep agreed scope, counterparties, and delivery status in one clear view." emptyTitle="No contracts yet" emptyDescription="Accepted proposals will create contracts that appear here." renderItem={(contract) => <><Avatar name={contract.freelancer?.name} size="sm" /><div className="data-row-copy"><strong>{contract.project?.title || 'Contract'}</strong><span>{contract.freelancer?.name || 'Freelancer'} · {currency(contract.agreedAmount)}</span><small>{dateLabel(contract.startDate)}{contract.endDate ? ` — ${dateLabel(contract.endDate)}` : ''}</small></div><StatusBadge value={contract.status} /><Link className="button button-outline button-small" to={user?.role === 'CUSTOMER' ? `/customer/projects/${contract.projectId}` : `/project/${contract.projectId}`}>Open</Link></>}/>
 }
 
 function MessagesPage() {
@@ -623,15 +1385,30 @@ function RouteView({ path }) {
   const { user } = useAuth()
   const prefix = `/${user?.role?.toLowerCase()}`
   if (path === `${prefix}/dashboard`) return <DashboardPage />
+
+  // Customer project detail
+  const customerProjectMatch = path.match(/^\/customer\/projects\/([^/]+)$/)
+  if (customerProjectMatch) {
+    return <CustomerProjectDetail projectId={customerProjectMatch[1]} />
+  }
+
+  // Customer projects list
   if (path === '/customer/projects') return <ProjectsPage mine />
   if (path === '/customer/freelancers') return <FreelancersPage />
-  if (path.endsWith('/projects') && user.role === 'FREELANCER') return <ProjectsPage />
+
+  // Freelancer project detail
+  const freelancerProjectMatch = path.match(/^\/freelancer\/projects\/([^/]+)$/)
+  if (freelancerProjectMatch && user?.role === 'FREELANCER') {
+    return <ProjectDetail projectId={freelancerProjectMatch[1]} />
+  }
+
+  if (path.endsWith('/projects') && user?.role === 'FREELANCER') return <ProjectsPage />
   if (path.endsWith('/proposals')) return <ProposalsPage />
   if (path.endsWith('/contracts')) return <ContractsPage />
   if (path.endsWith('/messages')) return <MessagesPage />
   if (path.endsWith('/payments')) return <PaymentsPage />
   if (path.endsWith('/reviews')) return <ReviewsPage />
-  if (path.endsWith('/reports')) return user.role === 'ADMIN' ? <AdminReportsPage /> : <ReportsPage />
+  if (path.endsWith('/reports')) return user?.role === 'ADMIN' ? <AdminReportsPage /> : <ReportsPage />
   if (path.endsWith('/portfolio')) return <PortfolioPage />
   if (path.endsWith('/profile')) return <ProfilePage />
   if (path.endsWith('/settings')) return <SettingsPage />
