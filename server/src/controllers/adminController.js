@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
  */
 export const getUsers = async (req, res) => {
   try {
-    const { role, status } = req.query
+    const { role, status, search } = req.query
 
     // Filter assembly
     const where = {}
@@ -16,6 +16,13 @@ export const getUsers = async (req, res) => {
     }
     if (status && ['ACTIVE', 'BLOCKED'].includes(status.toUpperCase())) {
       where.status = status.toUpperCase()
+    }
+    if (search?.trim()) {
+      where.OR = [
+        { name: { contains: search.trim() } },
+        { email: { contains: search.trim() } },
+        { professionalTitle: { contains: search.trim() } }
+      ]
     }
 
     // Fetch and exclude password hash

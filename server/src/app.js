@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import authRoutes from './routes/authRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
+import marketplaceRoutes from './routes/marketplaceRoutes.js'
 
 const app = express()
 
@@ -14,7 +15,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/admin', adminRoutes)
 
-// API Health check endpoint
+// API Health check endpoint stays public.
 app.get('/api/v1/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -22,6 +23,8 @@ app.get('/api/v1/health', (req, res) => {
     timestamp: new Date().toISOString()
   })
 })
+
+app.use('/api/v1', marketplaceRoutes)
 
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {

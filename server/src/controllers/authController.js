@@ -152,7 +152,8 @@ export const registerFreelancer = async (req, res) => {
         passwordHash,
         role: 'FREELANCER',
         status: 'ACTIVE',
-        professionalTitle
+        professionalTitle,
+        freelancerProfile: { create: {} }
       }
     })
 
@@ -275,3 +276,67 @@ export const getMe = async (req, res) => {
     })
   }
 }
+
+/**
+ * Change authenticated user's password
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'All password fields are required'
+      })
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long'
+      })
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'New passwords do not match'
+      })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } })
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found'
+      })
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash)
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Incorrect current password'
+      })
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { passwordHash }
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password updated successfully'
+    })
+  } catch (error) {
+    console.error('ChangePassword Error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred while changing password'
+    })
+  }
+}
+
