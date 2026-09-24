@@ -1,12 +1,21 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  ArrowRight, BarChart3, BriefcaseBusiness, Building2, Check, ChevronRight, CircleDollarSign, Flag,
+  ArrowRight, BarChart3, BriefcaseBusiness, Building2, Check, ChevronRight, CircleDollarSign, ExternalLink, Flag,
   Clock3, FolderKanban, HeartHandshake, LayoutDashboard, LogIn, LogOut, Menu, MessageSquare,
-  MoreHorizontal, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, Star, Tag, UserRound,
+  MoreHorizontal, Pencil, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, Star, Tag, Trash2, UserRound,
   Users, X, Zap
 } from 'lucide-react'
 import api from './services/api'
+import FreelancerDashboard from './pages/freelancer/FreelancerDashboard'
+import {
+  FreelancerContractsPage,
+  FreelancerMyProjectsPage,
+  FreelancerPaymentsPage,
+  FreelancerProposalsPage,
+  FreelancerReportsPage,
+  FreelancerReviewsPage
+} from './pages/freelancer/FreelancerWorkspacePages'
 import './index.css'
 
 const AuthContext = createContext(null)
@@ -16,6 +25,10 @@ const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN',
 const titleCase = (value) => String(value || '').replaceAll('_', ' ').toLowerCase().replace(/(^|\s)\S/g, (letter) => letter.toUpperCase())
 const getHome = (user) => user?.role === 'ADMIN' ? '/admin/dashboard' : user?.role === 'CUSTOMER' ? '/customer/dashboard' : '/freelancer/dashboard'
 const unwrap = (response) => response?.data?.data ?? response?.data ?? response
+const validRecordId = (value) => {
+  const id = Number(value)
+  return Number.isSafeInteger(id) && id > 0 ? id : null
+}
 const apiError = (error) => error?.response?.data?.message || error?.message || 'Something went wrong. Please try again.'
 
 function AuthProvider({ children }) {
@@ -189,7 +202,7 @@ function AuthPage({ registerRole }) {
 }
 
 const customerNav = [['Dashboard', '/customer/dashboard', LayoutDashboard], ['My projects', '/customer/projects', FolderKanban], ['Find freelancers', '/customer/freelancers', Users], ['Proposals', '/customer/proposals', BriefcaseBusiness], ['Contracts', '/customer/contracts', ShieldCheck], ['Messages', '/customer/messages', MessageSquare], ['Payments', '/customer/payments', CircleDollarSign], ['Reviews', '/customer/reviews', Star], ['Reports', '/customer/reports', FlagIcon], ['Profile', '/customer/profile', UserRound], ['Settings', '/customer/settings', SlidersHorizontal]]
-const freelancerNav = [['Dashboard', '/freelancer/dashboard', LayoutDashboard], ['Find work', '/freelancer/projects', Search], ['My proposals', '/freelancer/proposals', BriefcaseBusiness], ['Contracts', '/freelancer/contracts', ShieldCheck], ['Portfolio', '/freelancer/portfolio', Sparkles], ['Messages', '/freelancer/messages', MessageSquare], ['Payments', '/freelancer/payments', CircleDollarSign], ['Reviews', '/freelancer/reviews', Star], ['Reports', '/freelancer/reports', FlagIcon], ['Profile', '/freelancer/profile', UserRound], ['Settings', '/freelancer/settings', SlidersHorizontal]]
+const freelancerNav = [['Dashboard', '/freelancer/dashboard', LayoutDashboard], ['Find work', '/freelancer/projects', Search], ['My projects', '/freelancer/my-projects', FolderKanban], ['My proposals', '/freelancer/proposals', BriefcaseBusiness], ['Contracts', '/freelancer/contracts', ShieldCheck], ['Portfolio', '/freelancer/portfolio', Sparkles], ['Messages', '/freelancer/messages', MessageSquare], ['Payments', '/freelancer/payments', CircleDollarSign], ['Reviews', '/freelancer/reviews', Star], ['Reports', '/freelancer/reports', FlagIcon], ['Profile', '/freelancer/profile', UserRound], ['Settings', '/freelancer/settings', SlidersHorizontal]]
 const adminNav = [['Overview', '/admin/dashboard', LayoutDashboard], ['Users', '/admin/users', Users], ['Projects', '/admin/projects', FolderKanban], ['Moderation', '/admin/reports', ShieldCheck], ['Catalog', '/admin/catalog', Tag], ['Payments', '/admin/payments', CircleDollarSign]]
 function FlagIcon(props) { return <Flag size={17} {...props} /> }
 
@@ -198,7 +211,50 @@ function AppShell({ children }) {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const nav = user?.role === 'ADMIN' ? adminNav : user?.role === 'CUSTOMER' ? customerNav : freelancerNav
-  return <div className="app-shell"><aside className={`sidebar ${open ? 'sidebar-open' : ''}`}><div className="sidebar-top"><Link className="brand" to={getHome(user)} onClick={() => setOpen(false)}><span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span></Link><button className="sidebar-close" onClick={() => setOpen(false)}><X size={18} /></button></div><div className="workspace-label">{user?.role === 'ADMIN' ? 'Operations' : 'Workspace'}</div><nav className="side-nav">{nav.map(([label, path, Icon]) => <Link key={path} className={location.pathname === path || (path !== getHome(user) && location.pathname.startsWith(path)) ? 'active' : ''} to={path} onClick={() => setOpen(false)}><Icon size={18} /><span>{label}</span>{label === 'Messages' && <span className="nav-dot" />}</Link>)}</nav><div className="sidebar-bottom"><div className="side-privacy"><ShieldCheck size={16} /><span><strong>Secure workspace</strong><small>Your data stays yours.</small></span></div><button className="logout-link" onClick={logout}><LogOut size={17} /> Sign out</button></div></aside><div className="shell-content"><header className="shell-header"><button className="mobile-menu" onClick={() => setOpen(true)}><Menu size={20} /></button><div className="header-context"><span className="header-kicker">{user?.role === 'ADMIN' ? 'FreelanceHub operations' : 'Good work starts here'}</span><strong>{user?.role === 'ADMIN' ? 'Platform overview' : `Welcome back, ${user?.name?.split(' ')[0]}`}</strong></div><div className="header-actions"><Link className="icon-button" to={user?.role === 'FREELANCER' ? '/freelancer/messages' : user?.role === 'CUSTOMER' ? '/customer/messages' : '/admin/reports'}><MessageSquare size={18} /><span className="header-dot" /></Link><Link className="user-chip" to={`/${user?.role?.toLowerCase()}/profile`}><Avatar name={user?.name} size="sm" /><span className="user-chip-copy"><strong>{user?.name}</strong><small>{roleLabel[user?.role]}</small></span><ChevronRight size={15} /></Link></div></header><main className="shell-main">{children}</main></div></div>
+  const messagesPath = user?.role === 'FREELANCER' ? '/freelancer/messages' : user?.role === 'CUSTOMER' ? '/customer/messages' : '/admin/reports'
+
+  return (
+    <div className="app-shell">
+      <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+        <div className="sidebar-top">
+          <Link className="brand" to={getHome(user)} onClick={() => setOpen(false)}>
+            <span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span>
+          </Link>
+          <button className="sidebar-close" aria-label="Close navigation" onClick={() => setOpen(false)}><X size={18} /></button>
+        </div>
+        <div className="workspace-label">{user?.role === 'ADMIN' ? 'Operations' : 'Workspace'}</div>
+        <nav className="side-nav" aria-label="Workspace navigation">
+          {nav.map(([label, path, Icon]) => (
+            <Link key={path} className={location.pathname === path || (path !== getHome(user) && location.pathname.startsWith(path)) ? 'active' : ''} to={path} onClick={() => setOpen(false)}>
+              <Icon size={18} /><span>{label}</span>{label === 'Messages' && user?.role !== 'FREELANCER' && <span className="nav-dot" />}
+            </Link>
+          ))}
+        </nav>
+        <div className="sidebar-bottom">
+          <div className="side-privacy"><ShieldCheck size={16} /><span><strong>Secure workspace</strong><small>Your data stays yours.</small></span></div>
+          <button className="logout-link" onClick={logout}><LogOut size={17} /> Sign out</button>
+        </div>
+      </aside>
+      <div className="shell-content">
+        <header className="shell-header">
+          <button className="mobile-menu" aria-label="Open navigation" onClick={() => setOpen(true)}><Menu size={20} /></button>
+          <div className="header-context">
+            <span className="header-kicker">{user?.role === 'ADMIN' ? 'FreelanceHub operations' : 'Good work starts here'}</span>
+            <strong>{user?.role === 'ADMIN' ? 'Platform overview' : `Welcome back, ${user?.name?.split(' ')[0]}`}</strong>
+          </div>
+          <div className="header-actions">
+            <Link className="icon-button" aria-label="Open messages" to={messagesPath}>
+              <MessageSquare size={18} />{user?.role !== 'FREELANCER' && <span className="header-dot" />}
+            </Link>
+            <Link className="user-chip" to={`/${user?.role?.toLowerCase()}/profile`}>
+              <Avatar name={user?.name} size="sm" /><span className="user-chip-copy"><strong>{user?.name}</strong><small>{roleLabel[user?.role]}</small></span><ChevronRight size={15} />
+            </Link>
+          </div>
+        </header>
+        <main className="shell-main">{children}</main>
+      </div>
+    </div>
+  )
 }
 
 function PageIntro({ eyebrow, title, description, action }) {
@@ -242,21 +298,34 @@ function DashboardPage() {
 function ActivityRow({ item, type }) {
   const { user } = useAuth()
   const project = type === 'project' ? item : item.project
-  const targetId = project?.id || item.projectId
-  const destination = user?.role === 'CUSTOMER' && targetId ? `/customer/projects/${targetId}` : `/project/${targetId || ''}`
-  return <Link to={destination} className="activity-row"><div className="activity-avatar"><FolderKanban size={17} /></div><div className="activity-copy"><strong>{project?.title || 'Untitled project'}</strong><span>{type === 'proposal' ? `Proposed ${currency(item.proposedPrice)}` : `${project?.category?.name || 'Marketplace'} · ${dateLabel(project?.createdAt)}`}</span></div><StatusBadge value={item.status || project?.status || 'OPEN'} /><ChevronRight size={16} className="row-chevron" /></Link>
+  const targetId = validRecordId(project?.id || item.projectId)
+  const destination = !targetId ? null : user?.role === 'CUSTOMER'
+    ? `/customer/projects/${targetId}`
+    : user?.role === 'FREELANCER'
+      ? `/freelancer/projects/${targetId}`
+      : `/project/${targetId}`
+  const content = <><div className="activity-avatar"><FolderKanban size={17} /></div><div className="activity-copy"><strong>{project?.title || 'Untitled project'}</strong><span>{type === 'proposal' ? `Proposed ${currency(item.proposedPrice)}` : `${project?.category?.name || 'Marketplace'} · ${dateLabel(project?.createdAt)}`}</span></div><StatusBadge value={item.status || project?.status || 'OPEN'} /><ChevronRight size={16} className="row-chevron" /></>
+  return destination ? <Link to={destination} className="activity-row">{content}</Link> : <div className="activity-row">{content}</div>
 }
 
 function ProjectCard({ project }) {
   const { user } = useAuth()
-  const detailUrl = user?.role === 'CUSTOMER' && project.client?.id === user.id
-    ? `/customer/projects/${project.id}`
-    : `/project/${project.id}`
-  return <Link className="project-card" to={detailUrl}><div className="card-topline"><span className="category-label">{project.category?.name || 'Independent project'}</span><StatusBadge value={project.status} /></div><h3>{project.title}</h3><p>{String(project.description || '').slice(0, 110)}{String(project.description || '').length > 110 ? '…' : ''}</p><div className="tag-row">{(project.requiredSkills || []).slice(0, 3).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div><div className="card-footer"><span><strong>{currency(project.budget)}</strong><small> budget</small></span><span>{project._count?.proposals ?? 0} proposals <ChevronRight size={14} /></span></div></Link>
+  const projectId = validRecordId(project?.id)
+  const detailUrl = !projectId ? null : user?.role === 'FREELANCER'
+    ? `/freelancer/projects/${projectId}`
+    : user?.role === 'CUSTOMER' && project.client?.id === user.id
+      ? `/customer/projects/${projectId}`
+      : `/project/${projectId}`
+  const content = <><div className="card-topline"><span className="category-label">{project.category?.name || 'Independent project'}</span><StatusBadge value={project.status} /></div><h3>{project.title}</h3><p>{String(project.description || '').slice(0, 110)}{String(project.description || '').length > 110 ? '…' : ''}</p>{user?.role === 'FREELANCER' && <div className="project-card-client"><span>{project.client?.customerProfile?.companyName || project.client?.name || 'Customer'}</span><span>Posted {dateLabel(project.createdAt)}</span></div>}<div className="tag-row">{(project.requiredSkills || []).slice(0, 3).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div><div className="card-footer"><span><strong>{currency(project.budget)}</strong><small> budget</small></span><span>{project._count?.proposals ?? 0} proposals <ChevronRight size={14} /></span></div></>
+  return detailUrl ? <Link className="project-card" to={detailUrl}>{content}</Link> : <article className="project-card">{content}</article>
 }
 
 function FreelancerCard({ profile }) {
-  return <Link className="freelancer-card" to={`/freelancer/${profile.id}`}><div className="freelancer-card-top"><Avatar name={profile.user?.name} /><span className="availability-dot" /></div><h3>{profile.user?.name || 'Freelancer'}</h3><p>{profile.user?.professionalTitle || 'Independent professional'}</p><div className="talent-meta"><span><Star size={14} fill="currentColor" /> 4.9</span><span>{currency(profile.hourlyRate)} / hr</span></div><div className="tag-row">{(profile.skills || []).slice(0, 3).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div></Link>
+  const profileId = validRecordId(profile?.id)
+  const availabilityClass = profile.availability === 'NOT_AVAILABLE' || !profile.availability ? 'availability-dot unavailable' : 'availability-dot'
+  const availabilityLabel = profile.availability ? titleCase(profile.availability) : 'Availability not provided'
+  const content = <><div className="freelancer-card-top"><Avatar name={profile.user?.name} /><span className={availabilityClass} aria-label={availabilityLabel} title={availabilityLabel} /></div><h3>{profile.user?.name || 'Freelancer'}</h3><p>{profile.user?.professionalTitle || 'Independent professional'}</p><div className="talent-meta"><span><Clock3 size={14} /> {availabilityLabel}</span><span>{currency(profile.hourlyRate)} / hr</span></div><div className="tag-row">{(profile.skills || []).slice(0, 3).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div></>
+  return profileId ? <Link className="freelancer-card" to={`/freelancer/${profileId}`}>{content}</Link> : <article className="freelancer-card">{content}</article>
 }
 
 function Filters({ kind, values, setValues, categories, skills }) {
@@ -410,7 +479,7 @@ function ProjectsPage({ mine = false }) {
       {state.loading ? (
         <LoadingInline />
       ) : state.error ? (
-        <ErrorState message={state.error} />
+        <ErrorState message={user?.role === 'FREELANCER' ? 'We could not load open projects right now. Please try again.' : state.error} />
       ) : (
         <>
           <div className="result-summary">
@@ -810,6 +879,7 @@ function ProjectDetail({ projectId: propId }) {
   const validId = Number.isInteger(Number(rawId)) && Number(rawId) > 0 ? Number(rawId) : null
   const state = useFetch(validId ? `/projects/${validId}` : '')
   const proposalState = useFetch(validId && user?.role === 'CUSTOMER' ? `/projects/${validId}/proposals` : '')
+  const ownProposalsState = useFetch(user?.role === 'FREELANCER' ? '/proposals/mine' : '')
   const [message, setMessage] = useState('')
 
   if (!validId) {
@@ -852,6 +922,9 @@ function ProjectDetail({ projectId: propId }) {
 
   const project = state.data
   const proposals = proposalState.data || []
+  const freelancerProposal = user?.role === 'FREELANCER'
+    ? (ownProposalsState.data || []).find((proposal) => Number(proposal.projectId || proposal.project?.id) === validId)
+    : null
   const isOwner = user && user.id === project.client?.id
 
   return (
@@ -907,11 +980,24 @@ function ProjectDetail({ projectId: propId }) {
 
             {message && <div className="success-banner"><Check size={17} />{message}</div>}
 
-            {user?.role === 'FREELANCER' && project.status === 'OPEN' ? (
+            {user?.role === 'FREELANCER' && project.status === 'OPEN' && ownProposalsState.loading ? (
+              <LoadingInline />
+            ) : user?.role === 'FREELANCER' && project.status === 'OPEN' && ownProposalsState.error ? (
+              <div className="inline-callout" role="alert">
+                We could not confirm whether you have already applied. Please retry before submitting a proposal.
+                <button className="button button-outline button-small" type="button" onClick={ownProposalsState.refetch}>Try again</button>
+              </div>
+            ) : user?.role === 'FREELANCER' && project.status === 'OPEN' && freelancerProposal ? (
+              <div className="inline-callout">
+                You submitted a proposal for this project. Current status: <StatusBadge value={freelancerProposal.status} />
+                <Link to="/freelancer/proposals">View your proposals <ArrowRight size={14} /></Link>
+              </div>
+            ) : user?.role === 'FREELANCER' && project.status === 'OPEN' ? (
               <ProposalForm
                 projectId={project.id}
                 onDone={(text) => {
                   setMessage(text)
+                  ownProposalsState.refetch()
                   state.refetch()
                 }}
               />
@@ -1111,7 +1197,7 @@ function FreelancerDetail() {
             <div className="eyebrow">Independent freelancer</div>
             <h1>{profile.user?.name}</h1>
             <h3>{profile.user?.professionalTitle || 'Independent professional'}</h3>
-            <div className="profile-location">{profile.location || 'India'} · {titleCase(profile.availability)}</div>
+            <div className="profile-location">{profile.location || 'Location not provided'} · {titleCase(profile.availability) || 'Availability not provided'}</div>
           </div>
           <div className="profile-actions">
             <Button onClick={startConversation}><MessageSquare size={16} /> Start a conversation</Button>
@@ -1228,49 +1314,138 @@ function ProfilePage() {
   const [form, setForm] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!state.loading) {
+    if (!state.loading && !state.error) {
       const profile = state.data || {}
       setForm({
         name: profile.user?.name || user?.name || '',
         professionalTitle: profile.user?.professionalTitle || user?.professionalTitle || '',
         bio: profile.bio || '',
-        hourlyRate: profile.hourlyRate || '',
+        hourlyRate: profile.hourlyRate ?? '',
         experienceLevel: profile.experienceLevel || 'INTERMEDIATE',
         location: profile.location || '',
         availability: profile.availability || 'FULL_TIME',
         skillIds: (profile.skills || []).map(({ skill }) => skill.id)
       })
     }
-  }, [state.loading, state.data, user])
+  }, [state.loading, state.error, state.data, user])
 
-  if (state.loading || !form) return <LoadingInline />
-  const update = (key) => (event) => setForm({ ...form, [key]: event.target.value })
-  const toggleSkill = (id) => setForm({ ...form, skillIds: form.skillIds.includes(id) ? form.skillIds.filter((item) => item !== id) : [...form.skillIds, id] })
+  if (state.loading) return <LoadingInline />
+  if (state.error && !state.data) {
+    return <><PageIntro eyebrow="Professional identity" title="Your profile" description="Your authenticated profile is looked up from your user account." /><div className="panel" role="alert"><ErrorState message="We could not load your freelancer profile. Your dashboard is still available." /><Button variant="outline" onClick={state.refetch}>Try again</Button></div></>
+  }
+  if (!form) return <LoadingInline />
+
+  const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }))
+  const toggleSkill = (id) => setForm((current) => ({ ...current, skillIds: current.skillIds.includes(id) ? current.skillIds.filter((item) => item !== id) : [...current.skillIds, id] }))
   const save = async (event) => {
-    event.preventDefault(); setError(''); setMessage('')
-    try { await api.patch('/profile', form); await refresh(); setMessage('Profile updated successfully.') }
-    catch (err) { setError(apiError(err)) }
+    event.preventDefault(); setError(''); setMessage(''); setSaving(true)
+    try {
+      const response = await api.patch('/profile', form)
+      state.setData(unwrap(response))
+      await refresh()
+      setMessage('Profile updated successfully.')
+    } catch (err) { setError('We could not save your profile. Check the selected fields and try again.') }
+    finally { setSaving(false) }
   }
   const hasBio = Boolean(form.bio.trim())
   const hasSkills = form.skillIds.length > 0
   const hasPortfolio = Boolean(state.data?.portfolioProjects?.length)
   const completion = 25 + (hasBio ? 25 : 0) + (hasSkills ? 25 : 0) + (hasPortfolio ? 25 : 0)
   const missing = !hasBio ? 'Add your professional bio' : !hasSkills ? 'Add skills to improve discoverability' : !hasPortfolio ? 'Add a portfolio project' : 'Your profile is complete'
+  const freelancerProfileId = validRecordId(state.data?.id)
 
-  return <><PageIntro eyebrow="Professional identity" title="Make your profile work harder." description="Give clients the context they need to understand your expertise and choose you with confidence." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={save}><div className="panel-heading"><div><span className="panel-eyebrow">Profile completion</span><h2>{completion}% complete</h2></div><span className="required-note">{missing}</span></div><div className="progress" style={{ marginBottom: '22px' }}><span style={{ width: `${completion}%` }} /></div><Input label="Full name" value={form.name} onChange={update('name')} required /><Input label="Professional title" value={form.professionalTitle} onChange={update('professionalTitle')} required /><Textarea label="Professional bio" value={form.bio} onChange={update('bio')} placeholder="Describe your strengths, experience, and the problems you solve." /><div className="form-grid-two"><Select label="Experience level" value={form.experienceLevel} onChange={update('experienceLevel')}><option value="ENTRY">Entry</option><option value="INTERMEDIATE">Intermediate</option><option value="EXPERT">Expert</option></Select><Input label="Hourly rate (INR)" type="number" min="0" value={form.hourlyRate} onChange={update('hourlyRate')} placeholder="2500" /></div><div className="form-grid-two"><Select label="Availability" value={form.availability} onChange={update('availability')}><option value="FULL_TIME">Full time</option><option value="PART_TIME">Part time</option><option value="NOT_AVAILABLE">Not available</option></Select><Input label="Location" value={form.location} onChange={update('location')} placeholder="Bengaluru, India" /></div><div className="field"><span>Skills from the live database</span><div className="check-grid">{(skills.data || []).map((skill) => <button type="button" className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => toggleSkill(skill.id)}><Check size={13} />{skill.name}</button>)}</div></div><div className="form-actions"><Button>Save profile <Check size={16} /></Button></div></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Profile signal</span><h2>What clients will see</h2></div><Avatar name={form.name} size="sm" /></div><div className="profile-facts"><div><span>Professional title</span><strong>{form.professionalTitle || 'Add a title'}</strong></div><div><span>Experience</span><strong>{titleCase(form.experienceLevel)}</strong></div><div><span>Availability</span><strong>{titleCase(form.availability)}</strong></div><div><span>Portfolio</span><strong>{hasPortfolio ? `${state.data.portfolioProjects.length} project(s)` : 'Add your first project'}</strong></div></div><Link className="button button-outline button-full" to={`/freelancer/${state.data?.id || ''}`} style={{ marginTop: '20px' }}>Preview public profile <ArrowRight size={15} /></Link></section></div></>
+  return <><PageIntro eyebrow="Professional identity" title="Make your profile work harder." description="Give clients the context they need to understand your expertise and choose you with confidence." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={save}><div className="panel-heading"><div><span className="panel-eyebrow">Profile completion</span><h2>{completion}% complete</h2></div><span className="required-note">{missing}</span></div><div className="progress" style={{ marginBottom: '22px' }}><span style={{ width: `${completion}%` }} /></div><Input label="Full name" value={form.name} onChange={update('name')} required /><Input label="Professional title" value={form.professionalTitle} onChange={update('professionalTitle')} required /><Textarea label="Professional bio" value={form.bio} onChange={update('bio')} placeholder="Describe your strengths, experience, and the problems you solve." /><div className="form-grid-two"><Select label="Experience level" value={form.experienceLevel} onChange={update('experienceLevel')}><option value="ENTRY">Entry</option><option value="INTERMEDIATE">Intermediate</option><option value="EXPERT">Expert</option></Select><Input label="Hourly rate (INR)" type="number" min="0" value={form.hourlyRate} onChange={update('hourlyRate')} placeholder="2500" /></div><div className="form-grid-two"><Select label="Availability" value={form.availability} onChange={update('availability')}><option value="FULL_TIME">Full time</option><option value="PART_TIME">Part time</option><option value="NOT_AVAILABLE">Not available</option></Select><Input label="Location" value={form.location} onChange={update('location')} placeholder="Bengaluru, India" /></div><div className="field"><span>Skills from the live database</span>{skills.loading ? <small>Loading skills…</small> : skills.error ? <small role="alert">Skills are temporarily unavailable. Your existing selections are preserved.</small> : skills.data?.length ? <div className="check-grid">{skills.data.map((skill) => <button type="button" aria-pressed={form.skillIds.includes(skill.id)} className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => toggleSkill(skill.id)}><Check size={13} />{skill.name}</button>)}</div> : <small>No skills are available in the catalog yet.</small>}</div><div className="form-actions"><Button disabled={saving}>{saving ? 'Saving…' : 'Save profile'} <Check size={16} /></Button></div></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Profile signal</span><h2>What clients will see</h2></div><Avatar name={form.name} size="sm" /></div><div className="profile-facts"><div><span>Professional title</span><strong>{form.professionalTitle || 'Add a title'}</strong></div><div><span>Experience</span><strong>{titleCase(form.experienceLevel)}</strong></div><div><span>Availability</span><strong>{titleCase(form.availability)}</strong></div><div><span>Location</span><strong>{form.location || 'Not added'}</strong></div><div><span>Hourly rate</span><strong>{form.hourlyRate ? `${currency(form.hourlyRate)} / hour` : 'Not added'}</strong></div><div><span>Portfolio</span><strong>{hasPortfolio ? `${state.data.portfolioProjects.length} project(s)` : 'Add your first project'}</strong></div></div>{freelancerProfileId ? <Link className="button button-outline button-full" to={`/freelancer/${freelancerProfileId}`} style={{ marginTop: '20px' }}>Preview public profile <ArrowRight size={15} /></Link> : <p className="muted" style={{ fontSize: '11px', marginTop: '20px' }}>Save your profile to make your public profile available.</p>}<Link className="text-link" to="/freelancer/portfolio" style={{ marginTop: '15px' }}>Manage portfolio <ArrowRight size={14} /></Link></section></div></>
 }
 
 function PortfolioPage() {
   const state = useFetch('/portfolio')
   const skills = useFetch('/skills')
-  const [form, setForm] = useState({ title: '', description: '', projectUrl: '', skillIds: [] })
+  const emptyForm = { title: '', description: '', projectUrl: '', skillIds: [] }
+  const [form, setForm] = useState(emptyForm)
+  const [editingId, setEditingId] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const submit = async (event) => { event.preventDefault(); setError(''); try { await api.post('/portfolio', form); setMessage('Portfolio project added.'); setForm({ title: '', description: '', projectUrl: '', skillIds: [] }); window.location.reload() } catch (err) { setError(apiError(err)) } }
-  const remove = async (id) => { if (!window.confirm('Delete this portfolio project?')) return; try { await api.delete(`/portfolio/${id}`); window.location.reload() } catch (err) { setError(apiError(err)) } }
-  return <><PageIntro eyebrow="Proof of work" title="Show clients what you can do." description="Publish real work from your career. Portfolio changes are saved to your FreelancerProfile relationships." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={submit}><div className="panel-heading"><div><span className="panel-eyebrow">New portfolio project</span><h2>Add a strong example.</h2></div></div><Input label="Title" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="e.g. Fintech onboarding redesign" required /><Textarea label="Description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="What did you make, and what changed because of it?" /><Input label="Project URL" type="url" value={form.projectUrl} onChange={(event) => setForm({ ...form, projectUrl: event.target.value })} placeholder="https://…" /><div className="field"><span>Skills used</span><div className="check-grid">{(skills.data || []).map((skill) => <button type="button" className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => setForm({ ...form, skillIds: form.skillIds.includes(skill.id) ? form.skillIds.filter((id) => id !== skill.id) : [...form.skillIds, skill.id] })}><Check size={13} />{skill.name}</button>)}</div></div><Button>Add portfolio project <Plus size={16} /></Button></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Published work</span><h2>Your portfolio</h2></div></div>{state.loading ? <LoadingInline /> : state.error ? <ErrorState message={state.error} /> : state.data?.length ? <div className="portfolio-list">{state.data.map((item) => <div className="portfolio-list-item" key={item.id}><div className="portfolio-thumb"><Sparkles size={20} /></div><div style={{ flex: 1 }}><strong>{item.title}</strong><p>{item.description || 'No description added.'}</p><div className="tag-row">{(item.skills || []).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div></div><button className="icon-button danger-icon" onClick={() => remove(item.id)}><X size={16} /></button></div>)}</div> : <EmptyState icon={Sparkles} title="No portfolio projects yet" description="Show clients what you can do — add your first portfolio project." />}</section></div></>
+  const [saving, setSaving] = useState(false)
+
+  const beginEdit = (item) => {
+    const id = validRecordId(item?.id)
+    if (!id) return
+    setEditingId(id)
+    setForm({ title: item.title || '', description: item.description || '', projectUrl: item.projectUrl || '', skillIds: [] })
+    setMessage('')
+    setError('')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setForm(emptyForm)
+    setError('')
+  }
+
+  const submit = async (event) => {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+    setSaving(true)
+    try {
+      const response = editingId
+        ? await api.patch(`/portfolio/${editingId}`, { title: form.title, description: form.description, projectUrl: form.projectUrl })
+        : await api.post('/portfolio', form)
+      const saved = unwrap(response)
+      state.setData((current) => {
+        const existing = Array.isArray(current) ? current : []
+        return editingId
+          ? existing.map((item) => item.id === editingId ? saved : item)
+          : [saved, ...existing.filter((item) => item.id !== saved.id)]
+      })
+      setMessage(editingId ? 'Portfolio project updated.' : 'Portfolio project added.')
+      setEditingId(null)
+      setForm(emptyForm)
+    } catch (err) {
+      setError(err?.response?.status === 403 ? 'You cannot edit this portfolio item.' : 'We could not save this portfolio project. Please review the details and try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const remove = async (value) => {
+    const id = validRecordId(value)
+    if (!id) { setError('This portfolio item has an invalid identifier. Refresh the page and try again.'); return }
+    if (!window.confirm('Delete this portfolio project?')) return
+    setError('')
+    setMessage('')
+    try {
+      await api.delete(`/portfolio/${id}`)
+      state.setData((current) => (Array.isArray(current) ? current.filter((item) => item.id !== id) : []))
+      if (editingId === id) cancelEdit()
+      setMessage('Portfolio project deleted.')
+    } catch (err) {
+      setError(err?.response?.status === 404 ? 'This portfolio project is no longer available.' : 'We could not delete this portfolio project. Please try again.')
+    }
+  }
+
+  return <>
+    <PageIntro eyebrow="Proof of work" title="Show clients what you can build." description="Manage real portfolio projects connected to your freelancer profile." />
+    {message && <div className="success-banner" role="status"><Check size={17} />{message}</div>}
+    {error && <ErrorState message={error} />}
+    <div className="two-column">
+      <form className="panel form-panel" onSubmit={submit}>
+        <div className="panel-heading"><div><span className="panel-eyebrow">{editingId ? 'Edit portfolio project' : 'New portfolio project'}</span><h2>{editingId ? 'Update project details.' : 'Add a project.'}</h2></div></div>
+        <Input label="Title" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Project title" required />
+        <Textarea label="Description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Describe the work and your contribution." />
+        <Input label="Project URL" type="url" value={form.projectUrl} onChange={(event) => setForm({ ...form, projectUrl: event.target.value })} placeholder="https://…" />
+        {!editingId && <div className="field"><span>Skills used</span>{skills.loading ? <small>Loading skills…</small> : skills.error ? <small role="alert">Skills are temporarily unavailable.</small> : skills.data?.length ? <div className="check-grid">{skills.data.map((skill) => <button type="button" aria-pressed={form.skillIds.includes(skill.id)} className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => setForm((current) => ({ ...current, skillIds: current.skillIds.includes(skill.id) ? current.skillIds.filter((id) => id !== skill.id) : [...current.skillIds, skill.id] }))}><Check size={13} />{skill.name}</button>)}</div> : <small>No skills are available in the catalog yet.</small>}</div>}
+        <div className="form-actions"><Button disabled={saving}>{saving ? 'Saving…' : editingId ? 'Save changes' : 'Add portfolio project'} <Check size={16} /></Button>{editingId && <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>}</div>
+      </form>
+      <section className="panel">
+        <div className="panel-heading"><div><span className="panel-eyebrow">Published work</span><h2>Your portfolio</h2></div></div>
+        {state.loading ? <LoadingInline /> : state.error ? <div><ErrorState message="We could not load your portfolio right now." /><Button variant="outline" onClick={state.refetch}>Try again</Button></div> : state.data?.length ? <div className="portfolio-list">{state.data.map((item) => <article className="portfolio-list-item" key={item.id}><div className="portfolio-thumb"><Sparkles size={20} /></div><div className="portfolio-item-copy"><strong>{item.title}</strong><p>{item.description || 'No description added.'}</p><div className="tag-row">{(item.skills || []).map(({ skill }) => <span key={skill.id}>{skill.name}</span>)}</div>{item.projectUrl && <a href={item.projectUrl} target="_blank" rel="noreferrer">View project <ExternalLink size={13} /></a>}</div><div className="portfolio-item-actions"><button className="icon-button" type="button" aria-label={`Edit ${item.title}`} title="Edit project" onClick={() => beginEdit(item)}><Pencil size={15} /></button><button className="icon-button danger-icon" type="button" aria-label={`Delete ${item.title}`} title="Delete project" onClick={() => remove(item.id)}><Trash2 size={15} /></button></div></article>)}</div> : <EmptyState icon={Sparkles} title="No portfolio projects yet" description="Show clients what you can build. Add your first portfolio project." />}
+      </section>
+    </div>
+  </>
 }
 
 function SettingsPage() {
@@ -1384,7 +1559,11 @@ function SettingsPage() {
 function RouteView({ path }) {
   const { user } = useAuth()
   const prefix = `/${user?.role?.toLowerCase()}`
-  if (path === `${prefix}/dashboard`) return <DashboardPage />
+  if (path === `${prefix}/dashboard`) {
+    return user?.role === 'FREELANCER' ? <FreelancerDashboard user={user} /> : <DashboardPage />
+  }
+
+  if (path === '/freelancer/my-projects' && user?.role === 'FREELANCER') return <FreelancerMyProjectsPage />
 
   // Customer project detail
   const customerProjectMatch = path.match(/^\/customer\/projects\/([^/]+)$/)
@@ -1403,12 +1582,12 @@ function RouteView({ path }) {
   }
 
   if (path.endsWith('/projects') && user?.role === 'FREELANCER') return <ProjectsPage />
-  if (path.endsWith('/proposals')) return <ProposalsPage />
-  if (path.endsWith('/contracts')) return <ContractsPage />
+  if (path.endsWith('/proposals')) return user?.role === 'FREELANCER' ? <FreelancerProposalsPage /> : <ProposalsPage />
+  if (path.endsWith('/contracts')) return user?.role === 'FREELANCER' ? <FreelancerContractsPage /> : <ContractsPage />
   if (path.endsWith('/messages')) return <MessagesPage />
-  if (path.endsWith('/payments')) return <PaymentsPage />
-  if (path.endsWith('/reviews')) return <ReviewsPage />
-  if (path.endsWith('/reports')) return user?.role === 'ADMIN' ? <AdminReportsPage /> : <ReportsPage />
+  if (path.endsWith('/payments')) return user?.role === 'FREELANCER' ? <FreelancerPaymentsPage user={user} /> : <PaymentsPage />
+  if (path.endsWith('/reviews')) return user?.role === 'FREELANCER' ? <FreelancerReviewsPage user={user} /> : <ReviewsPage />
+  if (path.endsWith('/reports')) return user?.role === 'ADMIN' ? <AdminReportsPage /> : user?.role === 'FREELANCER' ? <FreelancerReportsPage /> : <ReportsPage />
   if (path.endsWith('/portfolio')) return <PortfolioPage />
   if (path.endsWith('/profile')) return <ProfilePage />
   if (path.endsWith('/settings')) return <SettingsPage />
@@ -1421,8 +1600,40 @@ function RouteView({ path }) {
 
 function WorkspaceRoute() { const location = useLocation(); return <AppShell><RouteView path={location.pathname} /></AppShell> }
 
+const freelancerWorkspaceRoutes = new Set([
+  'dashboard', 'projects', 'my-projects', 'proposals', 'contracts',
+  'messages', 'payments', 'reviews', 'reports', 'portfolio', 'profile', 'settings'
+])
+
+function FreelancerEntryRoute() {
+  const { id = '' } = useParams()
+  if (freelancerWorkspaceRoutes.has(id.toLowerCase())) {
+    return <ProtectedRoute roles={['FREELANCER']}><WorkspaceRoute /></ProtectedRoute>
+  }
+  return <PublicPage><FreelancerDetail /></PublicPage>
+}
+
 function App() {
-  return <BrowserRouter><AuthProvider><Routes><Route path="/" element={<LandingPage />} /><Route path="/login" element={<AuthPage />} /><Route path="/register/customer" element={<AuthPage registerRole="CUSTOMER" />} /><Route path="/register/freelancer" element={<AuthPage registerRole="FREELANCER" />} /><Route path="/projects" element={<PublicPage><ProjectsPage /></PublicPage>} /><Route path="/freelancers" element={<PublicPage><FreelancersPage /></PublicPage>} /><Route path="/project/:id" element={<PublicPage><ProjectDetail /></PublicPage>} /><Route path="/freelancer/:id" element={<PublicPage><FreelancerDetail /></PublicPage>} /><Route path="/customer/*" element={<ProtectedRoute roles={['CUSTOMER']}><WorkspaceRoute /></ProtectedRoute>} /><Route path="/freelancer/*" element={<ProtectedRoute roles={['FREELANCER']}><WorkspaceRoute /></ProtectedRoute>} /><Route path="/admin/*" element={<ProtectedRoute roles={['ADMIN']}><WorkspaceRoute /></ProtectedRoute>} /><Route path="*" element={<RootRedirect />} /></Routes></AuthProvider></BrowserRouter>
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/register/customer" element={<AuthPage registerRole="CUSTOMER" />} />
+          <Route path="/register/freelancer" element={<AuthPage registerRole="FREELANCER" />} />
+          <Route path="/projects" element={<PublicPage><ProjectsPage /></PublicPage>} />
+          <Route path="/freelancers" element={<PublicPage><FreelancersPage /></PublicPage>} />
+          <Route path="/project/:id" element={<PublicPage><ProjectDetail /></PublicPage>} />
+          <Route path="/freelancer/:id" element={<FreelancerEntryRoute />} />
+          <Route path="/customer/*" element={<ProtectedRoute roles={['CUSTOMER']}><WorkspaceRoute /></ProtectedRoute>} />
+          <Route path="/freelancer/*" element={<ProtectedRoute roles={['FREELANCER']}><WorkspaceRoute /></ProtectedRoute>} />
+          <Route path="/admin/*" element={<ProtectedRoute roles={['ADMIN']}><WorkspaceRoute /></ProtectedRoute>} />
+          <Route path="*" element={<RootRedirect />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  )
 }
 function PublicPage({ children }) { return <div className="public-page workspace-public"><PublicNav /><main className="public-main">{children}</main></div> }
 function RootRedirect() { const { user } = useAuth(); return <Navigate to={user ? getHome(user) : '/'} replace /> }

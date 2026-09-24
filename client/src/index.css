@@ -123,6 +123,7 @@ h2 { letter-spacing: -.035em; }
 .card-footer span:last-child { align-items: center; display: flex; gap: 3px; }
 .freelancer-card-top { position: relative; }
 .availability-dot { background: #24a970; border: 3px solid white; border-radius: 50%; bottom: -1px; height: 13px; left: 30px; position: absolute; width: 13px; }
+.availability-dot.unavailable { background: #9ba6b7; }
 .freelancer-card h3 { margin-bottom: 4px; }
 .freelancer-card p { min-height: 0; margin-bottom: 15px; }
 .talent-meta { align-items: center; color: #71809a; display: flex; font-size: 11px; gap: 15px; margin-bottom: 16px; }
@@ -527,3 +528,17 @@ h2 { letter-spacing: -.035em; }
   .table-panel { margin-left: -17px; margin-right: -17px; }
   .admin-report-meta { gap: 10px; }
 }
+
+.portfolio-item-copy { flex: 1; min-width: 0; }
+.portfolio-item-copy > strong { display: block; font-size: 12px; }
+.portfolio-item-copy > p { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 6px 0 9px; }
+.portfolio-item-copy > a { align-items: center; color: var(--blue); display: inline-flex; font-size: 10px; font-weight: 700; gap: 5px; margin-top: 8px; }
+.portfolio-item-copy > a:hover { color: var(--blue-dark); }
+.portfolio-item-actions { display: flex; flex: 0 0 auto; gap: 6px; }
+.portfolio-item-actions .icon-button { cursor: pointer; }
+@media (max-width: 560px) {
+  .portfolio-list-item { flex-wrap: wrap; }
+  .portfolio-item-actions { margin-left: auto; }
+}
+.project-card-client { align-items: center; color: #8b98ad; display: flex; font-size: 9px; justify-content: space-between; margin: -4px 0 12px; gap: 8px; }
+.project-card-client span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

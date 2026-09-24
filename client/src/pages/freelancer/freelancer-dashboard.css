@@ -1,0 +1,118 @@
+.freelancer-dashboard { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.fd-welcome { align-items: center; display: flex; justify-content: space-between; gap: 20px; margin-bottom: 2px; }
+.fd-welcome h1 { font-size: 30px; line-height: 1.2; margin: 10px 0 5px; }
+.fd-welcome p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0; }
+.fd-metrics { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.fd-metric { align-items: flex-start; background: white; border: 1px solid var(--line); border-radius: 11px; color: var(--ink); display: flex; gap: 12px; min-height: 112px; min-width: 0; padding: 16px; position: relative; transition: border-color .16s ease, transform .16s ease; }
+.fd-metric:hover { border-color: #b9c9e8; transform: translateY(-1px); }
+.fd-metric-icon { align-items: center; border-radius: 9px; display: flex; flex: 0 0 36px; height: 36px; justify-content: center; }
+.fd-tone-blue { background: var(--blue-soft); color: var(--blue); }
+.fd-tone-green { background: #e7f8f0; color: var(--green); }
+.fd-tone-amber { background: #fff3dc; color: var(--amber); }
+.fd-metric-copy { display: block; min-width: 0; }
+.fd-metric-copy > span, .fd-metric-copy > strong, .fd-metric-copy > small { display: block; }
+.fd-metric-label { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.fd-metric-copy > strong { font-family: 'Manrope', sans-serif; font-size: 21px; letter-spacing: -.03em; margin: 7px 0 4px; overflow-wrap: anywhere; }
+.fd-metric-copy > small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.fd-metric-arrow { color: #aab5c5; margin-left: auto; margin-top: 2px; }
+.fd-profile-strength { align-items: center; background: #edf3ff; border: 1px solid #d9e5fb; border-radius: 11px; display: flex; gap: 15px; min-width: 0; padding: 15px 18px; }
+.fd-profile-icon { align-items: center; background: white; border-radius: 9px; color: var(--blue); display: flex; flex: 0 0 36px; height: 36px; justify-content: center; }
+.fd-profile-copy { flex: 1; min-width: 0; }
+.fd-profile-title { align-items: center; display: flex; font-size: 11px; justify-content: space-between; margin-bottom: 8px; }
+.fd-profile-title strong { font-size: 12px; }
+.fd-profile-title > span { color: var(--blue-dark); font-weight: 800; }
+.fd-profile-progress { background: #d2def4; border-radius: 10px; height: 5px; overflow: hidden; }
+.fd-profile-progress > span { background: var(--blue); border-radius: inherit; display: block; height: 100%; transition: width .2s ease; }
+.fd-profile-copy > small { color: #687a9b; display: block; font-size: 10px; line-height: 1.5; margin-top: 7px; }
+.fd-profile-strength > .text-link { flex: 0 0 auto; font-size: 11px; }
+.fd-primary-grid { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1.55fr) minmax(270px, .8fr); }
+.fd-secondary-grid { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); }
+.fd-panel { min-width: 0; padding: 20px; }
+.fd-panel-heading { align-items: flex-start; display: flex; gap: 14px; justify-content: space-between; margin-bottom: 16px; }
+.fd-panel-heading h2 { font-size: 16px; line-height: 1.35; margin: 6px 0 0; }
+.fd-panel-heading > .text-link { flex: 0 0 auto; font-size: 11px; margin-top: 4px; }
+.fd-record-list, .fd-deadline-list, .fd-activity-list { display: flex; flex-direction: column; min-width: 0; }
+.fd-contract-row, .fd-deadline-row, .fd-record-row, .fd-activity-row { align-items: center; border-top: 1px solid #edf0f5; color: var(--ink); display: flex; gap: 10px; min-height: 58px; min-width: 0; padding: 10px 0; }
+.fd-contract-row:first-child, .fd-deadline-row:first-child, .fd-record-row:first-child, .fd-activity-row:first-child { border-top: 0; padding-top: 1px; }
+.fd-contract-row:hover .fd-row-main > strong, .fd-deadline-row:hover .fd-row-main > strong, .fd-record-row:hover .fd-row-main > strong, .fd-activity-row:hover .fd-row-main > strong { color: var(--blue-dark); }
+.fd-row-icon, .fd-deadline-icon { align-items: center; background: var(--blue-soft); border-radius: 8px; color: var(--blue); display: flex; flex: 0 0 34px; height: 34px; justify-content: center; }
+.fd-row-icon-green { background: #e7f8f0; color: var(--green); }
+.fd-row-main { flex: 1; min-width: 0; }
+.fd-row-main > strong, .fd-row-main > small { display: block; overflow: hidden; text-overflow: ellipsis; }
+.fd-row-main > strong { font-size: 12px; line-height: 1.4; white-space: nowrap; }
+.fd-row-main > small { color: var(--muted); font-size: 10px; line-height: 1.5; margin-top: 4px; white-space: nowrap; }
+.fd-row-state { flex: 0 0 auto; }
+.fd-row-state .status, .fd-record-row > .status { font-size: 10px; }
+.fd-row-action { align-items: center; color: var(--blue); display: inline-flex; flex: 0 0 auto; font-size: 10px; font-weight: 700; gap: 4px; }
+.fd-deadline-icon { background: #fff3dc; color: var(--amber); flex-basis: 32px; height: 32px; }
+.fd-deadline-time { color: var(--amber); flex: 0 0 auto; font-size: 10px; font-weight: 700; text-align: right; }
+.fd-state { align-items: center; color: var(--muted); display: flex; font-size: 12px; justify-content: center; line-height: 1.55; min-height: 90px; padding: 16px; text-align: center; }
+.fd-state-error { color: #a94452; flex-direction: column; gap: 7px; }
+.fd-state-error button { background: transparent; border: 0; color: var(--blue); font-size: 12px; font-weight: 700; min-height: 40px; padding: 8px 12px; }
+.fd-empty-action { align-items: center; color: var(--blue); display: inline-flex; font-size: 10px; font-weight: 700; gap: 5px; margin-top: 4px; }
+.fd-proposal-counts { border-bottom: 1px solid var(--line); display: grid; gap: 7px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 6px; padding: 1px 0 15px; }
+.fd-proposal-counts > div { min-width: 0; }
+.fd-proposal-counts strong, .fd-proposal-counts span { display: block; }
+.fd-proposal-counts strong { font-family: 'Manrope', sans-serif; font-size: 17px; }
+.fd-proposal-counts span { color: var(--muted); font-size: 10px; margin-top: 3px; }
+.fd-earnings-total { border-bottom: 1px solid var(--line); margin-bottom: 6px; padding: 2px 0 14px; }
+.fd-earnings-total > span, .fd-earnings-total > strong, .fd-earnings-total > small { display: block; }
+.fd-earnings-total > span { color: var(--muted); font-size: 11px; }
+.fd-earnings-total > strong { font-family: 'Manrope', sans-serif; font-size: 26px; letter-spacing: -.04em; margin: 4px 0; }
+.fd-earnings-total > small { color: var(--muted); font-size: 10px; }
+.fd-payment-amount { flex: 0 0 auto; font-size: 11px; font-weight: 800; }
+.fd-opportunity-list { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fd-opportunity { background: #fbfcfe; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); display: flex; flex-direction: column; min-width: 0; padding: 13px; transition: border-color .16s ease, background .16s ease; }
+.fd-opportunity:hover { background: white; border-color: #b9c9e8; }
+.fd-opportunity-top { align-items: center; color: var(--muted); display: flex; font-size: 10px; gap: 6px; justify-content: space-between; margin-bottom: 9px; }
+.fd-opportunity-top span:first-child { color: var(--blue); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.fd-opportunity > strong { font-size: 13px; line-height: 1.45; }
+.fd-opportunity-customer, .fd-opportunity-skills { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 5px; }
+.fd-opportunity-skills { min-height: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-opportunity-footer { align-items: center; color: var(--muted); display: flex; font-size: 10px; justify-content: space-between; margin-top: 10px; }
+.fd-opportunity-link { align-items: center; color: var(--blue); display: inline-flex; font-size: 11px; font-weight: 700; gap: 4px; }
+.fd-activity-row { min-height: 54px; }
+.fd-activity-date { color: var(--muted); flex: 0 0 auto; font-size: 10px; text-align: right; }
+.fd-quick-panel .fd-panel-heading { margin-bottom: 10px; }
+.fd-quick-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.fd-quick-actions a { align-items: center; background: #fbfcfe; border: 1px solid var(--line); border-radius: 8px; color: #52617c; display: inline-flex; font-size: 12px; font-weight: 700; gap: 7px; min-height: 40px; padding: 0 11px; transition: background .16s ease, border-color .16s ease, color .16s ease; }
+.fd-quick-actions a:hover { background: var(--blue-soft); border-color: #c8d9f8; color: var(--blue-dark); }
+.fd-row-disabled { cursor: default; }
+
+@media (max-width: 1120px) {
+  .fd-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fd-primary-grid { grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); }
+}
+@media (max-width: 860px) {
+  .fd-primary-grid, .fd-secondary-grid { grid-template-columns: minmax(0, 1fr); }
+  .fd-deadlines-panel { order: 2; }
+}
+@media (max-width: 560px) {
+  .fd-welcome { align-items: flex-start; flex-direction: column; }
+  .fd-welcome h1 { font-size: 25px; }
+  .fd-welcome > .button { align-self: stretch; }
+  .fd-metrics { gap: 8px; }
+  .fd-metric { flex-direction: column; gap: 9px; min-height: 126px; padding: 12px; }
+  .fd-metric-arrow { position: absolute; right: 10px; top: 10px; }
+  .fd-metric-copy > strong { font-size: 17px; margin: 4px 0; }
+  .fd-profile-strength { align-items: flex-start; flex-wrap: wrap; gap: 10px; padding: 13px; }
+  .fd-profile-copy { flex-basis: calc(100% - 48px); }
+  .fd-profile-copy > small { font-size: 11px; }
+  .fd-profile-strength > .text-link { margin-left: 46px; }
+  .fd-panel { padding: 15px; }
+  .fd-panel-heading { gap: 7px; }
+  .fd-panel-heading h2 { font-size: 15px; }
+  .fd-panel-heading > .text-link { font-size: 10px; white-space: nowrap; }
+  .fd-contract-row, .fd-deadline-row, .fd-record-row, .fd-activity-row { gap: 8px; }
+  .fd-row-action { display: none; }
+  .fd-row-state { max-width: 92px; }
+  .fd-row-state .status { white-space: normal; }
+  .fd-deadline-time { max-width: 58px; }
+  .fd-proposal-counts { gap: 4px; }
+  .fd-proposal-counts strong { font-size: 15px; }
+  .fd-proposal-counts span { font-size: 8px; }
+  .fd-opportunity-list { grid-template-columns: minmax(0, 1fr); }
+  .fd-activity-date { display: none; }
+  .fd-quick-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fd-quick-actions a { justify-content: flex-start; min-width: 0; padding: 0 8px; }
+}

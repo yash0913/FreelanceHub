@@ -167,15 +167,58 @@ export const updateProfile = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
     const { name, professionalTitle, bio, hourlyRate, experienceLevel, location, availability, companyName, profileImage, skillIds } = req.body
-    const user = await prisma.user.update({ where: { id: req.user.id }, data: { ...(name ? { name: String(name).trim() } : {}), ...(professionalTitle !== undefined ? { professionalTitle: professionalTitle ? String(professionalTitle).trim() : null } : {}) }, select: userSelect })
-    if (req.user.role === 'FREELANCER') {
-      const profile = await prisma.freelancerProfile.upsert({ where: { userId: req.user.id }, create: { userId: req.user.id }, update: { ...(bio !== undefined ? { bio } : {}), ...(hourlyRate !== undefined && hourlyRate !== '' ? { hourlyRate: Number(hourlyRate) } : {}), ...(experienceLevel ? { experienceLevel } : {}), ...(location !== undefined ? { location } : {}), ...(availability ? { availability } : {}), ...(profileImage !== undefined ? { profileImage } : {}) } })
-      if (Array.isArray(skillIds)) {
-        await prisma.freelancerSkill.deleteMany({ where: { freelancerProfileId: profile.id } })
-        if (skillIds.length) await prisma.freelancerSkill.createMany({ data: [...new Set(skillIds.map(Number).filter(Boolean))].map((skillId) => ({ freelancerProfileId: profile.id, skillId })) })
-      }
-      return respond(res, await prisma.freelancerProfile.findUnique({ where: { id: profile.id }, include: profileInclude }), 'Profile updated')
+    const userData = {
+      ...(name ? { name: String(name).trim() } : {}),
+      ...(professionalTitle !== undefined ? { professionalTitle: professionalTitle ? String(professionalTitle).trim() : null } : {})
     }
+
+    if (req.user.role === 'FREELANCER') {
+      const normalizedRate = hourlyRate === '' || hourlyRate === null ? null : Number(hourlyRate)
+      if (hourlyRate !== undefined && normalizedRate !== null && (!Number.isFinite(normalizedRate) || normalizedRate < 0)) {
+        return fail(res, 'Hourly rate must be a valid non-negative amount')
+      }
+
+      const profileData = {
+        ...(bio !== undefined ? { bio } : {}),
+        ...(hourlyRate !== undefined ? { hourlyRate: normalizedRate } : {}),
+        ...(experienceLevel ? { experienceLevel } : {}),
+        ...(location !== undefined ? { location } : {}),
+        ...(availability ? { availability } : {}),
+        ...(profileImage !== undefined ? { profileImage } : {})
+      }
+      const normalizedSkillIds = Array.isArray(skillIds)
+        ? [...new Set(skillIds.map(Number))]
+        : null
+
+      if (normalizedSkillIds?.some((skillId) => !Number.isSafeInteger(skillId) || skillId <= 0)) {
+        return fail(res, 'One or more selected skills are invalid')
+      }
+      if (normalizedSkillIds?.length) {
+        const existingSkills = await prisma.skill.findMany({ where: { id: { in: normalizedSkillIds } }, select: { id: true } })
+        if (existingSkills.length !== normalizedSkillIds.length) return fail(res, 'One or more selected skills are unavailable')
+      }
+
+      const profile = await prisma.$transaction(async (tx) => {
+        await tx.user.update({ where: { id: req.user.id }, data: userData, select: userSelect })
+        const savedProfile = await tx.freelancerProfile.upsert({
+          where: { userId: req.user.id },
+          create: { userId: req.user.id, ...profileData },
+          update: profileData
+        })
+        if (normalizedSkillIds) {
+          await tx.freelancerSkill.deleteMany({ where: { freelancerProfileId: savedProfile.id } })
+          if (normalizedSkillIds.length) {
+            await tx.freelancerSkill.createMany({
+              data: normalizedSkillIds.map((skillId) => ({ freelancerProfileId: savedProfile.id, skillId }))
+            })
+          }
+        }
+        return tx.freelancerProfile.findUnique({ where: { id: savedProfile.id }, include: profileInclude })
+      })
+      return respond(res, profile, 'Profile updated')
+    }
+
+    const user = await prisma.user.update({ where: { id: req.user.id }, data: userData, select: userSelect })
     if (req.user.role === 'CUSTOMER') return respond(res, await prisma.customerProfile.upsert({ where: { userId: req.user.id }, create: { userId: req.user.id, bio, companyName, location, profileImage }, update: { ...(bio !== undefined ? { bio } : {}), ...(companyName !== undefined ? { companyName } : {}), ...(location !== undefined ? { location } : {}), ...(profileImage !== undefined ? { profileImage } : {}) }, include: { user: { select: userSelect } } }), 'Profile updated')
     return respond(res, user, 'Profile updated')
   } catch (error) { console.error(error); return fail(res, 'Unable to update profile', 400) }
