@@ -293,7 +293,7 @@ export default function MessagesPage() {
               />
             </div>
 
-            <div style={{ maxHeight: '520px', overflowY: 'auto' }}>
+            <div className="conversation-scroll">
               {filteredConversations.length === 0 ? (
                 <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9aa6b7' }}>
                   <MessageSquare size={24} style={{ margin: '0 auto 8px', opacity: 0.6 }} />
@@ -322,6 +322,7 @@ export default function MessagesPage() {
                       onClick={() => setActiveConvId(conv.id)}
                     >
                       <div
+                        className="conversation-avatar"
                         style={{
                           width: '36px',
                           height: '36px',
