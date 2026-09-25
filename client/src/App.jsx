@@ -218,10 +218,11 @@ function AppShell({ children }) {
   const [open, setOpen] = useState(false)
   const nav = user?.role === 'ADMIN' ? adminNav : user?.role === 'CUSTOMER' ? customerNav : freelancerNav
   const messagesPath = user?.role === 'FREELANCER' ? '/freelancer/messages' : user?.role === 'CUSTOMER' ? '/customer/messages' : '/admin/reports'
+  const isMessagesPage = location.pathname.endsWith('/messages')
 
   return (
-    <div className="app-shell">
-      <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+    <div className={`app-shell ${isMessagesPage ? 'app-shell-messages' : ''}`}>
+      <aside className={`sidebar ${open ? 'sidebar-open' : ''} ${isMessagesPage ? 'sidebar-compact' : ''}`}>
         <div className="sidebar-top">
           <Link className="brand" to={getHome(user)} onClick={() => setOpen(false)}>
             <span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span>
@@ -231,14 +232,14 @@ function AppShell({ children }) {
         <div className="workspace-label">{user?.role === 'ADMIN' ? 'Operations' : 'Workspace'}</div>
         <nav className="side-nav" aria-label="Workspace navigation">
           {nav.map(([label, path, Icon]) => (
-            <Link key={path} className={location.pathname === path || (path !== getHome(user) && location.pathname.startsWith(path)) ? 'active' : ''} to={path} onClick={() => setOpen(false)}>
+            <Link key={path} className={location.pathname === path || (path !== getHome(user) && location.pathname.startsWith(path)) ? 'active' : ''} to={path} onClick={() => setOpen(false)} data-tooltip={isMessagesPage ? label : undefined} aria-label={isMessagesPage ? label : undefined}>
               <Icon size={18} /><span>{label}</span>{label === 'Messages' && user?.role !== 'FREELANCER' && <span className="nav-dot" />}
             </Link>
           ))}
         </nav>
         <div className="sidebar-bottom">
           <div className="side-privacy"><ShieldCheck size={16} /><span><strong>Secure workspace</strong><small>Your data stays yours.</small></span></div>
-          <button className="logout-link" onClick={logout}><LogOut size={17} /> Sign out</button>
+          <button className="logout-link" onClick={logout} data-tooltip={isMessagesPage ? 'Sign out' : undefined} aria-label={isMessagesPage ? 'Sign out' : undefined}><LogOut size={17} /> Sign out</button>
         </div>
       </aside>
       <div className="shell-content">

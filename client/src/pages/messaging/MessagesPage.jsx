@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Clock,
   MessageSquare,
-  RefreshCw,
   Send,
   ShieldAlert,
   UserCheck
@@ -236,29 +235,6 @@ export default function MessagesPage() {
 
   return (
     <div className="messages-workspace-page">
-      <div className="page-intro" style={{ marginBottom: '20px' }}>
-        <div>
-          <div className="eyebrow">Direct Communications</div>
-          <h1>Messages & Discussions</h1>
-          <p>
-            {user?.role === 'CUSTOMER'
-              ? 'Chat directly with the freelancers you hire.'
-              : 'Chat directly with your clients.'}
-          </p>
-        </div>
-        <button
-          className="button button-outline button-small"
-          onClick={() => {
-            loadConversations(true)
-            if (activeConvId) loadMessages(activeConvId, true)
-          }}
-          title="Refresh messages"
-          type="button"
-        >
-          <RefreshCw size={14} /> Refresh
-        </button>
-      </div>
-
       {loading ? (
         <div className="panel" style={{ padding: '36px', textAlign: 'center' }}>
           <div className="spinner" style={{ margin: '0 auto 12px' }} />
