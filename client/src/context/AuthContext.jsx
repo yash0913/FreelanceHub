@@ -79,6 +79,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
+    user: currentUser, // backward-compatible alias for pages using { user } = useAuth()
     loading,
     isAuthenticated: !!currentUser,
     login,

@@ -2,12 +2,18 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowRight, BarChart3, BriefcaseBusiness, Building2, Check, ChevronRight, CircleDollarSign, ExternalLink, Flag,
-  Clock3, FolderKanban, HeartHandshake, LayoutDashboard, LogIn, LogOut, Menu, MessageSquare,
+  Clock3, FolderKanban, HeartHandshake, LayoutDashboard, LifeBuoy, LogIn, LogOut, Menu, MessageSquare,
   MoreHorizontal, Pencil, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, Star, Tag, Trash2, UserRound,
   Users, X, Zap
 } from 'lucide-react'
 import api from './services/api'
 import FreelancerDashboard from './pages/freelancer/FreelancerDashboard'
+import MessagesPage from './pages/messaging/MessagesPage'
+import FreelancerCollaborationsPage from './pages/freelancer/FreelancerCollaborationsPage'
+import SupportPage from './pages/support/SupportPage'
+import AdminSupportPage from './pages/admin/AdminSupportPage'
+import AdminReportsPage from './pages/admin/AdminReportsPage'
+import AdminDashboardFull from './pages/admin/AdminDashboard'
 import {
   FreelancerContractsPage,
   FreelancerMyProjectsPage,
@@ -161,7 +167,7 @@ function Textarea({ label, ...props }) {
 
 function PublicNav() {
   const { user } = useAuth()
-  return <header className="public-nav"><Link className="brand" to="/"><span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span></Link><nav className="public-links"><Link to="/projects">Find work</Link><Link to="/freelancers">Find freelancers</Link><a href="#how-it-works">How it works</a></nav><div className="nav-actions">{user ? <Link className="button button-primary button-small" to={getHome(user)}>Open workspace <ArrowRight size={15} /></Link> : <><Link className="button button-ghost button-small" to="/login">Log in</Link><Link className="button button-primary button-small" to="/register/customer">Join free <ArrowRight size={15} /></Link></>}</div></header>
+  return <header className="public-nav"><Link className="brand" to="/"><span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span></Link><nav className="public-links"><Link to="/projects">Find work</Link><Link to="/freelancers">Find freelancers</Link><Link to="/collaborations">Collaborate</Link><Link to="/help">Help & FAQ</Link></nav><div className="nav-actions">{user ? <Link className="button button-primary button-small" to={getHome(user)}>Open workspace <ArrowRight size={15} /></Link> : <><Link className="button button-ghost button-small" to="/login">Log in</Link><Link className="button button-primary button-small" to="/register/customer">Join free <ArrowRight size={15} /></Link></>}</div></header>
 }
 
 function LandingPage() {
@@ -201,9 +207,9 @@ function AuthPage({ registerRole }) {
   return <div className="auth-page"><div className="auth-side"><Link className="brand brand-on-dark" to="/"><span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span></Link><div className="auth-side-copy"><div className="eyebrow light">Work, with intention.</div><h1>Find the work that moves you forward.</h1><p>A focused marketplace for Indian customers, independent talent, and the partnerships between them.</p><div className="auth-quote"><span>“</span><p>Great work happens when clarity meets capability.</p></div></div><span className="auth-side-foot">White + blue. Clear by design.</span></div><div className="auth-panel"><div className="auth-mobile-brand"><Link className="brand" to="/"><span className="brand-mark">F</span><span>freelance<span className="brand-blue">hub</span></span></Link></div><div className="auth-form-wrap"><div className="auth-kicker">{mode === 'login' ? 'Welcome back' : 'Join the network'}</div><h2>{mode === 'login' ? 'Sign in to your workspace' : 'Create your FreelanceHub account'}</h2><p className="muted">{mode === 'login' ? 'Your next great project is waiting.' : 'Choose how you want to contribute to the marketplace.'}</p>{mode === 'register' && <div className="role-switch"><button className={role === 'CUSTOMER' ? 'active' : ''} onClick={() => setRole('CUSTOMER')} type="button"><Building2 size={17} /><span>Hire talent<small>For customers</small></span></button><button className={role === 'FREELANCER' ? 'active' : ''} onClick={() => setRole('FREELANCER')} type="button"><BriefcaseBusiness size={17} /><span>Find work<small>For freelancers</small></span></button></div>}{error && <div className={`form-alert ${error.startsWith('Account') ? 'success-alert' : ''}`}>{error}</div>}<form onSubmit={submit}>{mode === 'register' && <><Input label="Full name" value={form.name} onChange={set('name')} placeholder="e.g. Ananya Sharma" required />{role === 'FREELANCER' && <Input label="Professional title" value={form.professionalTitle} onChange={set('professionalTitle')} placeholder="e.g. Full-stack developer" required />}</>}<Input label="Email address" type="email" value={form.email} onChange={set('email')} placeholder="you@company.com" required /><Input label="Password" type="password" value={form.password} onChange={set('password')} placeholder="At least 6 characters" minLength={6} required />{mode === 'register' && <Input label="Confirm password" type="password" value={form.confirmPassword} onChange={set('confirmPassword')} placeholder="Repeat your password" minLength={6} required />}<Button className="button-full" disabled={submitting}>{submitting ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'} <ArrowRight size={16} /></Button></form><p className="auth-switch">{mode === 'login' ? 'New to FreelanceHub?' : 'Already have an account?'} <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError('') }}>{mode === 'login' ? 'Create an account' : 'Sign in'}</button></p></div></div></div>
 }
 
-const customerNav = [['Dashboard', '/customer/dashboard', LayoutDashboard], ['My projects', '/customer/projects', FolderKanban], ['Find freelancers', '/customer/freelancers', Users], ['Proposals', '/customer/proposals', BriefcaseBusiness], ['Contracts', '/customer/contracts', ShieldCheck], ['Messages', '/customer/messages', MessageSquare], ['Payments', '/customer/payments', CircleDollarSign], ['Reviews', '/customer/reviews', Star], ['Reports', '/customer/reports', FlagIcon], ['Profile', '/customer/profile', UserRound], ['Settings', '/customer/settings', SlidersHorizontal]]
-const freelancerNav = [['Dashboard', '/freelancer/dashboard', LayoutDashboard], ['Find work', '/freelancer/projects', Search], ['My projects', '/freelancer/my-projects', FolderKanban], ['My proposals', '/freelancer/proposals', BriefcaseBusiness], ['Contracts', '/freelancer/contracts', ShieldCheck], ['Portfolio', '/freelancer/portfolio', Sparkles], ['Messages', '/freelancer/messages', MessageSquare], ['Payments', '/freelancer/payments', CircleDollarSign], ['Reviews', '/freelancer/reviews', Star], ['Reports', '/freelancer/reports', FlagIcon], ['Profile', '/freelancer/profile', UserRound], ['Settings', '/freelancer/settings', SlidersHorizontal]]
-const adminNav = [['Overview', '/admin/dashboard', LayoutDashboard], ['Users', '/admin/users', Users], ['Projects', '/admin/projects', FolderKanban], ['Moderation', '/admin/reports', ShieldCheck], ['Catalog', '/admin/catalog', Tag], ['Payments', '/admin/payments', CircleDollarSign]]
+const customerNav = [['Dashboard', '/customer/dashboard', LayoutDashboard], ['My projects', '/customer/projects', FolderKanban], ['Find freelancers', '/customer/freelancers', Users], ['Proposals', '/customer/proposals', BriefcaseBusiness], ['Contracts', '/customer/contracts', ShieldCheck], ['Messages', '/customer/messages', MessageSquare], ['Payments', '/customer/payments', CircleDollarSign], ['Reviews', '/customer/reviews', Star], ['Reports', '/customer/reports', FlagIcon], ['Profile', '/customer/profile', UserRound], ['Settings', '/customer/settings', SlidersHorizontal], ['Help & Care', '/customer/support', LifeBuoy]]
+const freelancerNav = [['Dashboard', '/freelancer/dashboard', LayoutDashboard], ['Find work', '/freelancer/projects', Search], ['My projects', '/freelancer/my-projects', FolderKanban], ['My proposals', '/freelancer/proposals', BriefcaseBusiness], ['Contracts', '/freelancer/contracts', ShieldCheck], ['Collaborations', '/freelancer/collaborations', Users], ['Portfolio', '/freelancer/portfolio', Sparkles], ['Messages', '/freelancer/messages', MessageSquare], ['Payments', '/freelancer/payments', CircleDollarSign], ['Reviews', '/freelancer/reviews', Star], ['Reports', '/freelancer/reports', FlagIcon], ['Profile', '/freelancer/profile', UserRound], ['Settings', '/freelancer/settings', SlidersHorizontal], ['Help & Care', '/freelancer/support', LifeBuoy]]
+const adminNav = [['Overview', '/admin/dashboard', LayoutDashboard], ['Users', '/admin/users', Users], ['Projects', '/admin/projects', FolderKanban], ['Moderation', '/admin/reports', FlagIcon], ['Customer Care', '/admin/support', LifeBuoy], ['Catalog', '/admin/catalog', Tag], ['Payments', '/admin/payments', CircleDollarSign]]
 function FlagIcon(props) { return <Flag size={17} {...props} /> }
 
 function AppShell({ children }) {
@@ -1054,8 +1060,9 @@ function ProjectDetail({ projectId: propId }) {
               className="button-full"
               onClick={async () => {
                 try {
-                  await api.post('/conversations', { participantId: project.client.id })
-                  window.location.assign(`${getHome(user).split('/').slice(0, 2).join('/')}/messages`)
+                  const res = await api.post('/conversations', { participantId: project.client.id })
+                  const conv = unwrap(res)
+                  navigate(`/${user.role.toLowerCase()}/messages?conversation=${conv.id}`)
                 } catch (err) {
                   setMessage(apiError(err))
                 }
@@ -1150,9 +1157,12 @@ function FreelancersPage() {
 function FreelancerDetail() {
   const { id } = useParams()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const validId = Number.isInteger(Number(id)) && Number(id) > 0 ? Number(id) : null
   const state = useFetch(validId ? `/freelancers/${validId}` : '')
+  const verifiedState = useFetch(validId ? `/freelancers/${validId}/verified-collaborations` : '')
   const [message, setMessage] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
 
   if (!validId) {
     return (
@@ -1179,11 +1189,17 @@ function FreelancerDetail() {
 
   const profile = state.data
   const reviews = profile.reviews || []
+  const verifiedCollabs = verifiedState.data || []
+
   const startConversation = async () => {
-    if (!user) return
+    if (!user) {
+      navigate('/login')
+      return
+    }
     try {
-      await api.post('/conversations', { participantId: profile.user.id })
-      window.location.assign(`${getHome(user).split('/').slice(0, 2).join('/')}/messages`)
+      const res = await api.post('/conversations', { participantId: profile.user.id })
+      const conv = unwrap(res)
+      navigate(`/${user.role.toLowerCase()}/messages?conversation=${conv.id}`)
     } catch (err) { setMessage(apiError(err)) }
   }
 
@@ -1200,7 +1216,19 @@ function FreelancerDetail() {
             <div className="profile-location">{profile.location || 'Location not provided'} · {titleCase(profile.availability) || 'Availability not provided'}</div>
           </div>
           <div className="profile-actions">
-            <Button onClick={startConversation}><MessageSquare size={16} /> Start a conversation</Button>
+            {user?.id !== profile.user?.id && (
+              <Button onClick={startConversation}><MessageSquare size={16} /> Start a conversation</Button>
+            )}
+            {user && user.id !== profile.user?.id && (
+              <button
+                type="button"
+                className="button button-ghost button-small"
+                onClick={() => setShowReportModal(true)}
+                style={{ color: '#d93838' }}
+              >
+                <Flag size={14} /> Report profile
+              </button>
+            )}
             {message && <span className="muted">{message}</span>}
           </div>
         </div>
@@ -1210,6 +1238,75 @@ function FreelancerDetail() {
               <div className="panel-heading"><div><span className="panel-eyebrow">About</span><h2>A little more context</h2></div></div>
               <p className="rich-copy">{profile.bio || 'This freelancer has not added a bio yet.'}</p>
             </section>
+
+            {/* Verified Collaborations & Experience (Distinct from self-added portfolio) */}
+            <section className="panel">
+              <div className="panel-heading">
+                <div>
+                  <span className="panel-eyebrow">Certified platform history</span>
+                  <h2>Collaborations & Verified Experience</h2>
+                </div>
+              </div>
+              {verifiedCollabs.length ? (
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {verifiedCollabs.map((collab) => (
+                    <div
+                      key={collab.id}
+                      style={{
+                        border: '1px solid #e2ebf6',
+                        borderRadius: '9px',
+                        padding: '16px 18px',
+                        background: '#fcfdff'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                            <span
+                              style={{
+                                background: '#e7f8f0',
+                                color: '#17825b',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <Check size={12} /> Verified Collaboration
+                            </span>
+                            <span style={{ fontSize: '11px', color: '#8898aa' }}>
+                              Completed {dateLabel(collab.completedAt)}
+                            </span>
+                          </div>
+                          <strong style={{ fontSize: '15px' }}>{collab.projectTitle}</strong>
+                          <div style={{ color: 'var(--blue)', fontSize: '12px', fontWeight: 600, marginTop: '2px' }}>
+                            Role: {collab.role} · Partner: {collab.collaborator?.name}
+                          </div>
+                        </div>
+                      </div>
+                      <p style={{ margin: '8px 0', fontSize: '12px', color: '#55637d', lineHeight: 1.6 }}>
+                        {collab.description}
+                      </p>
+                      {collab.skills && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                          {collab.skills.split(',').map((s, idx) => (
+                            <span key={idx} style={{ background: '#f0f4f9', color: '#55637d', fontSize: '10px', padding: '2px 7px', borderRadius: '4px' }}>
+                              {s.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon={Users} title="No verified collaborations yet" description="Completed collaborative engagements and internships will be certified here." />
+              )}
+            </section>
+
             <section className="panel">
               <div className="panel-heading"><div><span className="panel-eyebrow">Selected work</span><h2>Portfolio</h2></div></div>
               <div className="portfolio-grid">
@@ -1251,6 +1348,15 @@ function FreelancerDetail() {
           </aside>
         </div>
       </div>
+
+      {showReportModal && (
+        <ReportSubmitModal
+          defaultUserId={profile.user?.id}
+          defaultUserName={profile.user?.name}
+          onClose={() => setShowReportModal(false)}
+          onSubmitted={() => setMessage('Report submitted to platform administration for review.')}
+        />
+      )}
     </>
   )
 }
@@ -1265,34 +1371,595 @@ function ProposalsPage() {
   return <DataPage kind="proposals" endpoint="/proposals/mine" title="Proposals for your projects." description="Review incoming freelancer proposals and decide which relationships to move forward." emptyTitle="No proposals yet" emptyDescription="Proposals received on your open projects will appear here." renderItem={(proposal) => <><Avatar name={proposal.freelancerProfile?.user?.name} size="sm" /><div className="data-row-copy"><strong>{proposal.freelancerProfile?.user?.name || 'Freelancer'}</strong><span>{proposal.project?.title || 'Project'} · {currency(proposal.proposedPrice)}{proposal.estimatedDays ? ` · ${proposal.estimatedDays} days` : ''}</span><small>{proposal.coverLetter || 'No cover letter provided.'}</small></div><StatusBadge value={proposal.status} /><Link className="button button-outline button-small" to={user?.role === 'CUSTOMER' ? `/customer/projects/${proposal.projectId}` : `/project/${proposal.projectId}`}>View</Link></>}/>
 }
 
-function ContractsPage() {
-  const { user } = useAuth()
-  return <DataPage kind="contracts" endpoint="/contracts/mine" title="Contracts and engagements." description="Keep agreed scope, counterparties, and delivery status in one clear view." emptyTitle="No contracts yet" emptyDescription="Accepted proposals will create contracts that appear here." renderItem={(contract) => <><Avatar name={contract.freelancer?.name} size="sm" /><div className="data-row-copy"><strong>{contract.project?.title || 'Contract'}</strong><span>{contract.freelancer?.name || 'Freelancer'} · {currency(contract.agreedAmount)}</span><small>{dateLabel(contract.startDate)}{contract.endDate ? ` — ${dateLabel(contract.endDate)}` : ''}</small></div><StatusBadge value={contract.status} /><Link className="button button-outline button-small" to={user?.role === 'CUSTOMER' ? `/customer/projects/${contract.projectId}` : `/project/${contract.projectId}`}>Open</Link></>}/>
+function PaymentModal({ defaultContract, contracts = [], onClose, onSubmitted }) {
+  const [contractId, setContractId] = useState(defaultContract?.id || (contracts[0]?.id || ''))
+  const selectedContract = contracts.find((c) => String(c.id) === String(contractId)) || defaultContract
+  const [amount, setAmount] = useState(selectedContract ? String(selectedContract.agreedAmount || '') : '')
+  const [paymentMethod, setPaymentMethod] = useState('UPI')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (selectedContract && !amount) {
+      setAmount(String(selectedContract.agreedAmount || ''))
+    }
+  }, [selectedContract, amount])
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+    try {
+      await api.post('/payments', {
+        contractId: Number(contractId),
+        amount: Number(amount)
+      })
+      if (onSubmitted) onSubmitted()
+      onClose()
+    } catch (err) {
+      setError(apiError(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,33,61,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+      <div className="panel" style={{ maxWidth: '480px', width: '100%', padding: '26px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+            <div className="eyebrow">Finance & Settlement</div>
+            <h2 style={{ fontSize: '18px', margin: '2px 0 0' }}>Process Milestone Payment</h2>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 0, cursor: 'pointer' }} type="button"><X size={20} /></button>
+        </div>
+        {error && <div className="form-alert" style={{ marginBottom: '14px' }}>{error}</div>}
+        <form onSubmit={submit}>
+          {!defaultContract && contracts.length > 0 ? (
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Select Engagement / Contract *</label>
+              <select value={contractId} onChange={(e) => { setContractId(e.target.value); const found = contracts.find((c) => String(c.id) === e.target.value); if (found) setAmount(String(found.agreedAmount)); }} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }}>
+                {contracts.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.project?.title || 'Contract'} — {c.freelancer?.name || 'Freelancer'} ({currency(c.agreedAmount)})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : defaultContract ? (
+            <div style={{ marginBottom: '14px', background: 'var(--surface)', padding: '12px 14px', borderRadius: '8px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>Contract</div>
+              <div style={{ fontWeight: 700, fontSize: '14px' }}>{defaultContract.project?.title || 'Project engagement'}</div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>Paid to {defaultContract.freelancer?.name || 'Freelancer'} · Agreed: {currency(defaultContract.agreedAmount)}</div>
+            </div>
+          ) : null}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Payment Amount (₹) *</label>
+            <input type="number" required min="1" step="any" placeholder="e.g. 15000" value={amount} onChange={(e) => setAmount(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }} />
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Settlement Method *</label>
+            <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }}>
+              <option value="UPI">UPI (Google Pay / PhonePe / Paytm)</option>
+              <option value="NetBanking">Net Banking (IMPS / NEFT)</option>
+              <option value="Card">Debit / Credit Card</option>
+              <option value="Escrow">Direct Escrow Release</option>
+            </select>
+          </div>
+          <p style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '16px' }}>
+            Recording this payment confirms delivery satisfaction and marks the contract engagement as completed.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <button type="button" className="button button-outline" onClick={onClose}>Cancel</button>
+            <button type="submit" className="button button-primary" disabled={submitting || !amount}>
+              {submitting ? 'Recording…' : `Confirm & Pay ${currency(amount)}`}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
-function MessagesPage() {
+function ReviewModal({ defaultContract, contracts = [], onClose, onSubmitted }) {
+  const [contractId, setContractId] = useState(defaultContract?.id || (contracts[0]?.id || ''))
+  const selectedContract = contracts.find((c) => String(c.id) === String(contractId)) || defaultContract
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+    try {
+      await api.post('/reviews', {
+        contractId: Number(contractId),
+        rating: Number(rating),
+        comment: comment.trim() || undefined
+      })
+      if (onSubmitted) onSubmitted()
+      onClose()
+    } catch (err) {
+      setError(apiError(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,33,61,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+      <div className="panel" style={{ maxWidth: '480px', width: '100%', padding: '26px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+            <div className="eyebrow">Reputation & Feedback</div>
+            <h2 style={{ fontSize: '18px', margin: '2px 0 0' }}>Write a Review</h2>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 0, cursor: 'pointer' }} type="button"><X size={20} /></button>
+        </div>
+        {error && <div className="form-alert" style={{ marginBottom: '14px' }}>{error}</div>}
+        <form onSubmit={submit}>
+          {!defaultContract && contracts.length > 0 ? (
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Select Completed Engagement *</label>
+              <select value={contractId} onChange={(e) => setContractId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }}>
+                {contracts.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.project?.title || 'Contract'} — {c.freelancer?.name || 'Freelancer'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : defaultContract ? (
+            <div style={{ marginBottom: '14px', background: 'var(--surface)', padding: '12px 14px', borderRadius: '8px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>Completed Engagement</div>
+              <div style={{ fontWeight: 700, fontSize: '14px' }}>{defaultContract.project?.title || 'Project'}</div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>Reviewing {defaultContract.freelancer?.name || defaultContract.client?.name || 'Collaborator'}</div>
+            </div>
+          ) : null}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Rating *</label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  type="button"
+                  key={star}
+                  onClick={() => setRating(star)}
+                  style={{
+                    background: 'none',
+                    border: 0,
+                    fontSize: '26px',
+                    color: star <= rating ? '#eab308' : '#cbd5e1',
+                    cursor: 'pointer',
+                    padding: '2px 4px'
+                  }}
+                  title={`${star} star${star > 1 ? 's' : ''}`}
+                >
+                  ★
+                </button>
+              ))}
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink)', marginLeft: '6px' }}>
+                {rating === 5 ? '5.0 — Exceptional' : rating === 4 ? '4.0 — Very Good' : rating === 3 ? '3.0 — Average' : rating === 2 ? '2.0 — Needs Improvement' : '1.0 — Poor'}
+              </span>
+            </div>
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Detailed Feedback</label>
+            <textarea rows={4} placeholder="Describe the quality of delivery, communication, adherence to timelines, and overall experience..." value={comment} onChange={(e) => setComment(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <button type="button" className="button button-outline" onClick={onClose}>Cancel</button>
+            <button type="submit" className="button button-primary" disabled={submitting}>
+              {submitting ? 'Publishing…' : 'Publish Review'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function ContractsPage() {
   const { user } = useAuth()
-  const state = useFetch('/conversations')
-  return <><PageIntro eyebrow="Shared communication" title="Keep every conversation moving." description="Your existing FreelanceHub conversations are shown here with role-safe access." />{state.loading ? <LoadingInline /> : state.error ? <ErrorState message={state.error} /> : state.data?.length ? <div className="panel data-list">{state.data.map((conversation) => { const other = conversation.participants?.find((participant) => participant.userId !== user?.id)?.user; return <div className="data-row" key={conversation.id}><Avatar name={other?.name} size="sm" /><div className="data-row-copy"><strong>{other?.name || 'Conversation'}</strong><span>{conversation.messages?.[0]?.content || 'No messages yet.'}</span><small>{dateLabel(conversation.updatedAt)}</small></div><Link className="button button-primary button-small" to={`?conversation=${conversation.id}`}>Open</Link></div> })}</div> : <EmptyState icon={MessageSquare} title="No conversations yet" description="Start a conversation from a freelancer or project profile." />}</>
+  const state = useFetch('/contracts/mine')
+  const [payContract, setPayContract] = useState(null)
+  const [reviewContract, setReviewContract] = useState(null)
+
+  const contracts = Array.isArray(state.data) ? state.data : []
+
+  return (
+    <>
+      <PageIntro
+        eyebrow="Customer workspace"
+        title="Contracts & Engagements"
+        description="Keep agreed scope, counterparties, delivery milestones, and settlement status in one clear view."
+      />
+      {state.loading ? (
+        <LoadingInline />
+      ) : state.error ? (
+        <ErrorState message={state.error} />
+      ) : contracts.length > 0 ? (
+        <div className="panel data-list">
+          {contracts.map((contract) => {
+            const hasPaid = contract.payment?.status === 'COMPLETED'
+            const hasReview = Boolean(contract.review)
+            const canPay = user?.role === 'CUSTOMER' && contract.status === 'ACTIVE' && !hasPaid
+            const canReview = user?.role === 'CUSTOMER' && contract.status === 'COMPLETED' && !hasReview
+
+            return (
+              <div className="data-row" key={contract.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <Avatar name={contract.freelancer?.name} size="sm" />
+                  <div className="data-row-copy">
+                    <strong>{contract.project?.title || 'Contract'}</strong>
+                    <span>{contract.freelancer?.name || 'Freelancer'} · {currency(contract.agreedAmount)}</span>
+                    <small>
+                      {dateLabel(contract.startDate)}{contract.endDate ? ` — ${dateLabel(contract.endDate)}` : ''}
+                      {hasPaid && ` · Payment Completed (${currency(contract.payment.amount)})`}
+                      {hasReview && ` · Rated ${contract.review.rating}★`}
+                    </small>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <StatusBadge value={contract.status} />
+                  {canPay && (
+                    <Button variant="primary" className="button-small" onClick={() => setPayContract(contract)}>
+                      <CircleDollarSign size={14} /> Pay & Complete
+                    </Button>
+                  )}
+                  {canReview && (
+                    <Button variant="outline" className="button-small" onClick={() => setReviewContract(contract)}>
+                      <Star size={14} /> Review
+                    </Button>
+                  )}
+                  <Link className="button button-outline button-small" to={user?.role === 'CUSTOMER' ? `/customer/projects/${contract.projectId}` : `/project/${contract.projectId}`}>
+                    Open
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          icon={ShieldCheck}
+          title="No contracts yet"
+          description="Accepted proposals will create active contracts that appear here."
+        />
+      )}
+
+      {payContract && (
+        <PaymentModal
+          defaultContract={payContract}
+          onClose={() => setPayContract(null)}
+          onSubmitted={() => { setPayContract(null); state.refetch(); }}
+        />
+      )}
+
+      {reviewContract && (
+        <ReviewModal
+          defaultContract={reviewContract}
+          onClose={() => setReviewContract(null)}
+          onSubmitted={() => { setReviewContract(null); state.refetch(); }}
+        />
+      )}
+    </>
+  )
 }
 
 function PaymentsPage() {
   const { user } = useAuth()
-  const state = useFetch('/payments/mine')
-  const total = (state.data || []).filter((payment) => payment.payerId === user?.id && payment.status === 'COMPLETED').reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-  return <><PageIntro eyebrow="Financial activity" title="Payments and transaction history." description="Review recorded payment activity. Payment processing is not represented until a real payment record exists." /><div className="stats-grid"><StatCard icon={CircleDollarSign} label="Total spent" value={currency(total)} helper="Completed recorded payments" tone="amber" /><StatCard icon={Check} label="Transactions" value={state.data?.length ?? '—'} helper="All visible payment records" /></div>{state.loading ? <LoadingInline /> : state.error ? <ErrorState message={state.error} /> : state.data?.length ? <div className="panel data-list">{state.data.map((payment) => <div className="data-row" key={payment.id}><div className="activity-avatar"><CircleDollarSign size={17} /></div><div className="data-row-copy"><strong>{payment.contract?.project?.title || 'Contract payment'}</strong><span>{payment.receiver?.name || 'Freelancer'} · {currency(payment.amount)}</span><small>{dateLabel(payment.createdAt)}</small></div><StatusBadge value={payment.status} /></div>)}</div> : <EmptyState icon={CircleDollarSign} title="No payments yet" description="Your payment history will appear here once recorded transactions exist." />}</>
+  const isAdmin = user?.role === 'ADMIN'
+  const state = useFetch(isAdmin ? '/admin/payments' : '/payments/mine')
+  const contractsState = useFetch(user?.role === 'CUSTOMER' ? '/contracts/mine' : '')
+  const [payModalContract, setPayModalContract] = useState(null)
+  const [showPayModal, setShowPayModal] = useState(false)
+
+  const payments = Array.isArray(state.data) ? state.data : []
+  const completed = payments.filter((p) => p.status === 'COMPLETED')
+  const totalVolume = completed.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+
+  const payableContracts = (contractsState.data || []).filter(
+    (c) => c.status === 'ACTIVE' && (!c.payment || c.payment.status !== 'COMPLETED')
+  )
+
+  return (
+    <>
+      <div className="page-intro" style={{ marginBottom: '20px' }}>
+        <div>
+          <div className="eyebrow">{isAdmin ? 'Marketplace Settlements' : 'Customer Workspace'}</div>
+          <h1>{isAdmin ? 'Payment Records & Audits' : 'Payments & Settlements'}</h1>
+          <p>{isAdmin ? 'Complete historical ledger of payments processed across contracts.' : 'Track payments issued to freelancers for deliverables and project contracts.'}</p>
+        </div>
+        {!isAdmin && payableContracts.length > 0 && (
+          <Button onClick={() => { setPayModalContract(null); setShowPayModal(true); }}>
+            <CircleDollarSign size={16} /> Pay Contract
+          </Button>
+        )}
+      </div>
+
+      <div className="frw-finance-summary" style={{ marginBottom: '24px' }}>
+        <div>
+          <span>{isAdmin ? 'Total settlement volume' : 'Total spent'}</span>
+          <strong>{state.loading || state.error ? '—' : currency(totalVolume)}</strong>
+          <small>{completed.length} completed transaction{completed.length === 1 ? '' : 's'}</small>
+        </div>
+        <div>
+          <span>Completed transactions</span>
+          <strong>{state.loading || state.error ? '—' : completed.length}</strong>
+          <small>Out of {state.loading || state.error ? '—' : payments.length} total records</small>
+        </div>
+        {!isAdmin && (
+          <div>
+            <span>Pending payment</span>
+            <strong>{contractsState.loading ? '—' : payableContracts.length}</strong>
+            <small>Active engagements awaiting payment</small>
+          </div>
+        )}
+      </div>
+
+      {state.loading ? (
+        <LoadingInline />
+      ) : state.error ? (
+        <ErrorState message={state.error} />
+      ) : payments.length > 0 ? (
+        <div className="panel data-list">
+          {payments.map((payment) => {
+            const projectTitle = payment.contract?.project?.title || 'Contract payment'
+            const isPayer = Number(payment.payerId) === Number(user?.id)
+            const counterparty = isPayer ? payment.receiver?.name : payment.payer?.name
+            return (
+              <div className="data-row" key={payment.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div className="activity-avatar" style={{ background: 'var(--blue-soft)', color: 'var(--blue)', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CircleDollarSign size={19} />
+                  </div>
+                  <div className="data-row-copy">
+                    <strong>{projectTitle}</strong>
+                    <span>
+                      {isAdmin ? `Payer: ${payment.payer?.name || 'Customer'} → Receiver: ${payment.receiver?.name || 'Freelancer'}` : `Paid to ${counterparty || 'Freelancer'}`} · {dateLabel(payment.createdAt)}
+                    </span>
+                    <small style={{ color: 'var(--muted)' }}>Payment #{payment.id} · Contract #{payment.contractId}</small>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>{currency(payment.amount)}</strong>
+                  <StatusBadge value={payment.status} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          icon={CircleDollarSign}
+          title="No payments recorded"
+          description={isAdmin ? 'No payment records exist across the platform yet.' : 'When you approve deliverables and release funds for contracts, transaction receipts will appear here.'}
+          action={!isAdmin && payableContracts.length > 0 ? <Button onClick={() => setShowPayModal(true)}>Pay an active contract</Button> : null}
+        />
+      )}
+
+      {showPayModal && (
+        <PaymentModal
+          defaultContract={payModalContract}
+          contracts={payableContracts}
+          onClose={() => { setShowPayModal(false); setPayModalContract(null); }}
+          onSubmitted={() => { state.refetch(); if (contractsState.refetch) contractsState.refetch(); }}
+        />
+      )}
+    </>
+  )
 }
 
 function ReviewsPage() {
-  return <DataPage kind="reviews" endpoint="/reviews/mine" title="Reviews and trust signals." description="See feedback you have given and received on completed engagements." emptyTitle="No reviews yet" emptyDescription="Reviews will appear after a completed contract has a recorded review." renderItem={(review) => <><div className="activity-avatar"><Star size={17} /></div><div className="data-row-copy"><strong>{review.project?.title || 'Project review'}</strong><span>{review.reviewedUser?.name || 'Freelancer'} · {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span><small>{review.comment || 'No written comment.'} · {dateLabel(review.createdAt)}</small></div></>}/>
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
+  const state = useFetch('/reviews/mine')
+  const contractsState = useFetch(user?.role === 'CUSTOMER' ? '/contracts/mine' : '')
+  const [reviewModalContract, setReviewModalContract] = useState(null)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+
+  const reviews = Array.isArray(state.data) ? state.data : []
+  const avgRating = reviews.length ? (reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviews.length).toFixed(1) : '—'
+
+  const reviewableContracts = (contractsState.data || []).filter(
+    (c) => c.status === 'COMPLETED' && !c.review
+  )
+
+  return (
+    <>
+      <div className="page-intro" style={{ marginBottom: '20px' }}>
+        <div>
+          <div className="eyebrow">{isAdmin ? 'Marketplace Reputation' : 'Customer Workspace'}</div>
+          <h1>Reviews & Reputation</h1>
+          <p>{isAdmin ? 'Audit ratings and feedback submitted across engagements.' : 'Track verified reviews and client ratings from completed contracts.'}</p>
+        </div>
+        {!isAdmin && reviewableContracts.length > 0 && (
+          <Button onClick={() => { setReviewModalContract(null); setShowReviewModal(true); }}>
+            <Star size={16} /> Write a Review
+          </Button>
+        )}
+      </div>
+
+      <div className="frw-review-summary" style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '16px 20px', borderRadius: '10px', border: '1px solid var(--line)', marginBottom: '24px' }}>
+        <Star size={22} style={{ color: '#eab308', fill: '#eab308' }} />
+        <strong style={{ fontSize: '22px', fontWeight: 800 }}>{avgRating}</strong>
+        <span style={{ color: 'var(--muted)', fontSize: '13px' }}>
+          average rating across {reviews.length} review{reviews.length === 1 ? '' : 's'}
+        </span>
+        {!isAdmin && reviewableContracts.length > 0 && (
+          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--blue)', fontWeight: 600 }}>
+            {reviewableContracts.length} completed engagement{reviewableContracts.length === 1 ? '' : 's'} waiting for your review
+          </span>
+        )}
+      </div>
+
+      {state.loading ? (
+        <LoadingInline />
+      ) : state.error ? (
+        <ErrorState message={state.error} />
+      ) : reviews.length > 0 ? (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {reviews.map((review) => {
+            const isReviewer = Number(review.reviewerId) === Number(user?.id)
+            const targetName = isReviewer ? (review.reviewedUser?.name || 'Freelancer') : (review.reviewer?.name || 'Customer')
+            return (
+              <article className="panel" key={review.id} style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div>
+                    <strong style={{ fontSize: '15px' }}>{review.project?.title || 'Contract Review'}</strong>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
+                      {isReviewer ? `Reviewed ${targetName}` : `Reviewed by ${targetName}`} · {dateLabel(review.createdAt)}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: '#eab308', fontSize: '18px' }}>
+                      {'★'.repeat(Math.max(1, Math.min(5, Number(review.rating))))}
+                    </span>
+                    <span style={{ color: '#cbd5e1', fontSize: '18px' }}>
+                      {'★'.repeat(5 - Math.max(1, Math.min(5, Number(review.rating))))}
+                    </span>
+                    <strong style={{ fontSize: '13px', marginLeft: '6px' }}>{review.rating}.0</strong>
+                  </div>
+                </div>
+                <p style={{ margin: '8px 0 0', fontSize: '13px', lineHeight: '1.6', color: 'var(--ink)' }}>
+                  {review.comment || 'No written comment provided.'}
+                </p>
+              </article>
+            )
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          icon={Star}
+          title="No reviews yet"
+          description={isAdmin ? 'No reviews have been published yet.' : 'When project contracts are completed, you and your collaborators can exchange verified reviews.'}
+          action={!isAdmin && reviewableContracts.length > 0 ? <Button onClick={() => setShowReviewModal(true)}>Write a review</Button> : null}
+        />
+      )}
+
+      {showReviewModal && (
+        <ReviewModal
+          defaultContract={reviewModalContract}
+          contracts={reviewableContracts}
+          onClose={() => { setShowReviewModal(false); setReviewModalContract(null); }}
+          onSubmitted={() => { state.refetch(); if (contractsState.refetch) contractsState.refetch(); }}
+        />
+      )}
+    </>
+  )
+}
+
+function ReportSubmitModal({ defaultUserId, defaultUserName, onClose, onSubmitted }) {
+  const [reportedUserId, setReportedUserId] = useState(defaultUserId || '')
+  const [reason, setReason] = useState('Fraud / Scam')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+    try {
+      await api.post('/reports', {
+        reportedUserId: Number(reportedUserId),
+        reason,
+        description
+      })
+      if (onSubmitted) onSubmitted()
+      onClose()
+    } catch (err) {
+      setError(apiError(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(20,33,61,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
+      <div className="panel" style={{ maxWidth: '480px', width: '100%', padding: '26px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+            <div className="eyebrow">Trust & Safety</div>
+            <h2 style={{ fontSize: '18px', margin: '2px 0 0' }}>{defaultUserName ? `Report ${defaultUserName}` : 'File a Safety Report'}</h2>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 0, cursor: 'pointer' }} type="button"><X size={20} /></button>
+        </div>
+        {error && <div className="form-alert" style={{ marginBottom: '14px' }}>{error}</div>}
+        <form onSubmit={submit}>
+          {!defaultUserId && (
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>User ID to report *</label>
+              <input type="number" required placeholder="Enter User ID (e.g. 3)" value={reportedUserId} onChange={(e) => setReportedUserId(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }} />
+            </div>
+          )}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Reason / Category *</label>
+            <select value={reason} onChange={(e) => setReason(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }}>
+              <option value="Fraud / Scam">Fraud / Scam</option>
+              <option value="Payment issue">Payment issue</option>
+              <option value="Fake profile or portfolio">Fake profile or portfolio</option>
+              <option value="Harassment or abuse">Harassment or abuse</option>
+              <option value="Spam">Spam</option>
+              <option value="Suspicious activity">Suspicious activity</option>
+              <option value="Other">Other policy violation</option>
+            </select>
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px' }}>Description *</label>
+            <textarea required rows={4} placeholder="Describe the incident or reason for filing this report..." value={description} onChange={(e) => setDescription(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '7px', border: '1px solid var(--line)', fontSize: '13px' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <button type="button" className="button button-outline" onClick={onClose}>Cancel</button>
+            <button type="submit" className="button button-primary" disabled={submitting || !description.trim()} style={{ background: '#d93838' }}>{submitting ? 'Submitting…' : 'Submit Report'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 function ReportsPage() {
-  return <DataPage kind="reports" endpoint="/reports/mine" title="Reports and resolutions." description="Track reports you have submitted and the current moderation status." emptyTitle="No reports submitted" emptyDescription="Submitted reports and their resolution details will appear here." renderItem={(report) => <><div className="activity-avatar"><Flag size={17} /></div><div className="data-row-copy"><strong>{report.reason}</strong><span>Reported user: {report.reportedUser?.name || 'Unavailable'}</span><small>{report.description || 'No additional details.'} · {dateLabel(report.createdAt)}</small></div><StatusBadge value={report.status} /></>}/>
-}
+  const [showModal, setShowModal] = useState(false)
+  const state = useFetch('/reports/mine')
 
-function AdminReportsPage() { return <DataPage kind="reports" endpoint="/admin/reports" title="Moderation queue." description="Review platform reports using the existing admin workflow." emptyTitle="No reports in the queue" emptyDescription="The moderation queue is clear." renderItem={(report) => <><div className="data-row-copy"><strong>{report.reason}</strong><span>{report.reporter?.name} reported {report.reportedUser?.name}</span></div><StatusBadge value={report.status} /></>} /> }
-function AdminUsersPage() { return <DataPage endpoint="/admin/stats" title="User operations." description="Platform user statistics are available from the admin workspace." emptyTitle="No user statistics" emptyDescription="Statistics are not currently available." renderItem={(item) => <span>{JSON.stringify(item)}</span>} /> }
+  return (
+    <>
+      <div className="page-intro" style={{ marginBottom: '20px' }}>
+        <div>
+          <div className="eyebrow">Trust & Resolutions</div>
+          <h1>Reports and Moderation</h1>
+          <p>Track reports you have submitted and their current moderation status.</p>
+        </div>
+        <Button onClick={() => setShowModal(true)} style={{ background: '#d93838' }}>
+          <Flag size={15} /> File a report
+        </Button>
+      </div>
+      {state.loading ? <LoadingInline /> : state.error ? <ErrorState message={state.error} /> : state.data?.length ? (
+        <div className="panel data-list">
+          {state.data.map((report) => (
+            <div className="data-row" key={report.id}>
+              <div className="activity-avatar"><Flag size={17} /></div>
+              <div className="data-row-copy">
+                <strong>{report.reason}</strong>
+                <span>Reported user: {report.reportedUser?.name || 'Unavailable'}</span>
+                <small>{report.description || 'No additional details.'} · {dateLabel(report.createdAt)}</small>
+                {report.resolutionNotes && <small style={{ color: 'var(--blue)', marginTop: '4px' }}>Resolution: {report.resolutionNotes}</small>}
+              </div>
+              <StatusBadge value={report.status} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState icon={FlagIcon} title="No reports submitted" description="Submitted reports and their resolution details will appear here." />
+      )}
+      {showModal && <ReportSubmitModal onClose={() => setShowModal(false)} onSubmitted={() => state.refetch()} />}
+    </>
+  )
+}
+function AdminUsersPage() { return <AdminDashboardFull /> }
 function AdminProjectsPage() { return <ProjectsPage /> }
 function AdminCatalogPage() { return <DataPage endpoint="/categories" title="Marketplace catalog." description="Categories currently available to the marketplace." emptyTitle="No categories" emptyDescription="No categories are currently configured." renderItem={(item) => <><div className="data-row-copy"><strong>{item.name}</strong><span>{item._count?.projects ?? 0} projects</span></div></>} /> }
 
@@ -1560,10 +2227,13 @@ function RouteView({ path }) {
   const { user } = useAuth()
   const prefix = `/${user?.role?.toLowerCase()}`
   if (path === `${prefix}/dashboard`) {
-    return user?.role === 'FREELANCER' ? <FreelancerDashboard user={user} /> : <DashboardPage />
+    if (user?.role === 'FREELANCER') return <FreelancerDashboard user={user} />
+    if (user?.role === 'ADMIN') return <DashboardPage />
+    return <DashboardPage />
   }
 
   if (path === '/freelancer/my-projects' && user?.role === 'FREELANCER') return <FreelancerMyProjectsPage />
+  if (path === '/freelancer/collaborations' && user?.role === 'FREELANCER') return <FreelancerCollaborationsPage />
 
   // Customer project detail
   const customerProjectMatch = path.match(/^\/customer\/projects\/([^/]+)$/)
@@ -1588,21 +2258,23 @@ function RouteView({ path }) {
   if (path.endsWith('/payments')) return user?.role === 'FREELANCER' ? <FreelancerPaymentsPage user={user} /> : <PaymentsPage />
   if (path.endsWith('/reviews')) return user?.role === 'FREELANCER' ? <FreelancerReviewsPage user={user} /> : <ReviewsPage />
   if (path.endsWith('/reports')) return user?.role === 'ADMIN' ? <AdminReportsPage /> : user?.role === 'FREELANCER' ? <FreelancerReportsPage /> : <ReportsPage />
+  if (path.endsWith('/support')) return user?.role === 'ADMIN' ? <AdminSupportPage /> : <SupportPage />
   if (path.endsWith('/portfolio')) return <PortfolioPage />
   if (path.endsWith('/profile')) return <ProfilePage />
   if (path.endsWith('/settings')) return <SettingsPage />
   if (path === '/admin/users') return <AdminUsersPage />
   if (path === '/admin/projects') return <AdminProjectsPage />
   if (path === '/admin/catalog') return <AdminCatalogPage />
+  if (path === '/admin/reports') return <AdminReportsPage />
+  if (path === '/admin/support') return <AdminSupportPage />
   return <DashboardPage />
 }
-
 
 function WorkspaceRoute() { const location = useLocation(); return <AppShell><RouteView path={location.pathname} /></AppShell> }
 
 const freelancerWorkspaceRoutes = new Set([
   'dashboard', 'projects', 'my-projects', 'proposals', 'contracts',
-  'messages', 'payments', 'reviews', 'reports', 'portfolio', 'profile', 'settings'
+  'collaborations', 'messages', 'payments', 'reviews', 'reports', 'portfolio', 'profile', 'settings', 'support'
 ])
 
 function FreelancerEntryRoute() {
@@ -1624,6 +2296,8 @@ function App() {
           <Route path="/register/freelancer" element={<AuthPage registerRole="FREELANCER" />} />
           <Route path="/projects" element={<PublicPage><ProjectsPage /></PublicPage>} />
           <Route path="/freelancers" element={<PublicPage><FreelancersPage /></PublicPage>} />
+          <Route path="/collaborations" element={<PublicPage><FreelancerCollaborationsPage /></PublicPage>} />
+          <Route path="/help" element={<PublicPage><SupportPage /></PublicPage>} />
           <Route path="/project/:id" element={<PublicPage><ProjectDetail /></PublicPage>} />
           <Route path="/freelancer/:id" element={<FreelancerEntryRoute />} />
           <Route path="/customer/*" element={<ProtectedRoute roles={['CUSTOMER']}><WorkspaceRoute /></ProtectedRoute>} />

@@ -375,11 +375,62 @@ export const updateContract = async (req, res) => {
   } catch (error) { console.error(error); return fail(res, 'Unable to update contract', 400) }
 }
 
-const participantWhere = (conversationId, userId) => ({ conversationId_userId: { conversationId, userId } })
+// ── Messaging helpers ────────────────────────────────────────────────────────
+
+/** Returns {customerId, freelancerId} for a C↔F pair. */
+const resolveCanonicalPair = (caller, participant) => {
+  if (caller.role === 'CUSTOMER' && participant.role === 'FREELANCER') {
+    return { customerId: caller.id, freelancerId: participant.id }
+  }
+  if (caller.role === 'FREELANCER' && participant.role === 'CUSTOMER') {
+    return { customerId: participant.id, freelancerId: caller.id }
+  }
+  return null
+}
+
+/** Returns canonical collab pair {collabFreelancer1Id, collabFreelancer2Id} (lower ID first). */
+const resolveCollabPair = (idA, idB) => ({
+  collabFreelancer1Id: Math.min(idA, idB),
+  collabFreelancer2Id: Math.max(idA, idB)
+})
+
+/** Conversation include fragment used consistently across list/create. */
+const convInclude = {
+  participants: { include: { user: { select: userSelect } } },
+  messages: { orderBy: { sentAt: 'desc' }, take: 1, include: { sender: { select: userSelect } } }
+}
+
+/** Verify caller is an authorized participant of a conversation (either C↔F or F↔F). */
+const callerIsCanonical = (conv, userId) =>
+  conv.customerId === userId ||
+  conv.freelancerId === userId ||
+  conv.collabFreelancer1Id === userId ||
+  conv.collabFreelancer2Id === userId
+
 export const listConversations = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
-    const conversations = await prisma.conversation.findMany({ where: { participants: { some: { userId: req.user.id } } }, include: { participants: { include: { user: { select: userSelect } } }, messages: { orderBy: { sentAt: 'desc' }, take: 1, include: { sender: { select: userSelect } } } }, orderBy: { updatedAt: 'desc' } })
+    if (req.user.role === 'ADMIN') return respond(res, []) // Admin has no direct messaging
+
+    let where
+    if (req.user.role === 'CUSTOMER') {
+      where = { customerId: req.user.id }
+    } else {
+      // Freelancer: include both C↔F threads AND F↔F collab threads
+      where = {
+        OR: [
+          { freelancerId: req.user.id },
+          { collabFreelancer1Id: req.user.id },
+          { collabFreelancer2Id: req.user.id }
+        ]
+      }
+    }
+
+    const conversations = await prisma.conversation.findMany({
+      where,
+      include: convInclude,
+      orderBy: { updatedAt: 'desc' }
+    })
     return respond(res, conversations)
   } catch (error) { console.error(error); return fail(res, 'Unable to load conversations', 500) }
 }
@@ -387,25 +438,104 @@ export const listConversations = async (req, res) => {
 export const createConversation = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
+
+    // Admin cannot initiate or be in direct conversations
+    if (req.user.role === 'ADMIN') {
+      return fail(res, 'Admin cannot participate in direct conversations. Use Customer Care / Support.', 403)
+    }
+
     const participantId = idOf(req.body.participantId)
-    if (!participantId || participantId === req.user.id) return fail(res, 'Choose another user to start a conversation')
+    if (!participantId) return fail(res, 'participantId is required')
+    if (participantId === req.user.id) return fail(res, 'You cannot start a conversation with yourself')
+
     const participant = await prisma.user.findUnique({ where: { id: participantId } })
     if (!participant) return fail(res, 'User not found', 404)
-    const existing = await prisma.conversation.findFirst({ where: { AND: [{ participants: { some: { userId: req.user.id } } }, { participants: { some: { userId: participantId } } }] }, include: { participants: { include: { user: { select: userSelect } } } } })
-    if (existing) return respond(res, existing)
-    const conversation = await prisma.conversation.create({ data: { participants: { create: [{ userId: req.user.id }, { userId: participantId }] } }, include: { participants: { include: { user: { select: userSelect } } } } })
-    return respond(res, conversation, 'Conversation started', 201)
+
+    if (participant.role === 'ADMIN') {
+      return fail(res, 'Direct messaging with Admin is not permitted. Please use Customer Care / Support.', 403)
+    }
+
+    // ── Case 1: Freelancer ↔ Freelancer (collaboration only) ─────────────────────
+    if (req.user.role === 'FREELANCER' && participant.role === 'FREELANCER') {
+      const collaborationMode = req.body.collaborationMode === true
+      if (!collaborationMode) {
+        return fail(res, 'Freelancer-to-Freelancer messaging is only available through accepted collaborations.', 403)
+      }
+
+      // Server-side authorization: verify an accepted collaboration exists between them
+      const validCollab = await prisma.collaborationApplication.findFirst({
+        where: {
+          status: 'ACCEPTED',
+          OR: [
+            // Caller is creator, participant is applicant
+            {
+              applicantId: participantId,
+              opportunity: { creatorId: req.user.id }
+            },
+            // Participant is creator, caller is applicant
+            {
+              applicantId: req.user.id,
+              opportunity: { creatorId: participantId }
+            }
+          ]
+        },
+        select: { id: true }
+      })
+
+      if (!validCollab) {
+        return fail(res, 'No accepted collaboration exists between you and this freelancer. Messaging is only available for active collaborators.', 403)
+      }
+
+      const pair = resolveCollabPair(req.user.id, participantId)
+      const conversation = await prisma.conversation.upsert({
+        where: { collabFreelancer1Id_collabFreelancer2Id: pair },
+        update: {},
+        create: {
+          ...pair,
+          participants: { create: [{ userId: pair.collabFreelancer1Id }, { userId: pair.collabFreelancer2Id }] }
+        },
+        include: convInclude
+      })
+      return respond(res, conversation, 'Collaboration conversation ready', 200)
+    }
+
+    // ── Case 2: Customer ↔ Freelancer ─────────────────────────────────────
+    const pair = resolveCanonicalPair(req.user, participant)
+    if (!pair) {
+      return fail(res, 'Conversations are only supported between a Customer and a Freelancer.', 400)
+    }
+
+    const conversation = await prisma.conversation.upsert({
+      where: { customerId_freelancerId: pair },
+      update: {},
+      create: {
+        ...pair,
+        participants: { create: [{ userId: pair.customerId }, { userId: pair.freelancerId }] }
+      },
+      include: convInclude
+    })
+    return respond(res, conversation, 'Conversation ready', 200)
   } catch (error) { console.error(error); return fail(res, 'Unable to start conversation', 400) }
 }
 
 export const listMessages = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
+    if (req.user.role === 'ADMIN') return fail(res, 'Admin cannot access direct conversations', 403)
+
     const conversationId = idOf(req.params.id)
-    const member = await prisma.conversationParticipant.findUnique({ where: participantWhere(conversationId, req.user.id) })
-    if (!member) return fail(res, 'Conversation not found', 404)
-    await prisma.message.updateMany({ where: { conversationId, senderId: { not: req.user.id } }, data: { isRead: true } })
-    const messages = await prisma.message.findMany({ where: { conversationId }, include: { sender: { select: userSelect } }, orderBy: { sentAt: 'asc' } })
+    const conv = await prisma.conversation.findUnique({ where: { id: conversationId } })
+    if (!conv || !callerIsCanonical(conv, req.user.id)) return fail(res, 'Conversation not found', 404)
+
+    await prisma.message.updateMany({
+      where: { conversationId, senderId: { not: req.user.id } },
+      data: { isRead: true }
+    })
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      include: { sender: { select: userSelect } },
+      orderBy: { sentAt: 'asc' }
+    })
     return respond(res, messages)
   } catch (error) { console.error(error); return fail(res, 'Unable to load messages', 500) }
 }
@@ -413,12 +543,19 @@ export const listMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
+    if (req.user.role === 'ADMIN') return fail(res, 'Admin cannot send direct messages', 403)
+
     const conversationId = idOf(req.params.id)
     const content = String(req.body.content || '').trim()
     if (!content) return fail(res, 'Message cannot be empty')
-    const member = await prisma.conversationParticipant.findUnique({ where: participantWhere(conversationId, req.user.id) })
-    if (!member) return fail(res, 'Conversation not found', 404)
-    const message = await prisma.message.create({ data: { conversationId, senderId: req.user.id, content }, include: { sender: { select: userSelect } } })
+
+    const conv = await prisma.conversation.findUnique({ where: { id: conversationId } })
+    if (!conv || !callerIsCanonical(conv, req.user.id)) return fail(res, 'Conversation not found', 404)
+
+    const message = await prisma.message.create({
+      data: { conversationId, senderId: req.user.id, content },
+      include: { sender: { select: userSelect } }
+    })
     await prisma.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } })
     return respond(res, message, 'Message sent', 201)
   } catch (error) { console.error(error); return fail(res, 'Unable to send message', 400) }
@@ -469,7 +606,8 @@ export const deletePortfolio = async (req, res) => {
 export const listReviews = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
-    const reviews = await prisma.review.findMany({ where: { OR: [{ reviewerId: req.user.id }, { reviewedUserId: req.user.id }] }, include: { reviewer: { select: userSelect }, reviewedUser: { select: userSelect }, project: { select: { id: true, title: true } }, contract: { select: { id: true, status: true } } }, orderBy: { createdAt: 'desc' } })
+    const where = req.user.role === 'ADMIN' ? {} : { OR: [{ reviewerId: req.user.id }, { reviewedUserId: req.user.id }] }
+    const reviews = await prisma.review.findMany({ where, include: { reviewer: { select: userSelect }, reviewedUser: { select: userSelect }, project: { select: { id: true, title: true } }, contract: { select: { id: true, status: true } } }, orderBy: { createdAt: 'desc' } })
     return respond(res, reviews)
   } catch (error) { console.error(error); return fail(res, 'Unable to load reviews', 500) }
 }
@@ -497,6 +635,75 @@ export const listPayments = async (req, res) => {
   } catch (error) { console.error(error); return fail(res, 'Unable to load payments', 500) }
 }
 
+export const createPayment = async (req, res) => {
+  try {
+    if (!requireUser(req, res, ['CUSTOMER', 'ADMIN'])) return
+    const contractId = idOf(req.body.contractId)
+    if (!contractId) return fail(res, 'Valid contract ID is required')
+
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+      include: { project: true, payment: true }
+    })
+    if (!contract) return fail(res, 'Contract not found', 404)
+    if (req.user.role !== 'ADMIN' && contract.clientId !== req.user.id) {
+      return fail(res, 'You are not authorized to make payments for this contract', 403)
+    }
+
+    if (contract.payment && contract.payment.status === 'COMPLETED') {
+      return fail(res, 'Payment for this contract has already been completed', 400)
+    }
+
+    const amount = req.body.amount ? Number(req.body.amount) : Number(contract.agreedAmount)
+    if (isNaN(amount) || amount <= 0) return fail(res, 'Invalid payment amount', 400)
+
+    let payment
+    if (contract.payment) {
+      payment = await prisma.payment.update({
+        where: { id: contract.payment.id },
+        data: { status: 'COMPLETED', amount },
+        include: {
+          contract: { include: { project: { select: { id: true, title: true } } } },
+          payer: { select: userSelect },
+          receiver: { select: userSelect }
+        }
+      })
+    } else {
+      payment = await prisma.payment.create({
+        data: {
+          contractId,
+          payerId: contract.clientId,
+          receiverId: contract.freelancerId,
+          amount,
+          status: 'COMPLETED'
+        },
+        include: {
+          contract: { include: { project: { select: { id: true, title: true } } } },
+          payer: { select: userSelect },
+          receiver: { select: userSelect }
+        }
+      })
+    }
+
+    // Auto-mark contract as COMPLETED and project as COMPLETED if active
+    if (contract.status === 'ACTIVE') {
+      await prisma.contract.update({
+        where: { id: contractId },
+        data: { status: 'COMPLETED', endDate: new Date() }
+      })
+      await prisma.project.update({
+        where: { id: contract.projectId },
+        data: { status: 'COMPLETED' }
+      })
+    }
+
+    return respond(res, payment, 'Payment recorded successfully', 201)
+  } catch (error) {
+    console.error(error)
+    return fail(res, 'Unable to process payment', 500)
+  }
+}
+
 export const createReport = async (req, res) => {
   try {
     if (!requireUser(req, res, ['CUSTOMER', 'FREELANCER'])) return
@@ -504,7 +711,44 @@ export const createReport = async (req, res) => {
     if (!reportedUserId || reportedUserId === req.user.id || !req.body.reason?.trim()) return fail(res, 'Choose a user and provide a reason')
     const reported = await prisma.user.findUnique({ where: { id: reportedUserId } })
     if (!reported) return fail(res, 'Reported user not found', 404)
-    return respond(res, await prisma.report.create({ data: { reporterId: req.user.id, reportedUserId, reason: String(req.body.reason).trim(), description: req.body.description ? String(req.body.description).trim() : null }, include: { reportedUser: { select: userSelect } } }), 'Report submitted', 201)
+
+    let checkedProjectId = null
+    if (req.body.relatedProjectId) {
+      const pid = idOf(req.body.relatedProjectId)
+      if (pid) {
+        const proj = await prisma.project.findUnique({ where: { id: pid } })
+        if (proj) checkedProjectId = pid
+      }
+    }
+
+    let checkedConversationId = null
+    if (req.body.relatedConversationId) {
+      const cid = idOf(req.body.relatedConversationId)
+      if (cid) {
+        const member = await prisma.conversationParticipant.findUnique({
+          where: participantWhere(cid, req.user.id)
+        })
+        if (member) checkedConversationId = cid
+      }
+    }
+
+    const report = await prisma.report.create({
+      data: {
+        reporterId: req.user.id,
+        reportedUserId,
+        reason: String(req.body.reason).trim(),
+        description: req.body.description ? String(req.body.description).trim() : null,
+        relatedProjectId: checkedProjectId,
+        relatedConversationId: checkedConversationId,
+        status: 'PENDING'
+      },
+      include: {
+        reporter: { select: userSelect },
+        reportedUser: { select: userSelect },
+        relatedProject: { select: { id: true, title: true } }
+      }
+    })
+    return respond(res, report, 'Report submitted successfully. Administration has received your report.', 201)
   } catch (error) { console.error(error); return fail(res, 'Unable to submit report', 400) }
 }
 
@@ -542,7 +786,21 @@ export const adminReports = async (req, res) => {
   try {
     if (!requireUser(req, res, ['ADMIN'])) return
     const where = req.query.status && ['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'DISMISSED'].includes(req.query.status) ? { status: req.query.status } : {}
-    return respond(res, await prisma.report.findMany({ where, include: { reporter: { select: userSelect }, reportedUser: { select: userSelect }, resolvedBy: { select: userSelect } }, orderBy: { createdAt: 'desc' } }))
+    return respond(res, await prisma.report.findMany({
+      where,
+      include: {
+        reporter: { select: userSelect },
+        reportedUser: { select: userSelect },
+        resolvedBy: { select: userSelect },
+        relatedProject: { select: { id: true, title: true } },
+        relatedConversation: {
+          include: {
+            participants: { include: { user: { select: userSelect } } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    }))
   } catch (error) { console.error(error); return fail(res, 'Unable to load moderation queue', 500) }
 }
 
@@ -550,8 +808,30 @@ export const updateReport = async (req, res) => {
   try {
     if (!requireUser(req, res, ['ADMIN'])) return
     const status = req.body.status
-    if (!['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'DISMISSED'].includes(status)) return fail(res, 'Unsupported report status')
-    const report = await prisma.report.update({ where: { id: idOf(req.params.id) }, data: { status, resolvedById: ['RESOLVED', 'DISMISSED'].includes(status) ? req.user.id : null, resolvedAt: ['RESOLVED', 'DISMISSED'].includes(status) ? new Date() : null }, include: { reporter: { select: userSelect }, reportedUser: { select: userSelect }, resolvedBy: { select: userSelect } } })
-    return respond(res, report, 'Report status updated')
+    const resolutionNotes = req.body.resolutionNotes !== undefined ? (req.body.resolutionNotes ? String(req.body.resolutionNotes).trim() : null) : undefined
+    if (status && !['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'DISMISSED'].includes(status)) return fail(res, 'Unsupported report status')
+
+    const isResolving = ['RESOLVED', 'DISMISSED'].includes(status)
+    const report = await prisma.report.update({
+      where: { id: idOf(req.params.id) },
+      data: {
+        ...(status ? { status } : {}),
+        ...(resolutionNotes !== undefined ? { resolutionNotes } : {}),
+        resolvedById: isResolving ? req.user.id : undefined,
+        resolvedAt: isResolving ? new Date() : undefined
+      },
+      include: {
+        reporter: { select: userSelect },
+        reportedUser: { select: userSelect },
+        resolvedBy: { select: userSelect },
+        relatedProject: { select: { id: true, title: true } },
+        relatedConversation: {
+          include: {
+            participants: { include: { user: { select: userSelect } } }
+          }
+        }
+      }
+    })
+    return respond(res, report, 'Report updated successfully')
   } catch (error) { console.error(error); return fail(res, 'Unable to update report', 400) }
 }

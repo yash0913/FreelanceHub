@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
+  Award,
   BriefcaseBusiness,
   CalendarDays,
   Check,
@@ -11,7 +12,8 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Star
+  Star,
+  Users
 } from 'lucide-react'
 import api from '../../services/api'
 import './freelancer-dashboard.css'
@@ -22,7 +24,9 @@ const requests = {
   proposals: { url: '/proposals/mine' },
   payments: { url: '/payments/mine' },
   reviews: { url: '/reviews/mine' },
-  projects: { url: '/projects', params: { status: 'OPEN', limit: 4, sort: 'newest' } }
+  projects: { url: '/projects', params: { status: 'OPEN', limit: 4, sort: 'newest' } },
+  collaborations: { url: '/collaborations', params: { limit: 4 } },
+  collabApplications: { url: '/collaborations/mine/applications' }
 }
 
 const initialResources = () => Object.fromEntries(
@@ -233,6 +237,8 @@ export default function FreelancerDashboard({ user }) {
   const payments = useMemo(() => asList(paymentsState.data), [paymentsState.data])
   const reviews = useMemo(() => asList(reviewsState.data), [reviewsState.data])
   const projects = useMemo(() => asList(projectsState.data), [projectsState.data])
+  const collaborations = useMemo(() => asList(resources.collaborations?.data), [resources.collaborations?.data])
+  const myApplications = useMemo(() => asList(resources.collabApplications?.data), [resources.collabApplications?.data])
   const activeContracts = contracts.filter((contract) => contract.status === 'ACTIVE')
   const completedContracts = contracts.filter((contract) => contract.status === 'COMPLETED')
   const receivedPayments = payments.filter((payment) => Number(payment.receiverId) === Number(user?.id))
@@ -379,16 +385,52 @@ export default function FreelancerDashboard({ user }) {
           {!projectsState.loading && !projectsState.error && projects.length > 0 && <div className="fd-opportunity-list">{projects.map((project) => <Opportunity key={project.id} project={project} />)}</div>}
         </Panel>
 
-        <Panel eyebrow="From your recent records" title="Recent activity" className="fd-activity-panel">
-          {(proposalsState.loading || contractsState.loading || paymentsState.loading || reviewsState.loading) && <div className="fd-state" role="status">Loading recent records…</div>}
-          {!proposalsState.loading && !contractsState.loading && !paymentsState.loading && !reviewsState.loading && recentActivity.length === 0 && <ResourceState loading={false} error={[proposalsState, contractsState, paymentsState, reviewsState].find((state) => state.error)?.error} empty="New proposals, contracts, payments, and reviews will appear here." retry={retry} />}
-          {recentActivity.length > 0 && <div className="fd-activity-list">{recentActivity.map((item) => <ActivityItem key={item.id} item={item} />)}</div>}
+        <Panel eyebrow="Peer collaboration network" title="Collaboration & Internships" action={<Link className="text-link" to="/freelancer/collaborations">Collaborate <ArrowRight size={14} /></Link>}>
+          {resources.collaborations?.loading ? <div className="fd-state" role="status">Loading opportunities…</div> : (
+            <div style={{ display: 'grid', gap: '10px' }}>
+              {collaborations.length > 0 ? (
+                collaborations.slice(0, 3).map((collab) => (
+                  <Link
+                    key={collab.id}
+                    to="/freelancer/collaborations"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #eef2f8',
+                      textDecoration: 'none',
+                      color: 'inherit'
+                    }}
+                  >
+                    <div>
+                      <strong style={{ fontSize: '13px', display: 'block' }}>{collab.title}</strong>
+                      <small style={{ color: 'var(--blue)', fontSize: '11px' }}>{collab.roleNeeded} · {collab.creator?.name}</small>
+                    </div>
+                    <span className="status status-open" style={{ fontSize: '10px' }}>
+                      {collab.compensationType === 'UNPAID' ? 'Internship' : collab.compensation || 'Paid'}
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <div className="fd-state">No open peer collaborations right now.</div>
+              )}
+              {myApplications.length > 0 && (
+                <div style={{ marginTop: '4px', fontSize: '11px', color: '#687890' }}>
+                  You have <strong>{myApplications.length}</strong> active collaboration application{myApplications.length === 1 ? '' : 's'}.
+                </div>
+              )}
+            </div>
+          )}
         </Panel>
       </div>
 
       <Panel eyebrow="Shortcuts" title="Quick actions" className="fd-quick-panel">
         <div className="fd-quick-actions">
           <Link to="/freelancer/projects"><Search size={16} /> Find work</Link>
+          <Link to="/freelancer/collaborations"><Users size={16} /> Peer collaborations</Link>
           <Link to="/freelancer/proposals"><FileText size={16} /> View proposals</Link>
           <Link to="/freelancer/contracts"><ShieldCheck size={16} /> View contracts</Link>
           <Link to="/freelancer/portfolio"><BriefcaseBusiness size={16} /> Manage portfolio</Link>
