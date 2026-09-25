@@ -198,7 +198,7 @@ export const updateProfile = async (req, res) => {
         if (existingSkills.length !== normalizedSkillIds.length) return fail(res, 'One or more selected skills are unavailable')
       }
 
-      const profile = await prisma.$transaction(async (tx) => {
+      const profileId = await prisma.$transaction(async (tx) => {
         await tx.user.update({ where: { id: req.user.id }, data: userData, select: userSelect })
         const savedProfile = await tx.freelancerProfile.upsert({
           where: { userId: req.user.id },
@@ -213,8 +213,9 @@ export const updateProfile = async (req, res) => {
             })
           }
         }
-        return tx.freelancerProfile.findUnique({ where: { id: savedProfile.id }, include: profileInclude })
-      })
+        return savedProfile.id
+      }, { timeout: 15000 })
+      const profile = await prisma.freelancerProfile.findUnique({ where: { id: profileId }, include: profileInclude })
       return respond(res, profile, 'Profile updated')
     }
 

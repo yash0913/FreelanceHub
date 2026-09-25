@@ -186,6 +186,7 @@ h2 { letter-spacing: -.035em; }
 
 .loading-screen { align-items: center; color: var(--muted); display: flex; flex-direction: column; font-size: 13px; gap: 12px; justify-content: center; min-height: 100vh; }
 .spinner { animation: spin .8s linear infinite; border: 2px solid #dbe4f5; border-radius: 50%; border-top-color: var(--blue); height: 20px; width: 20px; }
+.button-spinner { animation: spin .8s linear infinite; border: 2px solid rgba(255,255,255,.45); border-radius: 50%; border-top-color: white; display: inline-block; flex: 0 0 auto; height: 14px; width: 14px; }
 .loading-inline { align-items: center; color: var(--muted); display: flex; font-size: 12px; gap: 10px; justify-content: center; min-height: 150px; width: 100%; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .toast { align-items: center; background: var(--ink); border-radius: 9px; bottom: 24px; box-shadow: 0 12px 28px rgba(20,33,61,.22); color: white; display: flex; font-size: 12px; gap: 9px; left: 50%; padding: 12px 15px; position: fixed; transform: translateX(-50%); z-index: 20; }
