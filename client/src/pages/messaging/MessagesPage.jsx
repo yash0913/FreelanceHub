@@ -23,12 +23,83 @@ const dateLabel = (val) => {
       d.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
+const toId = (value) => {
+  const id = Number(value)
+  return Number.isInteger(id) && id > 0 ? id : null
+}
+
+const findParticipantUser = (conv, userId) =>
+  conv?.participants?.find((p) => toId(p.userId) === userId || toId(p.user?.id) === userId)?.user || null
+
+/**
+ * Resolve the other person in a conversation.
+ * Never returns the logged-in user.
+ */
+const getCounterparty = (conv, currentUserId) => {
+  if (!conv || !currentUserId) return null
+
+  const presented = conv.counterparty
+  if (presented && toId(presented.id) && toId(presented.id) !== currentUserId) {
+    return presented
+  }
+
+  const collab1Id = toId(conv.collabFreelancer1Id)
+  const collab2Id = toId(conv.collabFreelancer2Id)
+  if (collab1Id && collab2Id) {
+    if (currentUserId === collab1Id) {
+      return conv.collabFreelancer2 || findParticipantUser(conv, collab2Id)
+    }
+    if (currentUserId === collab2Id) {
+      return conv.collabFreelancer1 || findParticipantUser(conv, collab1Id)
+    }
+    return null
+  }
+
+  const freelancerId = toId(conv.freelancerId)
+  const customerId = toId(conv.customerId)
+  if (customerId && freelancerId) {
+    if (currentUserId === customerId) {
+      return conv.freelancer || findParticipantUser(conv, freelancerId)
+    }
+    if (currentUserId === freelancerId) {
+      return conv.customer || findParticipantUser(conv, customerId)
+    }
+    return null
+  }
+
+  const others = (conv.participants || [])
+    .map((p) => p.user)
+    .filter((u) => u && toId(u.id) && toId(u.id) !== currentUserId)
+  return others.length === 1 ? others[0] : null
+}
+
+const conversationDedupeKey = (conv) => {
+  const collab1Id = toId(conv.collabFreelancer1Id)
+  const collab2Id = toId(conv.collabFreelancer2Id)
+  if (collab1Id && collab2Id) return `ff:${collab1Id}:${collab2Id}`
+  const customerId = toId(conv.customerId)
+  const freelancerId = toId(conv.freelancerId)
+  if (customerId && freelancerId) return `cf:${customerId}:${freelancerId}`
+  return `id:${conv.id}`
+}
+
+const dedupeConversations = (list) => {
+  const map = new Map()
+  for (const conv of list) {
+    const key = conversationDedupeKey(conv)
+    const existing = map.get(key)
+    if (!existing || new Date(conv.updatedAt) >= new Date(existing.updatedAt)) {
+      map.set(key, conv)
+    }
+  }
+  return [...map.values()].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+}
+
 export default function MessagesPage() {
   const { user } = useAuth()
+  const currentUserId = toId(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
-  const initialConvId = searchParams.get('conversation')
-    ? Number(searchParams.get('conversation'))
-    : null
+  const initialConvId = toId(searchParams.get('conversation'))
 
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -43,23 +114,26 @@ export default function MessagesPage() {
 
   const scrollRef = useRef(null)
 
-  // Fetch all conversations
+  // Fetch all conversations belonging to the authenticated user (DB is source of truth)
   const loadConversations = async (silent = false) => {
+    if (!currentUserId) return
     if (!silent) setLoading(true)
     setError('')
     try {
       const res = await api.get('/conversations')
-      const list = unwrap(res) || []
-      setConversations(list)
+      const list = Array.isArray(unwrap(res)) ? unwrap(res) : []
+      const visibleList = dedupeConversations(list).filter((conv) => {
+        const other = getCounterparty(conv, currentUserId)
+        return !!other && toId(other.id) !== currentUserId
+      })
+      setConversations(visibleList)
 
-      // If active conversation not set or invalid, select first
-      if (!activeConvId && list.length > 0) {
-        if (initialConvId && list.some((c) => c.id === initialConvId)) {
-          setActiveConvId(initialConvId)
-        } else {
-          setActiveConvId(list[0].id)
-        }
-      }
+      setActiveConvId((current) => {
+        if (current && visibleList.some((c) => c.id === current)) return current
+        if (initialConvId && visibleList.some((c) => c.id === initialConvId)) return initialConvId
+        if (visibleList.length > 0) return visibleList[0].id
+        return null
+      })
     } catch (err) {
       setError(err?.response?.data?.message || 'Unable to load conversations')
     } finally {
@@ -68,8 +142,9 @@ export default function MessagesPage() {
   }
 
   useEffect(() => {
+    if (!currentUserId) return
     loadConversations()
-  }, [])
+  }, [currentUserId])
 
   // When initialConvId changes from URL
   useEffect(() => {
@@ -143,44 +218,18 @@ export default function MessagesPage() {
     }
   }
 
-  const activeConversation = conversations.find((c) => c.id === activeConvId)
+  const visibleConversations = conversations
+  const activeConversation = visibleConversations.find((c) => c.id === activeConvId)
+  const counterparty = getCounterparty(activeConversation, currentUserId)
 
-  // Resolve counterparty for any conversation type (C↔F or F↔F collab)
-  const getCounterparty = (conv) => {
-    if (!conv) return null
-
-    // F↔F collaboration conversation
-    if (conv.collabFreelancer1Id || conv.collabFreelancer2Id) {
-      const counterpartyId =
-        conv.collabFreelancer1Id === user?.id
-          ? conv.collabFreelancer2Id
-          : conv.collabFreelancer1Id
-      const fromParticipants = conv.participants?.find((p) => p.userId === counterpartyId)?.user
-      if (fromParticipants) return fromParticipants
-    }
-
-    // C↔F conversation
-    if (user?.role === 'CUSTOMER' && conv.freelancerId) {
-      const fromParticipants = conv.participants?.find((p) => p.userId === conv.freelancerId)?.user
-      if (fromParticipants) return fromParticipants
-    }
-    if (user?.role === 'FREELANCER' && conv.customerId) {
-      const fromParticipants = conv.participants?.find((p) => p.userId === conv.customerId)?.user
-      if (fromParticipants) return fromParticipants
-    }
-
-    // Fallback: first participant that isn't the current user
-    return conv.participants?.find((p) => p.userId !== user?.id)?.user || null
-  }
-
-  const counterparty = getCounterparty(activeConversation)
-
-  const filteredConversations = conversations.filter((c) => {
+  const filteredConversations = visibleConversations.filter((c) => {
     if (!searchFilter.trim()) return true
-    const other = getCounterparty(c)
+    const other = getCounterparty(c, currentUserId)
+    const q = searchFilter.toLowerCase()
     return (
-      other?.name?.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      other?.professionalTitle?.toLowerCase().includes(searchFilter.toLowerCase())
+      other?.name?.toLowerCase().includes(q) ||
+      other?.professionalTitle?.toLowerCase().includes(q) ||
+      other?.role?.toLowerCase().includes(q)
     )
   })
 
@@ -224,7 +273,7 @@ export default function MessagesPage() {
           {/* Left: Conversation list */}
           <aside className="panel conversation-list">
             <div className="conversation-heading">
-              <span>Inbox ({conversations.length})</span>
+              <span>Inbox ({filteredConversations.length})</span>
               <span className="muted">End-to-end verified</span>
             </div>
 
@@ -261,7 +310,7 @@ export default function MessagesPage() {
                 </div>
               ) : (
                 filteredConversations.map((conv) => {
-                  const otherUser = getCounterparty(conv)
+                  const otherUser = getCounterparty(conv, currentUserId)
                   const lastMsg = conv.messages?.[0]
                   const isSelected = conv.id === activeConvId
 
@@ -311,7 +360,7 @@ export default function MessagesPage() {
                         >
                           {lastMsg ? (
                             <>
-                              {lastMsg.senderId === user?.id ? 'You: ' : ''}
+                              {toId(lastMsg.senderId) === currentUserId ? 'You: ' : ''}
                               {lastMsg.content}
                             </>
                           ) : (
@@ -384,7 +433,7 @@ export default function MessagesPage() {
                       </div>
                     ) : (
                       messages.map((msg) => {
-                        const isMine = msg.senderId === user?.id
+                        const isMine = toId(msg.senderId) === currentUserId
                         return (
                           <div
                             key={msg.id}

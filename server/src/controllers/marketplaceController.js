@@ -397,7 +397,62 @@ const resolveCollabPair = (idA, idB) => ({
 /** Conversation include fragment used consistently across list/create. */
 const convInclude = {
   participants: { include: { user: { select: userSelect } } },
-  messages: { orderBy: { sentAt: 'desc' }, take: 1, include: { sender: { select: userSelect } } }
+  messages: { orderBy: { sentAt: 'desc' }, take: 1, include: { sender: { select: userSelect } } },
+  customer: { select: userSelect },
+  freelancer: { select: userSelect },
+  collabFreelancer1: { select: userSelect },
+  collabFreelancer2: { select: userSelect }
+}
+
+const findParticipantUser = (conv, userId) =>
+  conv.participants?.find((p) => p.userId === userId)?.user ?? null
+
+/** Resolve the OTHER person in a conversation. Never returns the caller. */
+const resolveCounterparty = (conv, userId) => {
+  const collab1Id = conv.collabFreelancer1Id
+  const collab2Id = conv.collabFreelancer2Id
+  if (collab1Id && collab2Id) {
+    if (userId === collab1Id) return conv.collabFreelancer2 || findParticipantUser(conv, collab2Id)
+    if (userId === collab2Id) return conv.collabFreelancer1 || findParticipantUser(conv, collab1Id)
+    return null
+  }
+  if (conv.customerId && conv.freelancerId) {
+    if (userId === conv.customerId) return conv.freelancer || findParticipantUser(conv, conv.freelancerId)
+    if (userId === conv.freelancerId) return conv.customer || findParticipantUser(conv, conv.customerId)
+    return null
+  }
+  const others = (conv.participants || [])
+    .map((p) => p.user)
+    .filter((u) => u && u.id !== userId)
+  return others.length === 1 ? others[0] : null
+}
+
+const conversationDedupeKey = (conv) => {
+  if (conv.collabFreelancer1Id && conv.collabFreelancer2Id) {
+    return `ff:${conv.collabFreelancer1Id}:${conv.collabFreelancer2Id}`
+  }
+  if (conv.customerId && conv.freelancerId) {
+    return `cf:${conv.customerId}:${conv.freelancerId}`
+  }
+  return `id:${conv.id}`
+}
+
+const dedupeConversations = (list) => {
+  const map = new Map()
+  for (const conv of list) {
+    const key = conversationDedupeKey(conv)
+    const existing = map.get(key)
+    if (!existing || new Date(conv.updatedAt) >= new Date(existing.updatedAt)) {
+      map.set(key, conv)
+    }
+  }
+  return [...map.values()].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+}
+
+const presentConversation = (conv, userId) => {
+  const counterparty = resolveCounterparty(conv, userId)
+  if (!counterparty || counterparty.id === userId) return null
+  return { ...conv, counterparty }
 }
 
 /** Verify caller is an authorized participant of a conversation (either C↔F or F↔F). */
@@ -405,33 +460,35 @@ const callerIsCanonical = (conv, userId) =>
   conv.customerId === userId ||
   conv.freelancerId === userId ||
   conv.collabFreelancer1Id === userId ||
-  conv.collabFreelancer2Id === userId
+  conv.collabFreelancer2Id === userId ||
+  Boolean(conv.participants?.some((p) => p.userId === userId))
 
 export const listConversations = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
     if (req.user.role === 'ADMIN') return respond(res, []) // Admin has no direct messaging
 
-    let where
-    if (req.user.role === 'CUSTOMER') {
-      where = { customerId: req.user.id }
-    } else {
-      // Freelancer: include both C↔F threads AND F↔F collab threads
-      where = {
-        OR: [
-          { freelancerId: req.user.id },
-          { collabFreelancer1Id: req.user.id },
-          { collabFreelancer2Id: req.user.id }
-        ]
-      }
-    }
+    const membership = { participants: { some: { userId: req.user.id } } }
+    const where = req.user.role === 'CUSTOMER'
+      ? { OR: [{ customerId: req.user.id }, membership] }
+      : {
+          OR: [
+            { freelancerId: req.user.id },
+            { collabFreelancer1Id: req.user.id },
+            { collabFreelancer2Id: req.user.id },
+            membership
+          ]
+        }
 
     const conversations = await prisma.conversation.findMany({
       where,
       include: convInclude,
       orderBy: { updatedAt: 'desc' }
     })
-    return respond(res, conversations)
+    const inbox = dedupeConversations(conversations)
+      .map((conv) => presentConversation(conv, req.user.id))
+      .filter(Boolean)
+    return respond(res, inbox)
   } catch (error) { console.error(error); return fail(res, 'Unable to load conversations', 500) }
 }
 
@@ -455,14 +512,9 @@ export const createConversation = async (req, res) => {
       return fail(res, 'Direct messaging with Admin is not permitted. Please use Customer Care / Support.', 403)
     }
 
-    // ── Case 1: Freelancer ↔ Freelancer (collaboration only) ─────────────────────
+    // ── Case 1: Freelancer ↔ Freelancer (accepted collaboration only) ────────────
+    // Frontend flags such as collaborationMode are ignored; the DB relationship is authoritative.
     if (req.user.role === 'FREELANCER' && participant.role === 'FREELANCER') {
-      const collaborationMode = req.body.collaborationMode === true
-      if (!collaborationMode) {
-        return fail(res, 'Freelancer-to-Freelancer messaging is only available through accepted collaborations.', 403)
-      }
-
-      // Server-side authorization: verify an accepted collaboration exists between them
       const validCollab = await prisma.collaborationApplication.findFirst({
         where: {
           status: 'ACCEPTED',
@@ -496,7 +548,9 @@ export const createConversation = async (req, res) => {
         },
         include: convInclude
       })
-      return respond(res, conversation, 'Collaboration conversation ready', 200)
+      const presented = presentConversation(conversation, req.user.id)
+      if (!presented) return fail(res, 'Unable to start conversation', 400)
+      return respond(res, presented, 'Collaboration conversation ready', 200)
     }
 
     // ── Case 2: Customer ↔ Freelancer ─────────────────────────────────────
@@ -514,7 +568,9 @@ export const createConversation = async (req, res) => {
       },
       include: convInclude
     })
-    return respond(res, conversation, 'Conversation ready', 200)
+    const presented = presentConversation(conversation, req.user.id)
+    if (!presented) return fail(res, 'Unable to start conversation', 400)
+    return respond(res, presented, 'Conversation ready', 200)
   } catch (error) { console.error(error); return fail(res, 'Unable to start conversation', 400) }
 }
 
@@ -524,7 +580,10 @@ export const listMessages = async (req, res) => {
     if (req.user.role === 'ADMIN') return fail(res, 'Admin cannot access direct conversations', 403)
 
     const conversationId = idOf(req.params.id)
-    const conv = await prisma.conversation.findUnique({ where: { id: conversationId } })
+    const conv = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true }
+    })
     if (!conv || !callerIsCanonical(conv, req.user.id)) return fail(res, 'Conversation not found', 404)
 
     await prisma.message.updateMany({
@@ -549,7 +608,10 @@ export const sendMessage = async (req, res) => {
     const content = String(req.body.content || '').trim()
     if (!content) return fail(res, 'Message cannot be empty')
 
-    const conv = await prisma.conversation.findUnique({ where: { id: conversationId } })
+    const conv = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true }
+    })
     if (!conv || !callerIsCanonical(conv, req.user.id)) return fail(res, 'Conversation not found', 404)
 
     const message = await prisma.message.create({
