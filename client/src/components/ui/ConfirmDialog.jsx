@@ -10,7 +10,9 @@ export const ConfirmDialog = ({
   cancelLabel = 'Cancel',
   onConfirm,
   onCancel,
-  isLoading = false
+  isLoading = false,
+  showCloseButton = true,
+  showCancelButton = true
 }) => {
   if (!isOpen) return null
 
@@ -29,14 +31,16 @@ export const ConfirmDialog = ({
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
             <span>{title}</span>
           </div>
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="text-gray-400 hover:text-gray-650 disabled:opacity-50 cursor-pointer focus:outline-none"
-            aria-label="Close Dialog"
-          >
-            <X className="w-4.5 h-4.5" />
-          </button>
+          {showCloseButton && (
+            <button
+              onClick={onCancel}
+              disabled={isLoading}
+              className="text-gray-400 hover:text-gray-650 disabled:opacity-50 cursor-pointer focus:outline-none"
+              aria-label="Close Dialog"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+          )}
         </div>
 
         {/* Message body */}
@@ -46,14 +50,16 @@ export const ConfirmDialog = ({
 
         {/* Footer Actions */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100">
-          <Button 
-            variant="outline" 
-            onClick={onCancel} 
-            disabled={isLoading}
-            size="sm"
-          >
-            {cancelLabel}
-          </Button>
+          {showCancelButton && (
+            <Button
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+              size="sm"
+            >
+              {cancelLabel}
+            </Button>
+          )}
           <Button 
             variant="danger" 
             onClick={onConfirm} 

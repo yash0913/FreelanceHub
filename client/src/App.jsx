@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   ArrowRight, BarChart3, BriefcaseBusiness, Building2, Check, ChevronRight, CircleDollarSign, ExternalLink, Flag,
@@ -6,7 +6,8 @@ import {
   MoreHorizontal, Pencil, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, Star, Tag, Trash2, UserRound,
   Users, X, Zap
 } from 'lucide-react'
-import api from './services/api'
+import api, { hasBlockedAccountBeenDetected, isBlockedAccountResponse, resetBlockedAccountDetection } from './services/api'
+import ConfirmDialog from './components/ui/ConfirmDialog'
 import FreelancerDashboard from './pages/freelancer/FreelancerDashboard'
 import MessagesPage from './pages/messaging/MessagesPage'
 import FreelancerCollaborationsPage from './pages/freelancer/FreelancerCollaborationsPage'
@@ -40,6 +41,15 @@ const apiError = (error) => error?.response?.data?.message || error?.message || 
 function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [accountBlocked, setAccountBlocked] = useState(false)
+  const blockedLogoutStarted = useRef(false)
+
+  useEffect(() => {
+    const showBlockedNotice = () => setAccountBlocked(true)
+    window.addEventListener('freelancehub:account-blocked', showBlockedNotice)
+    if (hasBlockedAccountBeenDetected()) showBlockedNotice()
+    return () => window.removeEventListener('freelancehub:account-blocked', showBlockedNotice)
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -48,7 +58,15 @@ function AuthProvider({ children }) {
       const next = unwrap(response)
       setUser(next)
       localStorage.setItem('user', JSON.stringify(next))
-    }).catch(() => {
+    }).catch((error) => {
+      if (isBlockedAccountResponse(error)) {
+        try {
+          const cachedUser = JSON.parse(localStorage.getItem('user') || 'null')
+          if (cachedUser) setUser(cachedUser)
+        } catch { /* Keep the current route and session while the notice is shown. */ }
+        setAccountBlocked(true)
+        return
+      }
       localStorage.removeItem('token')
       localStorage.removeItem('user')
     }).finally(() => setLoading(false))
@@ -60,6 +78,7 @@ function AuthProvider({ children }) {
     async login(email, password) {
       const response = await api.post('/auth/login', { email, password })
       const payload = unwrap(response)
+      resetBlockedAccountDetection()
       localStorage.setItem('token', payload.token)
       localStorage.setItem('user', JSON.stringify(payload.user))
       setUser(payload.user)
@@ -69,10 +88,12 @@ function AuthProvider({ children }) {
       const endpoint = role === 'FREELANCER' ? '/auth/register/freelancer' : '/auth/register/customer'
       return unwrap(await api.post(endpoint, values))
     },
-    logout() {
+    logout({ replace = false } = {}) {
+      resetBlockedAccountDetection()
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       setUser(null)
+      if (replace) window.location.replace('/login')
     },
     refresh() {
       return api.get('/auth/me').then((response) => {
@@ -82,16 +103,33 @@ function AuthProvider({ children }) {
         return next
       })
     }
-  }), [user, loading])
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  }), [user, loading, accountBlocked])
+  return (
+    <AuthContext.Provider value={{ ...value, accountBlocked }}>
+      {children}
+      <ConfirmDialog
+        isOpen={accountBlocked}
+        title="Account Blocked"
+        message="Your account has been blocked and is currently under review. You cannot access your account until the review process is completed. If your account is cleared, access will be restored by the administrator."
+        confirmLabel="OK"
+        showCloseButton={false}
+        showCancelButton={false}
+        onConfirm={() => {
+          if (blockedLogoutStarted.current) return
+          blockedLogoutStarted.current = true
+          value.logout({ replace: true })
+        }}
+      />
+    </AuthContext.Provider>
+  )
 }
 const useAuth = () => useContext(AuthContext)
 
 function ProtectedRoute({ roles, children }) {
-  const { user, loading } = useAuth()
-  if (loading) return <LoadingScreen label="Restoring your workspace" />
-  if (!user) return <Navigate to="/login" replace />
-  if (roles && !roles.includes(user.role)) return <Navigate to={getHome(user)} replace />
+  const { user, loading, accountBlocked } = useAuth()
+  if (loading && !accountBlocked) return <LoadingScreen label="Restoring your workspace" />
+  if (!user && !accountBlocked) return <Navigate to="/login" replace />
+  if (!accountBlocked && roles && !roles.includes(user.role)) return <Navigate to={getHome(user)} replace />
   return children
 }
 

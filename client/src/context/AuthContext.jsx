@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react'
 import authService from '../services/authService'
+import { isBlockedAccountResponse, resetBlockedAccountDetection } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -25,6 +26,13 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Session verify failed:', error.message)
+      if (isBlockedAccountResponse(error)) {
+        try {
+          const cachedUser = JSON.parse(localStorage.getItem('user') || 'null')
+          if (cachedUser) setCurrentUser(cachedUser)
+        } catch { /* Keep the existing session intact until the user acknowledges the modal. */ }
+        return
+      }
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       setCurrentUser(null)
@@ -44,6 +52,7 @@ export const AuthProvider = ({ children }) => {
       const res = await authService.login(email, password)
       if (res.success && res.data) {
         const { token, user } = res.data
+        resetBlockedAccountDetection()
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(user))
         setCurrentUser(user)
@@ -59,6 +68,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
+    resetBlockedAccountDetection()
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setCurrentUser(null)

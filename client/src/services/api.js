@@ -5,6 +5,15 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+let blockedAccountDetected = false
+
+export const isBlockedAccountResponse = (error) =>
+  error?.response?.status === 403 &&
+  String(error.response?.data?.message || '').toLowerCase().includes('blocked')
+
+export const hasBlockedAccountBeenDetected = () => blockedAccountDetected
+export const resetBlockedAccountDetection = () => { blockedAccountDetected = false }
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
@@ -16,6 +25,16 @@ api.interceptors.response.use(
   (error) => {
     const status = error.response?.status
     const message = String(error.response?.data?.message || '').toLowerCase()
+    const isLoginRequest = String(error.config?.url || '').includes('/auth/login')
+
+    if (isBlockedAccountResponse(error) && !isLoginRequest) {
+      if (localStorage.getItem('token') && !blockedAccountDetected) {
+        blockedAccountDetected = true
+        window.dispatchEvent(new Event('freelancehub:account-blocked'))
+      }
+      return Promise.reject(error)
+    }
+
     if ((status === 401 || status === 403) && (message.includes('token') || message.includes('session') || message.includes('blocked') || message.includes('authentication'))) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
