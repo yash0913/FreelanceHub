@@ -325,7 +325,7 @@ export const getMe = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Account not found' })
     }
 
-    const isCompleted = checkProfileCompletion(user)
+    const isCompleted = isProfileComplete(user)
 
     return res.status(200).json({
       success: true,
