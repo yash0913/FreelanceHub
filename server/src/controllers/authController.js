@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
+import { isProfileComplete } from '../utils/profileCompletion.js'
 
 const prisma = new PrismaClient()
+
+
 
 // Email regex validator helper
 const isValidEmail = (email) => {
@@ -64,14 +67,33 @@ export const registerCustomer = async (req, res) => {
         email,
         passwordHash,
         role: 'CUSTOMER',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        isProfileCompleted: false,
+        customerProfile: { create: {} }
       }
     })
+
+    const secret = process.env.JWT_SECRET || 'your-default-jwt-secret-key-change-in-production'
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      secret,
+      { expiresIn: '24h' }
+    )
 
     return res.status(201).json({
       success: true,
       message: 'Customer registered successfully',
       data: {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          isProfileCompleted: false,
+          createdAt: user.createdAt
+        },
         id: user.id,
         name: user.name,
         email: user.email,
@@ -153,14 +175,33 @@ export const registerFreelancer = async (req, res) => {
         role: 'FREELANCER',
         status: 'ACTIVE',
         professionalTitle,
+        isProfileCompleted: false,
         freelancerProfile: { create: {} }
       }
     })
+
+    const secret = process.env.JWT_SECRET || 'your-default-jwt-secret-key-change-in-production'
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      secret,
+      { expiresIn: '24h' }
+    )
 
     return res.status(201).json({
       success: true,
       message: 'Freelancer registered successfully',
       data: {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          professionalTitle: user.professionalTitle,
+          isProfileCompleted: false,
+          createdAt: user.createdAt
+        },
         id: user.id,
         name: user.name,
         email: user.email,
@@ -194,7 +235,15 @@ export const login = async (req, res) => {
     }
 
     // 1. Fetch from Database
-    const user = await prisma.user.findUnique({ where: { email } })
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        customerProfile: true,
+        freelancerProfile: {
+          include: { skills: true }
+        }
+      }
+    })
     if (!user) {
       return res.status(401).json({ 
         success: false, 
@@ -227,6 +276,8 @@ export const login = async (req, res) => {
       { expiresIn: '24h' }
     )
 
+    const isCompleted = isProfileComplete(user)
+
     return res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -238,7 +289,8 @@ export const login = async (req, res) => {
           email: user.email,
           role: user.role,
           status: user.status,
-          professionalTitle: user.professionalTitle
+          professionalTitle: user.professionalTitle,
+          isProfileCompleted: isCompleted
         }
       }
     })
@@ -256,16 +308,35 @@ export const login = async (req, res) => {
  */
 export const getMe = async (req, res) => {
   try {
-    // req.user populated from active JWT middleware check
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        customerProfile: true,
+        freelancerProfile: {
+          include: {
+            skills: true,
+            certifications: true
+          }
+        }
+      }
+    })
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Account not found' })
+    }
+
+    const isCompleted = checkProfileCompletion(user)
+
     return res.status(200).json({
       success: true,
       data: {
-        id: req.user.id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        status: req.user.status,
-        professionalTitle: req.user.professionalTitle ?? null
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        professionalTitle: user.professionalTitle ?? null,
+        isProfileCompleted: isCompleted
       }
     })
   } catch (error) {

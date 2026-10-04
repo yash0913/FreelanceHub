@@ -168,7 +168,7 @@ model User {
   passwordHash      String
   role              Role     @default(CUSTOMER)
   status            Status   @default(ACTIVE)
-  professionalTitle String?  // Optional — stored at User level for quick access on login/JWT
+  professionalTitle String? // Optional — stored at User level for quick access on login/JWT
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -177,64 +177,69 @@ model User {
   freelancerProfile FreelancerProfile?
 
   // ── Projects posted by this user as a client (1:many) ────────────────────
-  projects          Project[]
+  projects Project[]
 
   // ── Messages sent by this user (1:many) ──────────────────────────────────
-  sentMessages      Message[]
+  sentMessages Message[]
 
   // ── Conversations this user participates in ───────────────────────────────
-  conversations     ConversationParticipant[]
+  conversations ConversationParticipant[]
 
   // ── Reviews written BY this user ─────────────────────────────────────────
-  reviewsGiven      Review[] @relation("ReviewerRelation")
+  reviewsGiven Review[] @relation("ReviewerRelation")
 
   // ── Reviews received by this user (as the reviewed party) ────────────────
-  reviewsReceived   Review[] @relation("ReviewedRelation")
+  reviewsReceived Review[] @relation("ReviewedRelation")
 
   // ── Reports filed BY this user ────────────────────────────────────────────
-  reportsFiled      Report[] @relation("ReporterRelation")
+  reportsFiled Report[] @relation("ReporterRelation")
 
   // ── Reports filed AGAINST this user ──────────────────────────────────────
-  reportsReceived   Report[] @relation("ReportedRelation")
+  reportsReceived Report[] @relation("ReportedRelation")
 
   // ── Reports resolved by this admin user ──────────────────────────────────
-  reportsResolved   Report[] @relation("ResolverRelation")
+  reportsResolved Report[] @relation("ResolverRelation")
 
   // ── Contracts as customer ─────────────────────────────────────────────────
-  contractsAsClient     Contract[] @relation("ContractClientRelation")
+  contractsAsClient Contract[] @relation("ContractClientRelation")
 
   // ── Contracts as freelancer ───────────────────────────────────────────────
   contractsAsFreelancer Contract[] @relation("ContractFreelancerRelation")
 
   // ── Payments made as payer ────────────────────────────────────────────────
-  paymentsMade      Payment[] @relation("PayerRelation")
+  paymentsMade Payment[] @relation("PayerRelation")
 
   // ── Payments received ─────────────────────────────────────────────────────
-  paymentsReceived  Payment[] @relation("ReceiverRelation")
+  paymentsReceived Payment[] @relation("ReceiverRelation")
 
   // ── Collaboration opportunities created by this user ─────────────────────
-  collaborationsCreated      CollaborationOpportunity[] @relation("CollabCreatorRelation")
+  collaborationsCreated CollaborationOpportunity[] @relation("CollabCreatorRelation")
 
   // ── Collaboration applications submitted by this user ───────────────────
-  collaborationApplications  CollaborationApplication[] @relation("CollabApplicantRelation")
+  collaborationApplications CollaborationApplication[] @relation("CollabApplicantRelation")
 
   // ── Verified collaborations as participating freelancer ──────────────────
   verifiedCollaborationsAsFreelancer VerifiedCollaboration[] @relation("VerifiedCollabFreelancer")
 
   // ── Verified collaborations as partner/creator ───────────────────────────
-  verifiedCollaborationsAsPartner    VerifiedCollaboration[] @relation("VerifiedCollabPartner")
+  verifiedCollaborationsAsPartner VerifiedCollaboration[] @relation("VerifiedCollabPartner")
 
   // ── Support tickets filed by this user ───────────────────────────────────
-  supportTickets             SupportTicket[] @relation("TicketUserRelation")
+  supportTickets SupportTicket[] @relation("TicketUserRelation")
 
   // ── Support tickets resolved by this admin ───────────────────────────────
-  ticketsResolved            SupportTicket[] @relation("TicketResolverRelation")
+  ticketsResolved SupportTicket[] @relation("TicketResolverRelation")
 
   // ── Canonical direct conversations ───────────────────────────────────────
-  customerConversations      Conversation[]  @relation("CustomerConversations")
-  freelancerConversations    Conversation[]  @relation("FreelancerConversations")
-  collabF1Conversations      Conversation[]  @relation("CollabF1Conversations")
-  collabF2Conversations      Conversation[]  @relation("CollabF2Conversations")
+  customerConversations   Conversation[] @relation("CustomerConversations")
+  freelancerConversations Conversation[] @relation("FreelancerConversations")
+  collabF1Conversations   Conversation[] @relation("CollabF1Conversations")
+  collabF2Conversations   Conversation[] @relation("CollabF2Conversations")
+
+  // ── Onboarding / Progress / Notifications ─────────────────────────────────
+  isProfileCompleted  Boolean                 @default(false)
+  notifications       Notification[]
+  progressUpdatesMade ProjectProgressUpdate[]
 
   // ── Indexes ───────────────────────────────────────────────────────────────
   @@index([role])
@@ -249,16 +254,20 @@ model User {
 /// Extended client/customer profile. Supplements User authentication record.
 /// One-to-one with User (CUSTOMER role).
 model CustomerProfile {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @unique
-  bio          String?  @db.Text
-  companyName  String?
-  location     String?
-  profileImage String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique
+  bio              String?  @db.Text
+  companyName      String?
+  organizationType String?
+  useCase          String?
+  website          String?
+  linkedinUrl      String?
+  location         String?
+  profileImage     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -270,21 +279,27 @@ model CustomerProfile {
 /// Detailed freelancer profile for marketplace visibility.
 /// One-to-one with User (FREELANCER role).
 model FreelancerProfile {
-  id              Int              @id @default(autoincrement())
-  userId          Int              @unique
-  bio             String?          @db.Text
-  hourlyRate      Decimal?         @db.Decimal(10, 2)
-  experienceLevel ExperienceLevel  @default(ENTRY)
-  location        String?
-  availability    Availability     @default(FULL_TIME)
-  profileImage    String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                Int             @id @default(autoincrement())
+  userId            Int             @unique
+  bio               String?         @db.Text
+  hourlyRate        Decimal?        @db.Decimal(10, 2)
+  experienceLevel   ExperienceLevel @default(ENTRY)
+  location          String?
+  availability      Availability    @default(FULL_TIME)
+  profileImage      String?
+  linkedinUrl       String?
+  githubUrl         String?
+  websiteUrl        String?
+  yearsOfExperience Int?
+  experienceSummary String?         @db.Text
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skills          FreelancerSkill[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills            FreelancerSkill[]
   portfolioProjects PortfolioProject[]
-  proposals       Proposal[]
+  certifications    Certification[]
+  proposals         Proposal[]
 
   @@index([userId])
   @@index([experienceLevel])
@@ -299,9 +314,9 @@ model FreelancerProfile {
 
 /// Normalized skill entity. Shared across freelancers and projects.
 model Skill {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
 
   freelancers FreelancerSkill[]
   projects    ProjectSkill[]
@@ -339,8 +354,8 @@ model PortfolioProject {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  freelancerProfile   FreelancerProfile       @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
-  skills              PortfolioProjectSkill[]
+  freelancerProfile FreelancerProfile       @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+  skills            PortfolioProjectSkill[]
 
   @@index([freelancerProfileId])
 }
@@ -364,11 +379,11 @@ model PortfolioProjectSkill {
 
 /// Normalized project category lookup table.
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  createdAt DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
 
-  projects  Project[]
+  projects Project[]
 
   @@index([name])
 }
@@ -387,15 +402,16 @@ model Project {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  client          User            @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  category        Category?       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  client          User                       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  category        Category?                  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   requiredSkills  ProjectSkill[]
   proposals       Proposal[]
   contract        Contract?
   review          Review?
-  reports         Report[]        @relation("ReportProjectRelation")
-  supportTickets  SupportTicket[] @relation("TicketProjectRelation")
+  reports         Report[]                   @relation("ReportProjectRelation")
+  supportTickets  SupportTicket[]            @relation("TicketProjectRelation")
   collaborations  CollaborationOpportunity[]
+  progressUpdates ProjectProgressUpdate[]
 
   @@index([clientId])
   @@index([categoryId])
@@ -464,12 +480,13 @@ model Contract {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
-  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Restrict)
-  client     User     @relation("ContractClientRelation", fields: [clientId], references: [id], onDelete: Restrict)
-  freelancer User     @relation("ContractFreelancerRelation", fields: [freelancerId], references: [id], onDelete: Restrict)
-  review     Review?
-  payment    Payment?
+  project         Project                 @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  proposal        Proposal                @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  client          User                    @relation("ContractClientRelation", fields: [clientId], references: [id], onDelete: Restrict)
+  freelancer      User                    @relation("ContractFreelancerRelation", fields: [freelancerId], references: [id], onDelete: Restrict)
+  review          Review?
+  payment         Payment?
+  progressUpdates ProjectProgressUpdate[]
 
   @@index([clientId])
   @@index([freelancerId])
@@ -486,21 +503,21 @@ model Contract {
 ///   2. Freelancer ↔ Freelancer (collaboration only): identified by collabFreelancer1Id + collabFreelancer2Id
 ///      where collabFreelancer1Id < collabFreelancer2Id (canonical ordering by numeric ID)
 model Conversation {
-  id                   Int      @id @default(autoincrement())
-  customerId           Int?
-  freelancerId         Int?
-  collabFreelancer1Id  Int?     // Freelancer with lower ID (canonical ordering)
-  collabFreelancer2Id  Int?     // Freelancer with higher ID (canonical ordering)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                  Int      @id @default(autoincrement())
+  customerId          Int?
+  freelancerId        Int?
+  collabFreelancer1Id Int? // Freelancer with lower ID (canonical ordering)
+  collabFreelancer2Id Int? // Freelancer with higher ID (canonical ordering)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  customer            User?    @relation("CustomerConversations", fields: [customerId], references: [id], onDelete: Cascade)
-  freelancer          User?    @relation("FreelancerConversations", fields: [freelancerId], references: [id], onDelete: Cascade)
-  collabFreelancer1   User?    @relation("CollabF1Conversations", fields: [collabFreelancer1Id], references: [id], onDelete: Cascade)
-  collabFreelancer2   User?    @relation("CollabF2Conversations", fields: [collabFreelancer2Id], references: [id], onDelete: Cascade)
-  participants        ConversationParticipant[]
-  messages            Message[]
-  reports             Report[]  @relation("ReportConversationRelation")
+  customer          User?                     @relation("CustomerConversations", fields: [customerId], references: [id], onDelete: Cascade)
+  freelancer        User?                     @relation("FreelancerConversations", fields: [freelancerId], references: [id], onDelete: Cascade)
+  collabFreelancer1 User?                     @relation("CollabF1Conversations", fields: [collabFreelancer1Id], references: [id], onDelete: Cascade)
+  collabFreelancer2 User?                     @relation("CollabF2Conversations", fields: [collabFreelancer2Id], references: [id], onDelete: Cascade)
+  participants      ConversationParticipant[]
+  messages          Message[]
+  reports           Report[]                  @relation("ReportConversationRelation")
 
   @@unique([customerId, freelancerId])
   @@unique([collabFreelancer1Id, collabFreelancer2Id])
@@ -526,15 +543,15 @@ model ConversationParticipant {
 
 /// An individual message within a conversation.
 model Message {
-  id             Int          @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   conversationId Int
   senderId       Int
-  content        String       @db.Text
-  isRead         Boolean      @default(false)
-  sentAt         DateTime     @default(now())
+  content        String   @db.Text
+  isRead         Boolean  @default(false)
+  sentAt         DateTime @default(now())
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
 
   @@index([conversationId])
   @@index([senderId])
@@ -553,14 +570,14 @@ model Review {
   contractId     Int      @unique
   reviewerId     Int
   reviewedUserId Int
-  rating         Int      // Application enforces 1-5 range
+  rating         Int // Application enforces 1-5 range
   comment        String?  @db.Text
   createdAt      DateTime @default(now())
 
-  project        Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
-  contract       Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
-  reviewer       User     @relation("ReviewerRelation", fields: [reviewerId], references: [id], onDelete: Restrict)
-  reviewedUser   User     @relation("ReviewedRelation", fields: [reviewedUserId], references: [id], onDelete: Restrict)
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  reviewer     User     @relation("ReviewerRelation", fields: [reviewerId], references: [id], onDelete: Restrict)
+  reviewedUser User     @relation("ReviewedRelation", fields: [reviewedUserId], references: [id], onDelete: Restrict)
 
   @@index([reviewedUserId])
   @@index([reviewerId])
@@ -609,18 +626,18 @@ model Report {
 /// Simple in-system payment record linked to a contract.
 /// Not integrated with external payment gateway.
 model Payment {
-  id           Int           @id @default(autoincrement())
-  contractId   Int           @unique
-  payerId      Int
-  receiverId   Int
-  amount       Decimal       @db.Decimal(10, 2)
-  status       PaymentStatus @default(PENDING)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id         Int           @id @default(autoincrement())
+  contractId Int           @unique
+  payerId    Int
+  receiverId Int
+  amount     Decimal       @db.Decimal(10, 2)
+  status     PaymentStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
-  contract     Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict)
-  payer        User          @relation("PayerRelation", fields: [payerId], references: [id], onDelete: Restrict)
-  receiver     User          @relation("ReceiverRelation", fields: [receiverId], references: [id], onDelete: Restrict)
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  payer    User     @relation("PayerRelation", fields: [payerId], references: [id], onDelete: Restrict)
+  receiver User     @relation("ReceiverRelation", fields: [receiverId], references: [id], onDelete: Restrict)
 
   @@index([contractId])
   @@index([payerId])
@@ -657,10 +674,10 @@ model CollaborationOpportunity {
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 
-  creator              User                     @relation("CollabCreatorRelation", fields: [creatorId], references: [id], onDelete: Cascade)
-  relatedProject       Project?                 @relation(fields: [relatedProjectId], references: [id], onDelete: SetNull)
-  applications         CollaborationApplication[]
-  verifiedWorks        VerifiedCollaboration[]
+  creator        User                       @relation("CollabCreatorRelation", fields: [creatorId], references: [id], onDelete: Cascade)
+  relatedProject Project?                   @relation(fields: [relatedProjectId], references: [id], onDelete: SetNull)
+  applications   CollaborationApplication[]
+  verifiedWorks  VerifiedCollaboration[]
 
   @@index([creatorId])
   @@index([status])
@@ -672,17 +689,17 @@ model CollaborationOpportunity {
 
 /// Application submitted by a freelancer to join a collaboration opportunity
 model CollaborationApplication {
-  id              Int                            @id @default(autoincrement())
-  opportunityId   Int
-  applicantId     Int
-  message         String                         @db.Text
-  status          CollaborationApplicationStatus @default(PENDING)
-  createdAt       DateTime                       @default(now())
-  updatedAt       DateTime                       @updatedAt
+  id            Int                            @id @default(autoincrement())
+  opportunityId Int
+  applicantId   Int
+  message       String                         @db.Text
+  status        CollaborationApplicationStatus @default(PENDING)
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
 
-  opportunity     CollaborationOpportunity       @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  applicant       User                           @relation("CollabApplicantRelation", fields: [applicantId], references: [id], onDelete: Cascade)
-  verifiedWork    VerifiedCollaboration?
+  opportunity  CollaborationOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  applicant    User                     @relation("CollabApplicantRelation", fields: [applicantId], references: [id], onDelete: Cascade)
+  verifiedWork VerifiedCollaboration?
 
   @@unique([opportunityId, applicantId])
   @@index([opportunityId])
@@ -692,26 +709,26 @@ model CollaborationApplication {
 
 /// Verified work history entry generated when a collaboration is successfully completed
 model VerifiedCollaboration {
-  id               Int                      @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   freelancerId     Int
   collaboratorId   Int
   opportunityId    Int
-  applicationId    Int?                     @unique
+  applicationId    Int?             @unique
   projectTitle     String
   role             String
-  skills           String?                  @db.Text
-  description      String?                  @db.Text
+  skills           String?          @db.Text
+  description      String?          @db.Text
   duration         String?
-  compensationType CompensationType         @default(UNPAID)
+  compensationType CompensationType @default(UNPAID)
   compensation     String?
-  isVerified       Boolean                  @default(true)
-  completedAt      DateTime                 @default(now())
-  createdAt        DateTime                 @default(now())
+  isVerified       Boolean          @default(true)
+  completedAt      DateTime         @default(now())
+  createdAt        DateTime         @default(now())
 
-  freelancer       User                     @relation("VerifiedCollabFreelancer", fields: [freelancerId], references: [id], onDelete: Cascade)
-  collaborator     User                     @relation("VerifiedCollabPartner", fields: [collaboratorId], references: [id], onDelete: Cascade)
-  opportunity      CollaborationOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  application      CollaborationApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  freelancer   User                      @relation("VerifiedCollabFreelancer", fields: [freelancerId], references: [id], onDelete: Cascade)
+  collaborator User                      @relation("VerifiedCollabPartner", fields: [collaboratorId], references: [id], onDelete: Cascade)
+  opportunity  CollaborationOpportunity  @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  application  CollaborationApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   @@index([freelancerId])
   @@index([collaboratorId])
@@ -738,9 +755,9 @@ model SupportTicket {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  user             User                @relation("TicketUserRelation", fields: [userId], references: [id], onDelete: Cascade)
-  relatedProject   Project?            @relation("TicketProjectRelation", fields: [relatedProjectId], references: [id], onDelete: SetNull)
-  resolvedBy       User?               @relation("TicketResolverRelation", fields: [resolvedById], references: [id], onDelete: SetNull)
+  user           User     @relation("TicketUserRelation", fields: [userId], references: [id], onDelete: Cascade)
+  relatedProject Project? @relation("TicketProjectRelation", fields: [relatedProjectId], references: [id], onDelete: SetNull)
+  resolvedBy     User?    @relation("TicketResolverRelation", fields: [resolvedById], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([status])
@@ -750,3 +767,73 @@ model SupportTicket {
   @@index([relatedProjectId])
 }
 
+// =============================================================================
+// MODULE 14 — CERTIFICATIONS
+// =============================================================================
+
+/// Professional certification earned by a freelancer.
+model Certification {
+  id                  Int      @id @default(autoincrement())
+  freelancerProfileId Int
+  name                String
+  issuingOrg          String
+  issueYear           String?
+  credentialUrl       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerProfileId])
+}
+
+// =============================================================================
+// MODULE 15 — PROJECT PROGRESS TRACKING & HISTORY
+// =============================================================================
+
+/// Tracks stages, milestones, status updates, and history for contracted projects.
+model ProjectProgressUpdate {
+  id                 Int       @id @default(autoincrement())
+  projectId          Int
+  contractId         Int?
+  updatedById        Int
+  stage              String // REQUIREMENTS, DEVELOPMENT, CLIENT_REVIEW, REVISIONS, FINAL_DELIVERY, COMPLETED
+  progressPercentage Int       @default(0)
+  status             String    @default("IN_PROGRESS") // NOT_STARTED, IN_PROGRESS, CLIENT_REVIEW, WAITING_FOR_CLIENT, BLOCKED, COMPLETED
+  note               String?   @db.Text
+  actionRequired     Boolean   @default(false)
+  actionNote         String?   @db.Text
+  expectedCompletion DateTime?
+  createdAt          DateTime  @default(now())
+
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contract  Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  updatedBy User      @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([contractId])
+  @@index([updatedById])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// MODULE 16 — IN-APP NOTIFICATIONS
+// =============================================================================
+
+/// In-app notification for project progress, actions, and milestones.
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String   @db.Text
+  type      String   @default("INFO") // PROGRESS_UPDATE, ACTION_REQUIRED, OVERDUE, MILESTONE
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}

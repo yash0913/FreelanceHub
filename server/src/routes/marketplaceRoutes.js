@@ -5,9 +5,14 @@ import {
   getProfile, updateProfile, listMyProjects, createProject, updateProject, listMyProposals,
   createProposal, updateProposal, listContracts, updateContract, listConversations,
   createConversation, listMessages, sendMessage, listPortfolio, createPortfolio,
-  updatePortfolio, deletePortfolio, listReviews, createReview, listPayments, createPayment,
+  updatePortfolio, deletePortfolio, createCertification, deleteCertification,
+  listReviews, createReview, listPayments, createPayment,
   createReport, listMyReports, adminStats, adminProjects, adminReports, updateReport
 } from '../controllers/marketplaceController.js'
+import {
+  getProjectProgress, createProjectProgressUpdate,
+  listNotifications, markNotificationRead, markAllNotificationsRead
+} from '../controllers/progressController.js'
 import {
   listOpportunities, getOpportunity, createOpportunity, updateOpportunity,
   applyOpportunity, listMyApplications, listMyCreatedOpportunities,
@@ -33,6 +38,8 @@ router.get('/projects', listProjects)
 router.get('/projects/mine', authenticateToken, listMyProjects)
 router.get('/projects/:id/proposals', authenticateToken, listProjectProposals)
 router.post('/projects/:projectId/proposals', authenticateToken, createProposal)
+router.get('/projects/:id/progress', authenticateToken, getProjectProgress)
+router.post('/projects/:id/progress', authenticateToken, createProjectProgressUpdate)
 router.post('/projects', authenticateToken, createProject)
 router.patch('/projects/:id', authenticateToken, updateProject)
 
@@ -74,6 +81,11 @@ router.get('/portfolio', listPortfolio)
 router.post('/portfolio', createPortfolio)
 router.patch('/portfolio/:id', updatePortfolio)
 router.delete('/portfolio/:id', deletePortfolio)
+router.post('/certifications', createCertification)
+router.delete('/certifications/:id', deleteCertification)
+router.get('/notifications', listNotifications)
+router.patch('/notifications/:id/read', markNotificationRead)
+router.post('/notifications/mark-all-read', markAllNotificationsRead)
 router.get('/reviews/mine', listReviews)
 router.post('/reviews', createReview)
 router.get('/payments/mine', listPayments)

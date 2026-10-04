@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { isProfileComplete, CUSTOMER_ORGANIZATION_TYPES, CUSTOMER_USE_CASES } from '../utils/profileCompletion.js'
 
 const prisma = new PrismaClient()
 
@@ -23,10 +24,11 @@ const pageOf = (req) => {
   return { page, limit, skip: (page - 1) * limit }
 }
 const numberOf = (value) => value === undefined || value === '' ? undefined : Number(value)
-const userSelect = { id: true, name: true, email: true, role: true, status: true, professionalTitle: true }
+const userSelect = { id: true, name: true, email: true, role: true, status: true, professionalTitle: true, isProfileCompleted: true }
 const profileInclude = {
   skills: { include: { skill: true } },
   portfolioProjects: { include: { skills: { include: { skill: true } } }, orderBy: { createdAt: 'desc' } },
+  certifications: { orderBy: { createdAt: 'desc' } },
   user: { select: userSelect },
   _count: { select: { proposals: true } }
 }
@@ -166,9 +168,26 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     if (!requireUser(req, res)) return
-    const { name, professionalTitle, bio, hourlyRate, experienceLevel, location, availability, companyName, profileImage, skillIds } = req.body
+    const {
+      name, professionalTitle, bio, hourlyRate, experienceLevel, location, availability,
+      companyName, organizationType, useCase, website, linkedinUrl, githubUrl, websiteUrl,
+      yearsOfExperience, experienceSummary, profileImage, skillIds, certifications
+    } = req.body
+
+    // isProfileCompleted in the request is intentionally ignored. The value below
+    // is derived from the saved account/profile records inside the transaction.
+    const textFields = [name, professionalTitle, bio, location, companyName, organizationType, useCase, website, linkedinUrl, githubUrl, websiteUrl, experienceSummary, profileImage]
+    if (textFields.some((value) => value !== undefined && value !== null && typeof value !== 'string')) {
+      return fail(res, 'Profile text fields must be strings')
+    }
+    if (organizationType !== undefined && organizationType !== null && !CUSTOMER_ORGANIZATION_TYPES.includes(String(organizationType).trim())) {
+      return fail(res, 'Customer / organization type is invalid')
+    }
+    if (useCase !== undefined && useCase !== null && !CUSTOMER_USE_CASES.includes(String(useCase).trim())) {
+      return fail(res, 'Customer use case is invalid')
+    }
     const userData = {
-      ...(name ? { name: String(name).trim() } : {}),
+      ...(name !== undefined && String(name).trim() ? { name: String(name).trim() } : {}),
       ...(professionalTitle !== undefined ? { professionalTitle: professionalTitle ? String(professionalTitle).trim() : null } : {})
     }
 
@@ -178,13 +197,32 @@ export const updateProfile = async (req, res) => {
         return fail(res, 'Hourly rate must be a valid non-negative amount')
       }
 
+      const normalizedYears = yearsOfExperience === '' || yearsOfExperience === null
+        ? null
+        : Number(yearsOfExperience)
+      if (yearsOfExperience !== undefined && normalizedYears !== null && (!Number.isInteger(normalizedYears) || normalizedYears < 0 || normalizedYears > 50)) {
+        return fail(res, 'Years of experience must be a whole number between 0 and 50')
+      }
+      if (experienceLevel !== undefined && !['ENTRY', 'INTERMEDIATE', 'EXPERT'].includes(experienceLevel)) {
+        return fail(res, 'Experience level is invalid')
+      }
+      if (availability !== undefined && !['FULL_TIME', 'PART_TIME', 'NOT_AVAILABLE'].includes(availability)) {
+        return fail(res, 'Availability is invalid')
+      }
+
+      const normalizedText = (value) => value === null ? null : String(value).trim()
       const profileData = {
-        ...(bio !== undefined ? { bio } : {}),
+        ...(bio !== undefined ? { bio: normalizedText(bio) } : {}),
         ...(hourlyRate !== undefined ? { hourlyRate: normalizedRate } : {}),
-        ...(experienceLevel ? { experienceLevel } : {}),
-        ...(location !== undefined ? { location } : {}),
-        ...(availability ? { availability } : {}),
-        ...(profileImage !== undefined ? { profileImage } : {})
+        ...(experienceLevel !== undefined ? { experienceLevel } : {}),
+        ...(location !== undefined ? { location: normalizedText(location) } : {}),
+        ...(availability !== undefined ? { availability } : {}),
+        ...(profileImage !== undefined ? { profileImage: normalizedText(profileImage) } : {}),
+        ...(linkedinUrl !== undefined ? { linkedinUrl: normalizedText(linkedinUrl) } : {}),
+        ...(githubUrl !== undefined ? { githubUrl: normalizedText(githubUrl) } : {}),
+        ...(websiteUrl !== undefined ? { websiteUrl: normalizedText(websiteUrl) } : {}),
+        ...(yearsOfExperience !== undefined ? { yearsOfExperience: normalizedYears } : {}),
+        ...(experienceSummary !== undefined ? { experienceSummary: normalizedText(experienceSummary) } : {})
       }
       const normalizedSkillIds = Array.isArray(skillIds)
         ? [...new Set(skillIds.map(Number))]
@@ -197,9 +235,12 @@ export const updateProfile = async (req, res) => {
         const existingSkills = await prisma.skill.findMany({ where: { id: { in: normalizedSkillIds } }, select: { id: true } })
         if (existingSkills.length !== normalizedSkillIds.length) return fail(res, 'One or more selected skills are unavailable')
       }
+      if (Array.isArray(certifications) && certifications.some((cert) => !cert || typeof cert !== 'object')) {
+        return fail(res, 'Certification details are invalid')
+      }
 
       const profileId = await prisma.$transaction(async (tx) => {
-        await tx.user.update({ where: { id: req.user.id }, data: userData, select: userSelect })
+        const savedUser = await tx.user.update({ where: { id: req.user.id }, data: userData })
         const savedProfile = await tx.freelancerProfile.upsert({
           where: { userId: req.user.id },
           create: { userId: req.user.id, ...profileData },
@@ -213,16 +254,125 @@ export const updateProfile = async (req, res) => {
             })
           }
         }
+        if (Array.isArray(certifications)) {
+          await tx.certification.deleteMany({ where: { freelancerProfileId: savedProfile.id } })
+          const validCerts = certifications.filter((cert) => String(cert.name || '').trim() && String(cert.issuingOrg || '').trim())
+          if (validCerts.length) {
+            await tx.certification.createMany({
+              data: validCerts.map((cert) => ({
+                freelancerProfileId: savedProfile.id,
+                name: String(cert.name).trim(),
+                issuingOrg: String(cert.issuingOrg).trim(),
+                issueYear: cert.issueYear ? String(cert.issueYear).trim() : null,
+                credentialUrl: cert.credentialUrl ? String(cert.credentialUrl).trim() : null
+              }))
+            })
+          }
+        }
+        await tx.user.update({
+          where: { id: req.user.id },
+          data: { isProfileCompleted: isProfileComplete({ ...savedUser, freelancerProfile: savedProfile }) }
+        })
         return savedProfile.id
       }, { timeout: 15000 })
       const profile = await prisma.freelancerProfile.findUnique({ where: { id: profileId }, include: profileInclude })
       return respond(res, profile, 'Profile updated')
     }
 
+    if (req.user.role === 'CUSTOMER') {
+      if (organizationType === null) {
+        const existingCustomerProfile = await prisma.customerProfile.findUnique({
+          where: { userId: req.user.id },
+          select: { organizationType: true }
+        })
+        if (existingCustomerProfile?.organizationType) {
+          return fail(res, 'Customer / organization type is required')
+        }
+      }
+      const customerData = {
+        ...(bio !== undefined ? { bio: bio === null ? null : String(bio).trim() } : {}),
+        ...(companyName !== undefined ? { companyName: companyName === null ? null : String(companyName).trim() } : {}),
+        ...(organizationType !== undefined ? { organizationType: organizationType === null ? null : String(organizationType).trim() } : {}),
+        ...(useCase !== undefined ? { useCase: useCase === null ? null : String(useCase).trim() } : {}),
+        ...(website !== undefined ? { website: website === null ? null : String(website).trim() } : {}),
+        ...(linkedinUrl !== undefined ? { linkedinUrl: linkedinUrl === null ? null : String(linkedinUrl).trim() } : {}),
+        ...(location !== undefined ? { location: location === null ? null : String(location).trim() } : {}),
+        ...(profileImage !== undefined ? { profileImage: profileImage === null ? null : String(profileImage).trim() } : {})
+      }
+      const profileId = await prisma.$transaction(async (tx) => {
+        const savedUser = await tx.user.update({ where: { id: req.user.id }, data: userData })
+        const savedProfile = await tx.customerProfile.upsert({
+          where: { userId: req.user.id },
+          create: { userId: req.user.id, ...customerData },
+          update: customerData
+        })
+        await tx.user.update({
+          where: { id: req.user.id },
+          data: { isProfileCompleted: isProfileComplete({ ...savedUser, customerProfile: savedProfile }) }
+        })
+        return savedProfile.id
+      })
+      const profile = await prisma.customerProfile.findUnique({
+        where: { id: profileId },
+        include: { user: { select: userSelect } }
+      })
+      return respond(res, profile, 'Profile updated')
+    }
+
     const user = await prisma.user.update({ where: { id: req.user.id }, data: userData, select: userSelect })
-    if (req.user.role === 'CUSTOMER') return respond(res, await prisma.customerProfile.upsert({ where: { userId: req.user.id }, create: { userId: req.user.id, bio, companyName, location, profileImage }, update: { ...(bio !== undefined ? { bio } : {}), ...(companyName !== undefined ? { companyName } : {}), ...(location !== undefined ? { location } : {}), ...(profileImage !== undefined ? { profileImage } : {}) }, include: { user: { select: userSelect } } }), 'Profile updated')
     return respond(res, user, 'Profile updated')
-  } catch (error) { console.error(error); return fail(res, 'Unable to update profile', 400) }
+  } catch (error) {
+    console.error('updateProfile Error:', error)
+    return fail(res, 'Unable to update profile', 400)
+  }
+}
+
+export const createCertification = async (req, res) => {
+  try {
+    if (!requireUser(req, res, ['FREELANCER'])) return
+    const profile = await prisma.freelancerProfile.upsert({
+      where: { userId: req.user.id },
+      create: { userId: req.user.id },
+      update: {}
+    })
+    const { name, issuingOrg, issueYear, credentialUrl } = req.body
+    if (!name?.trim() || !issuingOrg?.trim()) {
+      return fail(res, 'Certification name and issuing organization are required')
+    }
+    const cert = await prisma.certification.create({
+      data: {
+        freelancerProfileId: profile.id,
+        name: name.trim(),
+        issuingOrg: issuingOrg.trim(),
+        issueYear: issueYear ? String(issueYear).trim() : null,
+        credentialUrl: credentialUrl ? String(credentialUrl).trim() : null
+      }
+    })
+    return respond(res, cert, 'Certification added', 201)
+  } catch (error) {
+    console.error('createCertification Error:', error)
+    return fail(res, 'Unable to add certification', 400)
+  }
+}
+
+export const deleteCertification = async (req, res) => {
+  try {
+    if (!requireUser(req, res, ['FREELANCER'])) return
+    const id = idOf(req.params.id)
+    if (!id) return fail(res, 'Invalid certification ID', 400)
+    const cert = await prisma.certification.findUnique({
+      where: { id },
+      include: { freelancerProfile: true }
+    })
+    if (!cert || cert.freelancerProfile.userId !== req.user.id) {
+      return fail(res, 'Certification not found', 404)
+    }
+    await prisma.certification.delete({ where: { id } })
+    return respond(res, null, 'Certification deleted')
+  } catch (error) {
+    console.error('deleteCertification Error:', error)
+    return fail(res, 'Unable to delete certification', 400)
+  }
 }
 
 export const listMyProjects = async (req, res) => {

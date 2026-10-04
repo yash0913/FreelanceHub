@@ -23,6 +23,10 @@ import {
   FreelancerReportsPage,
   FreelancerReviewsPage
 } from './pages/freelancer/FreelancerWorkspacePages'
+import NotificationsPopover from './components/notifications/NotificationsPopover'
+import ProjectProgressTracker from './components/progress/ProjectProgressTracker'
+import FreelancerProfileSetup from './pages/onboarding/FreelancerProfileSetup'
+import CustomerProfileSetup from './pages/onboarding/CustomerProfileSetup'
 import './index.css'
 
 const AuthContext = createContext(null)
@@ -30,7 +34,12 @@ const roleLabel = { CUSTOMER: 'Customer', FREELANCER: 'Freelancer', ADMIN: 'Admi
 const currency = (value) => value === null || value === undefined || value === '' ? '—' : `₹${Number(value).toLocaleString('en-IN')}`
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 const titleCase = (value) => String(value || '').replaceAll('_', ' ').toLowerCase().replace(/(^|\s)\S/g, (letter) => letter.toUpperCase())
-const getHome = (user) => user?.role === 'ADMIN' ? '/admin/dashboard' : user?.role === 'CUSTOMER' ? '/customer/dashboard' : '/freelancer/dashboard'
+const getHome = (user) => {
+  if (!user) return '/'
+  if (user.role === 'ADMIN') return '/admin/dashboard'
+  if (!user.isProfileCompleted) return `/${user.role.toLowerCase()}/profile-setup`
+  return user.role === 'CUSTOMER' ? '/customer/dashboard' : '/freelancer/dashboard'
+}
 const unwrap = (response) => response?.data?.data ?? response?.data ?? response
 const validRecordId = (value) => {
   const id = Number(value)
@@ -96,6 +105,14 @@ function AuthProvider({ children }) {
       if (replace) window.location.replace('/login')
     },
     refresh() {
+      return api.get('/auth/me').then((response) => {
+        const next = unwrap(response)
+        setUser(next)
+        localStorage.setItem('user', JSON.stringify(next))
+        return next
+      })
+    },
+    refreshUser() {
       return api.get('/auth/me').then((response) => {
         const next = unwrap(response)
         setUser(next)
@@ -291,6 +308,7 @@ function AppShell({ children }) {
             <Link className="icon-button" aria-label="Open messages" to={messagesPath}>
               <MessageSquare size={18} />{user?.role !== 'FREELANCER' && <span className="header-dot" />}
             </Link>
+            <NotificationsPopover />
             <Link className="user-chip" to={`/${user?.role?.toLowerCase()}/profile`}>
               <Avatar name={user?.name} size="sm" /><span className="user-chip-copy"><strong>{user?.name}</strong><small>{roleLabel[user?.role]}</small></span><ChevronRight size={15} />
             </Link>
@@ -896,6 +914,16 @@ function CustomerProjectDetail({ projectId }) {
                   Mark project completed
                 </Button>
               )}
+
+              {(project.status === 'IN_PROGRESS' || project.status === 'COMPLETED') && (
+                <Link
+                  className="button button-outline button-full"
+                  to={`/customer/projects/${project.id}/progress`}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <BarChart3 size={15} /> Track Progress
+                </Link>
+              )}
             </div>
 
             <div className="side-divider" />
@@ -1109,6 +1137,15 @@ function ProjectDetail({ projectId: propId }) {
             >
               <MessageSquare size={16} /> Message customer
             </Button>
+          )}
+          {user?.role === 'FREELANCER' && (project.status === 'IN_PROGRESS' || project.status === 'COMPLETED') && (
+            <Link
+              className="button button-primary button-full"
+              to={`/freelancer/projects/${project.id}/progress`}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
+            >
+              <BarChart3 size={15} /> {project.status === 'IN_PROGRESS' ? 'Update Progress' : 'View Progress History'}
+            </Link>
           )}
         </aside>
       </div>
@@ -2003,13 +2040,60 @@ function AdminProjectsPage() { return <ProjectsPage /> }
 function AdminCatalogPage() { return <DataPage endpoint="/categories" title="Marketplace catalog." description="Categories currently available to the marketplace." emptyTitle="No categories" emptyDescription="No categories are currently configured." renderItem={(item) => <><div className="data-row-copy"><strong>{item.name}</strong><span>{item._count?.projects ?? 0} projects</span></div></>} /> }
 
 function CustomerProfilePage() {
-  const { user, refresh } = useAuth(); const state = useFetch('/profile'); const [form, setForm] = useState(null); const [message, setMessage] = useState(''); const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
-  useEffect(() => { if (!state.loading) { const profile = state.data || {}; setForm({ name: profile.user?.name || user?.name || '', bio: profile.bio || '', companyName: profile.companyName || '', location: profile.location || '' }) } }, [state.loading, state.data, user])
+  const { user, refresh } = useAuth()
+  const state = useFetch('/profile')
+  const [form, setForm] = useState(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const organizationTypes = ['Individual / Personal', 'Startup', 'Small Business', 'Established Business', 'Agency', 'Other']
+  const useCases = ['Building a website', 'Software & app development', 'Design, UX & branding', 'Marketing & SEO growth', 'Business operations & data analytics', 'Other / Ongoing freelance support']
+
+  useEffect(() => {
+    if (!state.loading) {
+      const profile = state.data || {}
+      setForm({
+        name: profile.user?.name || user?.name || '',
+        organizationType: profile.organizationType || '',
+        useCase: profile.useCase || '',
+        companyName: profile.companyName || '',
+        bio: profile.bio || '',
+        website: profile.website || '',
+        linkedinUrl: profile.linkedinUrl || '',
+        location: profile.location || '',
+        profileImage: profile.profileImage || ''
+      })
+    }
+  }, [state.loading, state.data, user])
+
   if (state.loading || !form) return <LoadingInline />
-  const update = (key) => (event) => setForm({ ...form, [key]: event.target.value })
-  const save = async (event) => { event.preventDefault(); if (saving) return; setSaving(true); setError(''); setMessage(''); try { const response = await api.patch('/profile', form); state.setData(unwrap(response)); await refresh(); setMessage('Profile updated successfully.') } catch (err) { setError(apiError(err)) } finally { setSaving(false) } }
-  const completion = [form.name, form.bio, form.companyName, form.location].filter(Boolean).length * 25
-  return <><PageIntro eyebrow="Customer identity" title="Make your customer profile clear." description="Use your real account and CustomerProfile data to help freelancers understand who they will work with." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={save}><div className="panel-heading"><div><span className="panel-eyebrow">Profile completion</span><h2>{completion}% complete</h2></div><span className="required-note">{completion === 100 ? 'All available details are filled' : 'Add context to build trust'}</span></div><div className="progress" style={{ marginBottom: '22px' }}><span style={{ width: `${completion}%` }} /></div><Input label="Full name" value={form.name} onChange={update('name')} required /><Input label="Company or business name" value={form.companyName} onChange={update('companyName')} placeholder="Optional" /><Textarea label="About you or your business" value={form.bio} onChange={update('bio')} placeholder="Share your goals, context, and what you value in a freelancer." /><Input label="Location" value={form.location} onChange={update('location')} placeholder="City, country" /><div className="form-actions"><Button disabled={saving} aria-busy={saving}>{saving && <span className="button-spinner" aria-hidden="true" />}{saving ? 'Saving…' : 'Save profile'} {!saving && <Check size={16} />}</Button></div></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Account information</span><h2>{form.name}</h2></div><Avatar name={form.name} size="sm" /></div><div className="profile-facts"><div><span>Email</span><strong>{user?.email}</strong></div><div><span>Role</span><strong>{roleLabel[user?.role]}</strong></div><div><span>Company</span><strong>{form.companyName || 'Not added'}</strong></div><div><span>Location</span><strong>{form.location || 'Not added'}</strong></div></div></section></div></>
+  const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }))
+  const isPersonal = form.organizationType === 'Individual / Personal'
+  const completion = [Boolean(form.organizationType), Boolean(form.useCase), isPersonal || Boolean(form.companyName.trim()), Boolean(form.name.trim())].filter(Boolean).length * 25
+  const save = async (event) => {
+    event.preventDefault()
+    if (saving) return
+    setSaving(true); setError(''); setMessage('')
+    try {
+      const response = await api.patch('/profile', {
+        ...form,
+        organizationType: form.organizationType || null,
+        useCase: form.useCase || null,
+        companyName: form.companyName.trim() || null,
+        bio: form.bio.trim() || null,
+        website: form.website.trim() || null,
+        linkedinUrl: form.linkedinUrl.trim() || null,
+        location: form.location.trim() || null,
+        profileImage: form.profileImage.trim() || null
+      })
+      state.setData(unwrap(response))
+      await refresh()
+      setMessage('Profile updated successfully.')
+    } catch (err) { setError(apiError(err)) }
+    finally { setSaving(false) }
+  }
+
+  return <><PageIntro eyebrow="Customer identity" title="Make your customer profile clear." description="Edit the same customer profile used during onboarding and throughout the marketplace." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={save}><div className="panel-heading"><div><span className="panel-eyebrow">Profile completion</span><h2>{completion}% complete</h2></div><span className="required-note">Business name is optional for individuals</span></div><div className="progress" style={{ marginBottom: '22px' }}><span style={{ width: `${completion}%` }} /></div><Input label="Full name" value={form.name} onChange={update('name')} required /><Select label="Customer / organization type" value={form.organizationType} onChange={update('organizationType')} required><option value="">Choose a type</option>{organizationTypes.map((type) => <option key={type} value={type}>{type}</option>)}</Select><Select label="Primary use case" value={form.useCase} onChange={update('useCase')} required><option value="">Choose a use case</option>{useCases.map((item) => <option key={item} value={item}>{item}</option>)}</Select><Input label="Business / organization name" value={form.companyName} onChange={update('companyName')} placeholder={isPersonal ? 'Optional for individuals' : 'Company name'} required={Boolean(form.organizationType) && !isPersonal} /><Textarea label="About you or your organization" value={form.bio} onChange={update('bio')} placeholder="Share your goals, context, and what you value in a freelancer." /><div className="form-grid-two"><Input label="Website URL" type="url" value={form.website} onChange={update('website')} placeholder="https://company.example" /><Input label="LinkedIn / company profile URL" type="url" value={form.linkedinUrl} onChange={update('linkedinUrl')} placeholder="https://linkedin.com/company/…" /></div><div className="form-grid-two"><Input label="Location" value={form.location} onChange={update('location')} placeholder="City, country" /><Input label="Logo / photo URL" type="url" value={form.profileImage} onChange={update('profileImage')} placeholder="https://…" /></div><p className="muted" style={{ fontSize: '12px' }}>Images are stored as URLs; this form does not upload files.</p><div className="form-actions"><Button disabled={saving} aria-busy={saving}>{saving ? 'Saving…' : 'Save profile'} {!saving && <Check size={16} />}</Button></div></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Customer profile</span><h2>{form.name}</h2></div><Avatar name={form.name} size="sm" /></div><div className="profile-facts"><div><span>Account</span><strong>{user?.email}</strong></div><div><span>Type</span><strong>{form.organizationType || 'Not selected'}</strong></div><div><span>Use case</span><strong>{form.useCase || 'Not selected'}</strong></div><div><span>Organization</span><strong>{form.companyName || 'Individual / not added'}</strong></div><div><span>Location</span><strong>{form.location || 'Not added'}</strong></div><div><span>Website</span><strong>{form.website || 'Not added'}</strong></div><div><span>LinkedIn</span><strong>{form.linkedinUrl || 'Not added'}</strong></div><div><span>Logo URL</span><strong>{form.profileImage || 'Not added'}</strong></div></div></section></div></>
 }
 
 function ProfilePage() {
@@ -2029,11 +2113,18 @@ function ProfilePage() {
         name: profile.user?.name || user?.name || '',
         professionalTitle: profile.user?.professionalTitle || user?.professionalTitle || '',
         bio: profile.bio || '',
+        profileImage: profile.profileImage || '',
         hourlyRate: profile.hourlyRate ?? '',
         experienceLevel: profile.experienceLevel || 'INTERMEDIATE',
         location: profile.location || '',
         availability: profile.availability || 'FULL_TIME',
-        skillIds: (profile.skills || []).map(({ skill }) => skill.id)
+        linkedinUrl: profile.linkedinUrl || '',
+        githubUrl: profile.githubUrl || '',
+        websiteUrl: profile.websiteUrl || '',
+        yearsOfExperience: profile.yearsOfExperience ?? '',
+        experienceSummary: profile.experienceSummary || '',
+        skillIds: (profile.skills || []).map(({ skill }) => skill?.id).filter(Boolean),
+        certifications: (profile.certifications || []).map(({ name, issuingOrg, issueYear, credentialUrl }) => ({ name, issuingOrg, issueYear: issueYear || '', credentialUrl: credentialUrl || '' }))
       })
     }
   }, [state.loading, state.error, state.data, user])
@@ -2046,6 +2137,7 @@ function ProfilePage() {
 
   const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }))
   const toggleSkill = (id) => setForm((current) => ({ ...current, skillIds: current.skillIds.includes(id) ? current.skillIds.filter((item) => item !== id) : [...current.skillIds, id] }))
+  const updateCertification = (index, key, value) => setForm((current) => ({ ...current, certifications: current.certifications.map((cert, i) => i === index ? { ...cert, [key]: value } : cert) }))
   const save = async (event) => {
     event.preventDefault(); setError(''); setMessage(''); setSaving(true)
     try {
@@ -2057,13 +2149,13 @@ function ProfilePage() {
     finally { setSaving(false) }
   }
   const hasBio = Boolean(form.bio.trim())
-  const hasSkills = form.skillIds.length > 0
-  const hasPortfolio = Boolean(state.data?.portfolioProjects?.length)
-  const completion = 25 + (hasBio ? 25 : 0) + (hasSkills ? 25 : 0) + (hasPortfolio ? 25 : 0)
-  const missing = !hasBio ? 'Add your professional bio' : !hasSkills ? 'Add skills to improve discoverability' : !hasPortfolio ? 'Add a portfolio project' : 'Your profile is complete'
+  const hasTitle = Boolean(form.professionalTitle.trim())
+  const hasName = Boolean(form.name.trim())
+  const completion = Math.round(([hasName, hasTitle, hasBio].filter(Boolean).length / 3) * 100)
   const freelancerProfileId = validRecordId(state.data?.id)
+  const portfolioProjects = state.data?.portfolioProjects || []
 
-  return <><PageIntro eyebrow="Professional identity" title="Make your profile work harder." description="Give clients the context they need to understand your expertise and choose you with confidence." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={save}><div className="panel-heading"><div><span className="panel-eyebrow">Profile completion</span><h2>{completion}% complete</h2></div><span className="required-note">{missing}</span></div><div className="progress" style={{ marginBottom: '22px' }}><span style={{ width: `${completion}%` }} /></div><Input label="Full name" value={form.name} onChange={update('name')} required /><Input label="Professional title" value={form.professionalTitle} onChange={update('professionalTitle')} required /><Textarea label="Professional bio" value={form.bio} onChange={update('bio')} placeholder="Describe your strengths, experience, and the problems you solve." /><div className="form-grid-two"><Select label="Experience level" value={form.experienceLevel} onChange={update('experienceLevel')}><option value="ENTRY">Entry</option><option value="INTERMEDIATE">Intermediate</option><option value="EXPERT">Expert</option></Select><Input label="Hourly rate (INR)" type="number" min="0" value={form.hourlyRate} onChange={update('hourlyRate')} placeholder="2500" /></div><div className="form-grid-two"><Select label="Availability" value={form.availability} onChange={update('availability')}><option value="FULL_TIME">Full time</option><option value="PART_TIME">Part time</option><option value="NOT_AVAILABLE">Not available</option></Select><Input label="Location" value={form.location} onChange={update('location')} placeholder="Bengaluru, India" /></div><div className="field"><span>Skills from the live database</span>{skills.loading ? <small>Loading skills…</small> : skills.error ? <small role="alert">Skills are temporarily unavailable. Your existing selections are preserved.</small> : skills.data?.length ? <div className="check-grid">{skills.data.map((skill) => <button type="button" aria-pressed={form.skillIds.includes(skill.id)} className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => toggleSkill(skill.id)}><Check size={13} />{skill.name}</button>)}</div> : <small>No skills are available in the catalog yet.</small>}</div><div className="form-actions"><Button disabled={saving} aria-busy={saving}>{saving && <span className="button-spinner" aria-hidden="true" />}{saving ? 'Saving…' : 'Save profile'} {!saving && <Check size={16} />}</Button></div></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Profile signal</span><h2>What clients will see</h2></div><Avatar name={form.name} size="sm" /></div><div className="profile-facts"><div><span>Professional title</span><strong>{form.professionalTitle || 'Add a title'}</strong></div><div><span>Experience</span><strong>{titleCase(form.experienceLevel)}</strong></div><div><span>Availability</span><strong>{titleCase(form.availability)}</strong></div><div><span>Location</span><strong>{form.location || 'Not added'}</strong></div><div><span>Hourly rate</span><strong>{form.hourlyRate ? `${currency(form.hourlyRate)} / hour` : 'Not added'}</strong></div><div><span>Portfolio</span><strong>{hasPortfolio ? `${state.data.portfolioProjects.length} project(s)` : 'Add your first project'}</strong></div></div>{freelancerProfileId ? <Link className="button button-outline button-full" to={`/freelancer/${freelancerProfileId}`} style={{ marginTop: '20px' }}>Preview public profile <ArrowRight size={15} /></Link> : <p className="muted" style={{ fontSize: '11px', marginTop: '20px' }}>Save your profile to make your public profile available.</p>}<Link className="text-link" to="/freelancer/portfolio" style={{ marginTop: '15px' }}>Manage portfolio <ArrowRight size={14} /></Link></section></div></>
+  return <><PageIntro eyebrow="Professional identity" title="Make your profile work harder." description="Edit the same freelancer profile used during onboarding, including professional details, skills, certifications, and links to your saved portfolio." />{message && <div className="success-banner"><Check size={17} />{message}</div>}{error && <ErrorState message={error} />}<div className="two-column"><form className="panel form-panel" onSubmit={save}><div className="panel-heading"><div><span className="panel-eyebrow">Profile completion</span><h2>{completion}% complete</h2></div><span className="required-note">Name, title, and bio are required</span></div><div className="progress" style={{ marginBottom: '22px' }}><span style={{ width: `${completion}%` }} /></div><Input label="Full name" value={form.name} onChange={update('name')} required /><Input label="Professional headline / title" value={form.professionalTitle} onChange={update('professionalTitle')} required /><Textarea label="Professional bio" value={form.bio} onChange={update('bio')} placeholder="Describe your strengths, experience, and the problems you solve." required /><Input label="Profile photo URL" type="url" value={form.profileImage} onChange={update('profileImage')} placeholder="https://…" /><p className="muted" style={{ fontSize: '12px' }}>Images are stored as URLs; this form does not upload files.</p><div className="form-grid-two"><Select label="Experience level" value={form.experienceLevel} onChange={update('experienceLevel')}><option value="ENTRY">Entry</option><option value="INTERMEDIATE">Intermediate</option><option value="EXPERT">Expert</option></Select><Input label="Hourly rate (INR)" type="number" min="0" value={form.hourlyRate} onChange={update('hourlyRate')} placeholder="2500" /></div><div className="form-grid-two"><Select label="Availability" value={form.availability} onChange={update('availability')}><option value="FULL_TIME">Full time</option><option value="PART_TIME">Part time</option><option value="NOT_AVAILABLE">Not available</option></Select><Input label="Location" value={form.location} onChange={update('location')} placeholder="Bengaluru, India" /></div><div className="form-grid-three"><Input label="Years of experience" type="number" min="0" max="50" value={form.yearsOfExperience} onChange={update('yearsOfExperience')} /><Input label="LinkedIn URL" type="url" value={form.linkedinUrl} onChange={update('linkedinUrl')} /><Input label="GitHub URL" type="url" value={form.githubUrl} onChange={update('githubUrl')} /></div><Input label="Website / portfolio URL" type="url" value={form.websiteUrl} onChange={update('websiteUrl')} /><Textarea label="Experience summary" value={form.experienceSummary} onChange={update('experienceSummary')} placeholder="Previous roles, client engagements, or open-source work." /><div className="field"><span>Skills from the live database</span>{skills.loading ? <small>Loading skills…</small> : skills.error ? <small role="alert">Skills are temporarily unavailable. Your existing selections are preserved.</small> : skills.data?.length ? <div className="check-grid">{skills.data.map((skill) => <button type="button" aria-pressed={form.skillIds.includes(skill.id)} className={`check-pill ${form.skillIds.includes(skill.id) ? 'selected' : ''}`} key={skill.id} onClick={() => toggleSkill(skill.id)}><Check size={13} />{skill.name}</button>)}</div> : <small>No skills are available in the catalog yet.</small>}</div><div className="field"><span>Certifications</span>{form.certifications.map((cert, index) => <div className="panel" key={`${index}-${cert.name}`} style={{ marginBottom: '10px', padding: '12px' }}><div className="form-grid-two"><Input label="Certification name" value={cert.name} onChange={(event) => updateCertification(index, 'name', event.target.value)} /><Input label="Issuing organization" value={cert.issuingOrg} onChange={(event) => updateCertification(index, 'issuingOrg', event.target.value)} /></div><div className="form-grid-two"><Input label="Issue year" value={cert.issueYear} onChange={(event) => updateCertification(index, 'issueYear', event.target.value)} /><Input label="Credential URL" type="url" value={cert.credentialUrl} onChange={(event) => updateCertification(index, 'credentialUrl', event.target.value)} /></div><Button type="button" variant="outline" onClick={() => setForm((current) => ({ ...current, certifications: current.certifications.filter((_, i) => i !== index) }))}>Remove certification</Button></div>)}<Button type="button" variant="outline" onClick={() => setForm((current) => ({ ...current, certifications: [...current.certifications, { name: '', issuingOrg: '', issueYear: '', credentialUrl: '' }] }))}>Add certification</Button></div><div className="form-actions"><Button disabled={saving} aria-busy={saving}>{saving ? 'Saving…' : 'Save profile'} {!saving && <Check size={16} />}</Button></div></form><section className="panel"><div className="panel-heading"><div><span className="panel-eyebrow">Profile signal</span><h2>What clients will see</h2></div><Avatar name={form.name} size="sm" /></div><div className="profile-facts"><div><span>Professional title</span><strong>{form.professionalTitle || 'Add a title'}</strong></div><div><span>Experience</span><strong>{titleCase(form.experienceLevel)}</strong></div><div><span>Years</span><strong>{form.yearsOfExperience || 'Not added'}</strong></div><div><span>Availability</span><strong>{titleCase(form.availability)}</strong></div><div><span>Location</span><strong>{form.location || 'Not added'}</strong></div><div><span>Hourly rate</span><strong>{form.hourlyRate ? `${currency(form.hourlyRate)} / hour` : 'Not added'}</strong></div><div><span>LinkedIn</span><strong>{form.linkedinUrl || 'Not added'}</strong></div><div><span>GitHub</span><strong>{form.githubUrl || 'Not added'}</strong></div><div><span>Website</span><strong>{form.websiteUrl || 'Not added'}</strong></div><div><span>Certifications</span><strong>{form.certifications.length}</strong></div><div><span>Portfolio</span><strong>{portfolioProjects.length ? `${portfolioProjects.length} project(s)` : 'Add your first project'}</strong></div></div>{portfolioProjects.length > 0 && <div style={{ marginTop: '18px' }}><strong>Saved portfolio projects</strong>{portfolioProjects.map((project) => <div key={project.id} style={{ marginTop: '8px' }}><strong>{project.title}</strong>{project.description && <p className="muted" style={{ margin: '3px 0' }}>{project.description}</p>}{project.projectUrl && <a href={project.projectUrl} target="_blank" rel="noreferrer">View project</a>}</div>)}</div>}{freelancerProfileId ? <Link className="button button-outline button-full" to={`/freelancer/${freelancerProfileId}`} style={{ marginTop: '20px' }}>Preview public profile <ArrowRight size={15} /></Link> : <p className="muted" style={{ fontSize: '11px', marginTop: '20px' }}>Save your profile to make your public profile available.</p>}<Link className="text-link" to="/freelancer/portfolio" style={{ marginTop: '15px' }}>Manage portfolio projects <ArrowRight size={14} /></Link></section></div></>
 }
 
 function PortfolioPage() {
@@ -2262,9 +2354,25 @@ function SettingsPage() {
   )
 }
 
+function ProfileSetupGate({ children }) {
+  // Render inside AppShell — sidebar is helpful context during onboarding
+  return <>{children}</>
+}
+
 function RouteView({ path }) {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const prefix = `/${user?.role?.toLowerCase()}`
+
+  // Profile setup — shown without AppShell sidebar
+  if (path.endsWith('/profile-setup')) {
+    if (user?.role === 'FREELANCER') {
+      return <ProfileSetupGate><FreelancerProfileSetup user={user} refreshUser={refreshUser} /></ProfileSetupGate>
+    }
+    if (user?.role === 'CUSTOMER') {
+      return <ProfileSetupGate><CustomerProfileSetup user={user} refreshUser={refreshUser} /></ProfileSetupGate>
+    }
+  }
+
   if (path === `${prefix}/dashboard`) {
     if (user?.role === 'FREELANCER') return <FreelancerDashboard user={user} />
     if (user?.role === 'ADMIN') return <DashboardPage />
@@ -2273,6 +2381,12 @@ function RouteView({ path }) {
 
   if (path === '/freelancer/my-projects' && user?.role === 'FREELANCER') return <FreelancerMyProjectsPage />
   if (path === '/freelancer/collaborations' && user?.role === 'FREELANCER') return <FreelancerCollaborationsPage />
+
+  // Customer project progress tracker
+  const customerProgressMatch = path.match(/^\/customer\/projects\/([^/]+)\/progress$/)
+  if (customerProgressMatch) {
+    return <ProjectProgressTracker projectId={customerProgressMatch[1]} user={user} />
+  }
 
   // Customer project detail
   const customerProjectMatch = path.match(/^\/customer\/projects\/([^/]+)$/)
@@ -2283,6 +2397,12 @@ function RouteView({ path }) {
   // Customer projects list
   if (path === '/customer/projects') return <ProjectsPage mine />
   if (path === '/customer/freelancers') return <FreelancersPage />
+
+  // Freelancer project progress tracker
+  const freelancerProgressMatch = path.match(/^\/freelancer\/projects\/([^/]+)\/progress$/)
+  if (freelancerProgressMatch && user?.role === 'FREELANCER') {
+    return <ProjectProgressTracker projectId={freelancerProgressMatch[1]} user={user} />
+  }
 
   // Freelancer project detail
   const freelancerProjectMatch = path.match(/^\/freelancer\/projects\/([^/]+)$/)
