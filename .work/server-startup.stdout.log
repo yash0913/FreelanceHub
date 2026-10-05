@@ -1,0 +1,4 @@
+==================================================
+FreelanceHub Server Scaffold Listening on Port: 5187
+Health Check: http://localhost:5187/api/v1/health
+==================================================

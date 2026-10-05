@@ -279,21 +279,22 @@ model CustomerProfile {
 /// Detailed freelancer profile for marketplace visibility.
 /// One-to-one with User (FREELANCER role).
 model FreelancerProfile {
-  id                Int             @id @default(autoincrement())
-  userId            Int             @unique
-  bio               String?         @db.Text
-  hourlyRate        Decimal?        @db.Decimal(10, 2)
-  experienceLevel   ExperienceLevel @default(ENTRY)
-  location          String?
-  availability      Availability    @default(FULL_TIME)
-  profileImage      String?
-  linkedinUrl       String?
-  githubUrl         String?
-  websiteUrl        String?
-  yearsOfExperience Int?
-  experienceSummary String?         @db.Text
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  id                     Int             @id @default(autoincrement())
+  userId                 Int             @unique
+  bio                    String?         @db.Text
+  hourlyRate             Decimal?        @db.Decimal(10, 2)
+  experienceLevel        ExperienceLevel @default(ENTRY)
+  location               String?
+  availability           Availability    @default(FULL_TIME)
+  profileImage           String?
+  linkedinUrl            String?
+  githubUrl              String?
+  websiteUrl             String?
+  yearsOfExperience      Int?
+  experienceSummary      String?         @db.Text
+  educationQualification String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
 
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   skills            FreelancerSkill[]

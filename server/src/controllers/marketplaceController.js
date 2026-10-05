@@ -171,12 +171,12 @@ export const updateProfile = async (req, res) => {
     const {
       name, professionalTitle, bio, hourlyRate, experienceLevel, location, availability,
       companyName, organizationType, useCase, website, linkedinUrl, githubUrl, websiteUrl,
-      yearsOfExperience, experienceSummary, profileImage, skillIds, certifications
+      yearsOfExperience, experienceSummary, educationQualification, profileImage, skillIds, certifications
     } = req.body
 
     // isProfileCompleted in the request is intentionally ignored. The value below
     // is derived from the saved account/profile records inside the transaction.
-    const textFields = [name, professionalTitle, bio, location, companyName, organizationType, useCase, website, linkedinUrl, githubUrl, websiteUrl, experienceSummary, profileImage]
+    const textFields = [name, professionalTitle, bio, location, companyName, organizationType, useCase, website, linkedinUrl, githubUrl, websiteUrl, experienceSummary, educationQualification, profileImage]
     if (textFields.some((value) => value !== undefined && value !== null && typeof value !== 'string')) {
       return fail(res, 'Profile text fields must be strings')
     }
@@ -222,7 +222,8 @@ export const updateProfile = async (req, res) => {
         ...(githubUrl !== undefined ? { githubUrl: normalizedText(githubUrl) } : {}),
         ...(websiteUrl !== undefined ? { websiteUrl: normalizedText(websiteUrl) } : {}),
         ...(yearsOfExperience !== undefined ? { yearsOfExperience: normalizedYears } : {}),
-        ...(experienceSummary !== undefined ? { experienceSummary: normalizedText(experienceSummary) } : {})
+        ...(experienceSummary !== undefined ? { experienceSummary: normalizedText(experienceSummary) } : {}),
+        ...(educationQualification !== undefined ? { educationQualification: normalizedText(educationQualification) } : {})
       }
       const normalizedSkillIds = Array.isArray(skillIds)
         ? [...new Set(skillIds.map(Number))]

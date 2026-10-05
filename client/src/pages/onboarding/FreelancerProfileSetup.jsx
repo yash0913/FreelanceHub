@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
+import { EDUCATION_QUALIFICATIONS } from '../../constants/educationQualifications'
 
 export default function FreelancerProfileSetup({ user, refreshUser }) {
   const navigate = useNavigate()
@@ -21,6 +22,7 @@ export default function FreelancerProfileSetup({ user, refreshUser }) {
   const [hourlyRate, setHourlyRate] = useState('')
   const [availability, setAvailability] = useState('FULL_TIME')
   const [experienceLevel, setExperienceLevel] = useState('INTERMEDIATE')
+  const [educationQualification, setEducationQualification] = useState('')
 
   // Professional Presence
   const [linkedinUrl, setLinkedinUrl] = useState('')
@@ -62,6 +64,7 @@ export default function FreelancerProfileSetup({ user, refreshUser }) {
       if (p.hourlyRate) setHourlyRate(p.hourlyRate)
       if (p.availability) setAvailability(p.availability)
       if (p.experienceLevel) setExperienceLevel(p.experienceLevel)
+      if (p.educationQualification) setEducationQualification(p.educationQualification)
       if (p.profileImage) setProfileImage(p.profileImage)
       if (p.linkedinUrl) setLinkedinUrl(p.linkedinUrl)
       if (p.githubUrl) setGithubUrl(p.githubUrl)
@@ -139,6 +142,7 @@ export default function FreelancerProfileSetup({ user, refreshUser }) {
         hourlyRate: hourlyRate ? Number(hourlyRate) : null,
         availability,
         experienceLevel,
+        educationQualification: educationQualification || null,
         profileImage: profileImage.trim() || null,
         linkedinUrl: linkedinUrl.trim() || null,
         githubUrl: githubUrl.trim() || null,
@@ -347,6 +351,14 @@ export default function FreelancerProfileSetup({ user, refreshUser }) {
                 placeholder="e.g. 5"
                 style={{ maxWidth: '200px' }}
               />
+            </div>
+
+            <div className="field" style={{ marginBottom: '14px' }}>
+              <label>Education qualification</label>
+              <select value={educationQualification} onChange={(e) => setEducationQualification(e.target.value)}>
+                <option value="">Select your highest qualification (optional)</option>
+                {EDUCATION_QUALIFICATIONS.map((qualification) => <option key={qualification} value={qualification}>{qualification}</option>)}
+              </select>
             </div>
 
             <div className="field" style={{ marginBottom: '14px' }}>

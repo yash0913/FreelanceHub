@@ -1,0 +1,6 @@
+In-app Browser JS state was preserved. Completed actions were not rolled back; refresh stale UI handles and continue only the remaining work.
+{"code":"REF_NOT_INTERACTABLE","method":"browser_click","callIndex":2,"nextAction":"observe_again"}
+ERROR REF_NOT_INTERACTABLE
+{"control":{"documentRevision":"rev_4d8109c8-b69f-45f3-9632-9b2be64a970b","error":{"code":"REF_NOT_INTERACTABLE","retryable":true},"requiresSnapshot":true,"status":"error","tabId":"tab_f40261bb-cade-42b1-b005-1b9cb7df07e6"},"kind":"error","schema":"manus.browser/v1"}
+ERROR REF_NOT_INTERACTABLE
+{"control":{"documentRevision":"rev_4d8109c8-b69f-45f3-9632-9b2be64a970b","error":{"code":"REF_NOT_INTERACTABLE","retryable":true},"requiresSnapshot":true,"status":"error","tabId":"tab_f40261bb-cade-42b1-b005-1b9cb7df07e6"},"kind":"error","schema":"manus.browser/v1"}
