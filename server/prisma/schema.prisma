@@ -798,6 +798,7 @@ model ProjectProgressUpdate {
   projectId          Int
   contractId         Int?
   updatedById        Int
+  submissionId       String?   @db.VarChar(64)
   stage              String // REQUIREMENTS, DEVELOPMENT, CLIENT_REVIEW, REVISIONS, FINAL_DELIVERY, COMPLETED
   progressPercentage Int       @default(0)
   status             String    @default("IN_PROGRESS") // NOT_STARTED, IN_PROGRESS, CLIENT_REVIEW, WAITING_FOR_CLIENT, BLOCKED, COMPLETED
@@ -811,6 +812,7 @@ model ProjectProgressUpdate {
   contract  Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
   updatedBy User      @relation(fields: [updatedById], references: [id], onDelete: Restrict)
 
+  @@unique([projectId, submissionId])
   @@index([projectId])
   @@index([contractId])
   @@index([updatedById])

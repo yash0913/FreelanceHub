@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { isProfileComplete, CUSTOMER_ORGANIZATION_TYPES, CUSTOMER_USE_CASES } from '../utils/profileCompletion.js'
+import { buildUserProfileUpdateData } from '../utils/profileUpdate.js'
 
 const prisma = new PrismaClient()
 
@@ -186,10 +187,7 @@ export const updateProfile = async (req, res) => {
     if (useCase !== undefined && useCase !== null && !CUSTOMER_USE_CASES.includes(String(useCase).trim())) {
       return fail(res, 'Customer use case is invalid')
     }
-    const userData = {
-      ...(name !== undefined && String(name).trim() ? { name: String(name).trim() } : {}),
-      ...(professionalTitle !== undefined ? { professionalTitle: professionalTitle ? String(professionalTitle).trim() : null } : {})
-    }
+    const userData = buildUserProfileUpdateData(req.user.role, { name, professionalTitle })
 
     if (req.user.role === 'FREELANCER') {
       const normalizedRate = hourlyRate === '' || hourlyRate === null ? null : Number(hourlyRate)

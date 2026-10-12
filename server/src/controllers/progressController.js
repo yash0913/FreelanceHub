@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client'
+import { authorizeProgressUpdate } from '../utils/progressAuthorization.js'
+import { validateProgressSubmission, validateProgressTransition } from '../utils/progressValidation.js'
 
 const prisma = new PrismaClient()
 
@@ -35,6 +37,28 @@ const VALID_PROGRESS_STATUSES = [
   'COMPLETED'
 ]
 
+let progressIdempotencyColumnAvailable
+const hasProgressIdempotencyColumn = async () => {
+  if (progressIdempotencyColumnAvailable !== undefined) return progressIdempotencyColumnAvailable
+  try {
+    const rows = await prisma.$queryRaw`
+      SELECT 1 AS present
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'ProjectProgressUpdate'
+        AND COLUMN_NAME = 'submissionId'
+      LIMIT 1
+    `
+    progressIdempotencyColumnAvailable = rows.length > 0
+  } catch (error) {
+    // Older databases remain usable; idempotency storage becomes active after
+    // the additive migration is applied and the server process restarts.
+    console.warn('Progress idempotency column is unavailable; using legacy schema compatibility mode.')
+    progressIdempotencyColumnAvailable = false
+  }
+  return progressIdempotencyColumnAvailable
+}
+
 const STAGE_LABELS = {
   REQUIREMENTS: 'Requirements / Planning',
   DEVELOPMENT: 'Development / Work in Progress',
@@ -63,10 +87,22 @@ export const getProjectProgress = async (req, res) => {
           }
         },
         progressUpdates: {
-          include: {
+          select: {
+            id: true,
+            projectId: true,
+            contractId: true,
+            updatedById: true,
+            stage: true,
+            progressPercentage: true,
+            status: true,
+            note: true,
+            actionRequired: true,
+            actionNote: true,
+            expectedCompletion: true,
+            createdAt: true,
             updatedBy: { select: userSelect }
           },
-          orderBy: { createdAt: 'desc' }
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }]
         }
       }
     })
@@ -148,103 +184,111 @@ export const createProjectProgressUpdate = async (req, res) => {
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
-      include: { contract: true }
+      include: {
+        contract: {
+          include: {
+            proposal: {
+              select: {
+                id: true,
+                projectId: true,
+                status: true,
+                freelancerProfile: { select: { userId: true } }
+              }
+            }
+          }
+        }
+      }
     })
 
     if (!project) return fail(res, 'Project not found', 404)
+    const authorization = authorizeProgressUpdate(req.user, project)
+    if (authorization) return fail(res, authorization.message, authorization.status)
 
-    // Admins retain their existing operational override. Other users must be
-    // the freelancer assigned to this exact project's contract.
-    const isFreelancer = req.user.role === 'FREELANCER' && project.contract?.freelancerId === req.user.id
-    const isAdmin = req.user.role === 'ADMIN'
-    if (!isFreelancer && !isAdmin) {
-      return fail(res, 'Only the assigned freelancer or an admin can update progress for this project', 403)
+    const requestKey = req.get('Idempotency-Key')
+    const validation = validateProgressSubmission(req.body, requestKey)
+    if (validation.error) return fail(res, validation.error, 422)
+    const updateData = validation.data
+    const supportsIdempotency = await hasProgressIdempotencyColumn()
+
+    if (supportsIdempotency) {
+      const existingRequest = await prisma.projectProgressUpdate.findUnique({
+        where: { projectId_submissionId: { projectId, submissionId: updateData.submissionId } },
+        select: {
+          id: true,
+          projectId: true,
+          contractId: true,
+          updatedById: true,
+          stage: true,
+          progressPercentage: true,
+          status: true,
+          note: true,
+          actionRequired: true,
+          actionNote: true,
+          expectedCompletion: true,
+          createdAt: true,
+          updatedBy: { select: userSelect }
+        }
+      })
+      if (existingRequest) {
+        return respond(res, existingRequest, 'Project progress update already saved', 200)
+      }
     }
 
-    const {
-      stage,
-      progressPercentage,
-      status,
-      note,
-      actionRequired,
-      actionNote,
-      expectedCompletion
-    } = req.body
-
-    if (!stage || !VALID_STAGES.includes(stage)) {
-      return fail(res, `Invalid stage. Must be one of: ${VALID_STAGES.join(', ')}`, 400)
-    }
-
-    const percentage = Number(progressPercentage)
-    if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
-      return fail(res, 'Progress percentage must be between 0 and 100', 400)
-    }
-    if (status !== undefined && !VALID_PROGRESS_STATUSES.includes(status)) {
-      return fail(res, `Invalid progress status. Must be one of: ${VALID_PROGRESS_STATUSES.join(', ')}`, 400)
-    }
-    if (actionRequired !== undefined && typeof actionRequired !== 'boolean') {
-      return fail(res, 'Action required must be a boolean', 400)
-    }
-
-    const requestedDate = expectedCompletion ? new Date(expectedCompletion) : null
-    if (requestedDate && !Number.isFinite(requestedDate.getTime())) {
-      return fail(res, 'Expected completion must be a valid date', 400)
-    }
-
-    const roundedPercentage = Math.round(percentage)
-    const isComplete = stage === 'COMPLETED' || status === 'COMPLETED' || roundedPercentage === 100
-    const savedPercentage = isComplete ? 100 : roundedPercentage
-    const savedStage = isComplete ? 'COMPLETED' : stage
-    const savedStatus = isComplete ? 'COMPLETED' : (status || 'IN_PROGRESS')
-    const requiresAction = actionRequired === true
-    const cleanNote = note ? String(note).trim() : null
-    const cleanActionNote = requiresAction && actionNote ? String(actionNote).trim() : null
-    const targetDate = requestedDate
+    const previous = await prisma.projectProgressUpdate.findFirst({
+      where: { projectId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { id: true, stage: true, status: true, progressPercentage: true }
+    })
+    const transitionError = validateProgressTransition(previous, updateData)
+    if (transitionError) return fail(res, transitionError, 409)
 
     const progressUpdate = await prisma.$transaction(async (tx) => {
       const update = await tx.projectProgressUpdate.create({
         data: {
           projectId,
-          contractId: project.contract?.id || null,
+          contractId: project.contract.id,
           updatedById: req.user.id,
-          stage: savedStage,
-          progressPercentage: savedPercentage,
-          status: savedStatus,
-          note: cleanNote,
-          actionRequired: requiresAction,
-          actionNote: cleanActionNote,
-          expectedCompletion: targetDate
+          stage: updateData.stage,
+          progressPercentage: updateData.progressPercentage,
+          status: updateData.status,
+          note: updateData.note,
+          actionRequired: updateData.actionRequired,
+          actionNote: updateData.actionNote,
+          expectedCompletion: updateData.expectedCompletion,
+          ...(supportsIdempotency ? { submissionId: updateData.submissionId } : {})
         },
-        include: { updatedBy: { select: userSelect } }
+        select: {
+          id: true,
+          projectId: true,
+          contractId: true,
+          updatedById: true,
+          stage: true,
+          progressPercentage: true,
+          status: true,
+          note: true,
+          actionRequired: true,
+          actionNote: true,
+          expectedCompletion: true,
+          createdAt: true,
+          updatedBy: { select: userSelect }
+        }
       })
 
-      if (isComplete) {
-        // These are the existing Prisma enum values: ProjectStatus.COMPLETED
-        // and ContractStatus.COMPLETED (not progress-only status strings).
-        await tx.project.update({ where: { id: projectId }, data: { status: 'COMPLETED' } })
-        if (project.contract) {
-          await tx.contract.update({
-            where: { id: project.contract.id },
-            data: { status: 'COMPLETED', endDate: new Date() }
-          })
-        }
-      }
-
-      const stageName = STAGE_LABELS[savedStage] || savedStage
-      const notifTitle = requiresAction
+      const stageName = STAGE_LABELS[updateData.stage] || updateData.stage
+      const notifTitle = updateData.actionRequired
         ? `Action Required: ${project.title}`
-        : isComplete
+        : updateData.completionRequested
           ? `Project Completed: ${project.title}`
           : `Progress Update: ${project.title}`
-      const notifMsg = requiresAction
-        ? `${req.user.name} requested action on "${project.title}": ${cleanActionNote || 'Please review progress.'}`
-        : `${req.user.name} updated "${project.title}" to ${stageName} (${savedPercentage}%). ${cleanNote || ''}`
+      const notifMsg = updateData.actionRequired
+        ? `${req.user.name} requested action on "${project.title}": ${updateData.actionNote}`
+        : `${req.user.name} updated "${project.title}" to ${stageName} (${updateData.progressPercentage}%). ${updateData.note}`
       await tx.notification.create({
         data: {
           userId: project.clientId,
           title: notifTitle,
           message: notifMsg.trim(),
-          type: requiresAction ? 'ACTION_REQUIRED' : isComplete ? 'COMPLETED' : 'PROGRESS_UPDATE',
+          type: updateData.actionRequired ? 'ACTION_REQUIRED' : updateData.completionRequested ? 'COMPLETED' : 'PROGRESS_UPDATE',
           link: `/customer/projects/${project.id}`
         }
       })
@@ -256,6 +300,9 @@ export const createProjectProgressUpdate = async (req, res) => {
       stageLabel: STAGE_LABELS[progressUpdate.stage] || progressUpdate.stage
     }, 'Project progress updated successfully', 201)
   } catch (error) {
+    if (error?.code === 'P2002') {
+      return fail(res, 'This progress update has already been recorded', 409)
+    }
     console.error('createProjectProgressUpdate Error:', error)
     return fail(res, 'Unable to update project progress', 500)
   }

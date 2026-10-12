@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   CheckCircle2, Clock, AlertTriangle, Calendar, ChevronDown, ChevronUp,
   Pencil, Save, X, Sparkles, Check, ArrowRight, UserCheck, ShieldAlert
@@ -32,6 +32,9 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [modalError, setModalError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const savingRef = useRef(false)
+  const submissionKeyRef = useRef(null)
 
   // Form state for updating progress
   const [stage, setStage] = useState('DEVELOPMENT')
@@ -42,12 +45,13 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
   const [actionNote, setActionNote] = useState('')
   const [expectedCompletion, setExpectedCompletion] = useState('')
 
-  const loadProgress = async () => {
+  const loadProgress = async ({ quiet = false } = {}) => {
     try {
-      setLoading(true)
+      if (!quiet) setLoading(true)
       const res = await api.get(`/projects/${projectId}/progress`)
       const payload = res.data?.data || res.data || {}
       setData(payload)
+      setError('')
       if (payload.currentProgress) {
         setStage(payload.currentProgress.stage || 'DEVELOPMENT')
         setProgressPercentage(payload.currentProgress.progressPercentage ?? 0)
@@ -59,20 +63,25 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
         }
       }
     } catch (err) {
-      setError(err?.response?.data?.message || 'Unable to load project progress tracking.')
+      const message = err?.response?.data?.message || 'Unable to load project progress tracking.'
+      setError(message)
+      throw err
     } finally {
-      setLoading(false)
+      if (!quiet) setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (projectId) loadProgress()
+    if (projectId) loadProgress().catch(() => {})
   }, [projectId])
 
   const handleSaveProgress = async (e) => {
     e.preventDefault()
+    if (savingRef.current) return
+    savingRef.current = true
     setSaving(true)
     setModalError('')
+    setSuccessMessage('')
     try {
       await api.post(`/projects/${projectId}/progress`, {
         stage,
@@ -82,14 +91,25 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
         actionRequired,
         actionNote: actionRequired ? actionNote : '',
         expectedCompletion: expectedCompletion || null
+      }, {
+        headers: { 'Idempotency-Key': submissionKeyRef.current }
       })
       setShowUpdateModal(false)
       setNote('')
-      loadProgress()
+      setActionRequired(false)
+      setActionNote('')
+      setSuccessMessage('Project progress was saved successfully.')
+      submissionKeyRef.current = null
+      try {
+        await loadProgress({ quiet: true })
+      } catch {
+        setError('Progress was saved, but the latest tracker data could not be refreshed. Use Retry to reload it.')
+      }
       if (onUpdateDone) onUpdateDone('Project progress successfully recorded.')
     } catch (err) {
       setModalError(err?.response?.data?.message || 'Failed to save progress update. Please try again.')
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
@@ -103,8 +123,8 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
     )
   }
 
-  if (error || !data) {
-    return null // Gracefully omit if project has no contract or progress not accessible
+  if ((error || !data) && !data) {
+    return <div className="panel" role="alert" style={{ padding: '20px' }}><p>{error || 'Project progress is unavailable.'}</p><Button type="button" variant="outline" onClick={() => loadProgress().catch(() => {})}>Retry</Button></div>
   }
 
   const { project, contract, currentProgress, isOverdue, history = [] } = data
@@ -117,6 +137,8 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
 
   return (
     <div className="panel" style={{ marginBottom: '24px', border: '1px solid #dbeafe', background: 'linear-gradient(180deg, #f9fbff 0%, #ffffff 100%)' }}>
+      {successMessage && <div className="success-banner" role="status" style={{ marginBottom: '14px' }}><CheckCircle2 size={17} />{successMessage}</div>}
+      {error && <div className="error-state" role="alert" style={{ marginBottom: '14px' }}><ShieldAlert size={17} /><span>{error}</span><Button type="button" variant="outline" className="button-small" onClick={() => loadProgress({ quiet: true }).catch(() => {})}>Retry</Button></div>}
       {/* Header Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '18px' }}>
         <div>
@@ -153,7 +175,11 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
           {isFreelancer && (
             <Button
               className="button-small"
-              onClick={() => setShowUpdateModal(true)}
+              onClick={() => {
+                submissionKeyRef.current = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
+                setModalError('')
+                setShowUpdateModal(true)
+              }}
               style={{ marginLeft: '8px' }}
             >
               <Pencil size={14} /> Update Progress
@@ -460,6 +486,7 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
               </div>
               <button
                 type="button"
+                disabled={saving}
                 onClick={() => setShowUpdateModal(false)}
                 style={{ background: 'transparent', border: 0, cursor: 'pointer', padding: '4px' }}
               >
@@ -570,11 +597,12 @@ export default function ProjectProgressTracker({ projectId, user, onUpdateDone }
                 <Button
                   type="button"
                   variant="outline"
+                  disabled={saving}
                   onClick={() => setShowUpdateModal(false)}
                 >
                   Cancel
                 </Button>
-                <Button disabled={saving} aria-busy={saving}>
+                <Button type="submit" disabled={saving} aria-busy={saving}>
                   {saving ? 'Saving…' : 'Save Progress Update'} <Save size={15} />
                 </Button>
               </div>

@@ -39,7 +39,7 @@ router.get('/projects/mine', authenticateToken, listMyProjects)
 router.get('/projects/:id/proposals', authenticateToken, listProjectProposals)
 router.post('/projects/:projectId/proposals', authenticateToken, createProposal)
 router.get('/projects/:id/progress', authenticateToken, getProjectProgress)
-router.post('/projects/:id/progress', authenticateToken, createProjectProgressUpdate)
+router.post('/projects/:id/progress', authenticateToken, requireRole('FREELANCER'), createProjectProgressUpdate)
 router.post('/projects', authenticateToken, createProject)
 router.patch('/projects/:id', authenticateToken, updateProject)
 

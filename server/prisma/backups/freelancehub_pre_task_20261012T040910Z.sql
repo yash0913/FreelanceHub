@@ -1,0 +1,990 @@
+-- MySQL dump 10.13  Distrib 8.0.41, for Win64 (x86_64)
+--
+-- Host: 127.0.0.1    Database: freelancehub
+-- ------------------------------------------------------
+-- Server version	8.0.41
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Current Database: `freelancehub`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `freelancehub` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+USE `freelancehub`;
+
+--
+-- Table structure for table `_prisma_migrations`
+--
+
+DROP TABLE IF EXISTS `_prisma_migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `_prisma_migrations` (
+  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `checksum` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `finished_at` datetime(3) DEFAULT NULL,
+  `migration_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logs` text COLLATE utf8mb4_unicode_ci,
+  `rolled_back_at` datetime(3) DEFAULT NULL,
+  `started_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `applied_steps_count` int unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `_prisma_migrations`
+--
+
+LOCK TABLES `_prisma_migrations` WRITE;
+/*!40000 ALTER TABLE `_prisma_migrations` DISABLE KEYS */;
+INSERT INTO `_prisma_migrations` VALUES ('14aee9a1-247c-4f92-8642-09c12b9c84b5','0f5f93c07e4e5e8c7fc6c5cd732ba5dd411c32d29a87e33d892c45d610bd0763','2026-10-11 17:31:23.184','20261004194500_add_profile_setup_and_progress_tracker',NULL,NULL,'2026-10-11 17:31:22.879',1),('40554068-a0a7-40e2-a117-6693c886edee','80c8622a566b1680f8704297903860b523e10ec9df523de136be888a983040e6','2026-10-11 17:31:23.214','20261005145500_add_freelancer_education_qualification',NULL,NULL,'2026-10-11 17:31:23.186',1),('8b593301-32b8-4621-be81-6c0ef37e1698','854fb42b5877569482c344f7c97e32ac7a6903d5ac9fa183fe9d2d9436dffdcf','2026-08-20 18:44:21.736','20260820184419_add_full_schema',NULL,NULL,'2026-08-20 18:44:19.769',1),('9532734f-9b2e-43ee-a797-c694b781c1d7','adfd7a79127ffd8b8f3d841c6f93a14f40083f377f4ca719392957854465228f','2026-08-20 17:42:09.320','20260820174209_init',NULL,NULL,'2026-08-20 17:42:09.281',1),('a6d60638-79ed-4f15-be45-09aca7f2301b','9317beb6964f4217085b08ce311c3daf5c86b14f7ea7d56b1f3f1a2f6917d1e2',NULL,'20260925052156_add_collaboration_support',NULL,'2026-09-25 05:22:41.290','2026-09-25 05:21:56.061',0);
+/*!40000 ALTER TABLE `_prisma_migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `category`
+--
+
+DROP TABLE IF EXISTS `category`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `category` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Category_name_key` (`name`),
+  KEY `Category_name_idx` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `category`
+--
+
+LOCK TABLES `category` WRITE;
+/*!40000 ALTER TABLE `category` DISABLE KEYS */;
+INSERT INTO `category` VALUES (1,'Web Development','2026-08-24 16:12:39.160'),(2,'Mobile App Development','2026-08-24 16:12:39.191'),(3,'UI/UX Design','2026-08-24 16:12:39.195'),(4,'Graphic Design','2026-08-24 16:12:39.198'),(5,'Data Science & AI','2026-08-24 16:12:39.201'),(6,'Cloud & DevOps','2026-08-24 16:12:39.204'),(7,'Digital Marketing','2026-08-24 16:12:39.207'),(8,'Content Writing','2026-08-24 16:12:39.209'),(9,'Video & Animation','2026-08-24 16:12:39.213'),(10,'E-commerce','2026-08-24 16:12:39.215'),(11,'Software & IT','2026-08-24 16:12:39.218'),(12,'Business & Consulting','2026-08-24 16:12:39.221');
+/*!40000 ALTER TABLE `category` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `certification`
+--
+
+DROP TABLE IF EXISTS `certification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `certification` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `freelancerProfileId` int NOT NULL,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `issuingOrg` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `issueYear` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `credentialUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Certification_freelancerProfileId_idx` (`freelancerProfileId`),
+  CONSTRAINT `Certification_freelancerProfileId_fkey` FOREIGN KEY (`freelancerProfileId`) REFERENCES `freelancerprofile` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `certification`
+--
+
+LOCK TABLES `certification` WRITE;
+/*!40000 ALTER TABLE `certification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `certification` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `collaborationapplication`
+--
+
+DROP TABLE IF EXISTS `collaborationapplication`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `collaborationapplication` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `opportunityId` int NOT NULL,
+  `applicantId` int NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('PENDING','ACCEPTED','REJECTED','WITHDRAWN') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `CollaborationApplication_opportunityId_applicantId_key` (`opportunityId`,`applicantId`),
+  KEY `CollaborationApplication_opportunityId_idx` (`opportunityId`),
+  KEY `CollaborationApplication_applicantId_idx` (`applicantId`),
+  KEY `CollaborationApplication_status_idx` (`status`),
+  CONSTRAINT `CollaborationApplication_applicantId_fkey` FOREIGN KEY (`applicantId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `CollaborationApplication_opportunityId_fkey` FOREIGN KEY (`opportunityId`) REFERENCES `collaborationopportunity` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `collaborationapplication`
+--
+
+LOCK TABLES `collaborationapplication` WRITE;
+/*!40000 ALTER TABLE `collaborationapplication` DISABLE KEYS */;
+INSERT INTO `collaborationapplication` VALUES (1,1,54,'I have experience building React components and want to gain verified collaborative experience on real dashboards.','ACCEPTED','2026-09-25 05:26:15.768','2026-09-25 05:26:15.797'),(2,2,54,'I have experience building React components and want to gain verified collaborative experience on real dashboards.','ACCEPTED','2026-09-25 06:16:00.541','2026-09-25 06:16:00.553'),(3,3,74,'I\'m great with those skills','ACCEPTED','2026-09-25 07:36:36.794','2026-09-25 07:37:29.860'),(4,4,54,'I have experience building React components and want to gain verified collaborative experience on real dashboards.','ACCEPTED','2026-09-25 09:44:05.249','2026-09-25 09:44:05.264');
+/*!40000 ALTER TABLE `collaborationapplication` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `collaborationopportunity`
+--
+
+DROP TABLE IF EXISTS `collaborationopportunity`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `collaborationopportunity` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `creatorId` int NOT NULL,
+  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `roleNeeded` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `expectedContribution` text COLLATE utf8mb4_unicode_ci,
+  `type` enum('INTERNSHIP','PROJECT_COLLABORATION','FREELANCE_ASSISTANCE','CO_FREELANCER','MENTORSHIP') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PROJECT_COLLABORATION',
+  `compensationType` enum('UNPAID','PAID','NEGOTIABLE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UNPAID',
+  `compensation` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `workMode` enum('REMOTE','ON_SITE','HYBRID') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'REMOTE',
+  `location` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `duration` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `startDate` datetime(3) DEFAULT NULL,
+  `endDate` datetime(3) DEFAULT NULL,
+  `maxCollaborators` int NOT NULL DEFAULT '1',
+  `requirements` text COLLATE utf8mb4_unicode_ci,
+  `skills` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('OPEN','ACTIVE','COMPLETED','CANCELLED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OPEN',
+  `relatedProjectId` int DEFAULT NULL,
+  `completedAt` datetime(3) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `CollaborationOpportunity_creatorId_idx` (`creatorId`),
+  KEY `CollaborationOpportunity_status_idx` (`status`),
+  KEY `CollaborationOpportunity_type_idx` (`type`),
+  KEY `CollaborationOpportunity_workMode_idx` (`workMode`),
+  KEY `CollaborationOpportunity_compensationType_idx` (`compensationType`),
+  KEY `CollaborationOpportunity_relatedProjectId_idx` (`relatedProjectId`),
+  CONSTRAINT `CollaborationOpportunity_creatorId_fkey` FOREIGN KEY (`creatorId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `CollaborationOpportunity_relatedProjectId_fkey` FOREIGN KEY (`relatedProjectId`) REFERENCES `project` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `collaborationopportunity`
+--
+
+LOCK TABLES `collaborationopportunity` WRITE;
+/*!40000 ALTER TABLE `collaborationopportunity` DISABLE KEYS */;
+INSERT INTO `collaborationopportunity` VALUES (1,3,'React & Tailwind Dashboard Collaboration','Junior Frontend Collaborator','Building an interactive analytics dashboard for our client engagement. Looking for an enthusiastic developer or intern to collaborate on charting components.',NULL,'PROJECT_COLLABORATION','PAID','₹12,000 stipend','REMOTE',NULL,'3 weeks',NULL,NULL,1,NULL,'React, TailwindCSS, Chart.js','COMPLETED',NULL,'2026-09-25 05:26:15.832','2026-09-25 05:26:15.713','2026-09-25 05:26:15.834'),(2,3,'React & Tailwind Dashboard Collaboration','Junior Frontend Collaborator','Building an interactive analytics dashboard for our client engagement. Looking for an enthusiastic developer or intern to collaborate on charting components.',NULL,'PROJECT_COLLABORATION','PAID','₹12,000 stipend','REMOTE',NULL,'3 weeks',NULL,NULL,1,NULL,'React, TailwindCSS, Chart.js','COMPLETED',NULL,'2026-09-25 06:16:00.568','2026-09-25 06:16:00.512','2026-09-25 06:16:00.569'),(3,3,'Android gym fitness app','Software Developer','Just an Application',NULL,'PROJECT_COLLABORATION','UNPAID',NULL,'REMOTE',NULL,NULL,NULL,NULL,1,NULL,'Andriod studio , flutter','ACTIVE',NULL,NULL,'2026-09-25 07:33:37.509','2026-09-25 07:37:29.868'),(4,3,'React & Tailwind Dashboard Collaboration','Junior Frontend Collaborator','Building an interactive analytics dashboard for our client engagement. Looking for an enthusiastic developer or intern to collaborate on charting components.',NULL,'PROJECT_COLLABORATION','PAID','₹12,000 stipend','REMOTE',NULL,'3 weeks',NULL,NULL,1,NULL,'React, TailwindCSS, Chart.js','COMPLETED',NULL,'2026-09-25 09:44:05.372','2026-09-25 09:44:05.199','2026-09-25 09:44:05.374');
+/*!40000 ALTER TABLE `collaborationopportunity` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract`
+--
+
+DROP TABLE IF EXISTS `contract`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `projectId` int NOT NULL,
+  `proposalId` int NOT NULL,
+  `clientId` int NOT NULL,
+  `freelancerId` int NOT NULL,
+  `agreedAmount` decimal(10,2) NOT NULL,
+  `startDate` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `endDate` datetime(3) DEFAULT NULL,
+  `status` enum('ACTIVE','COMPLETED','CANCELLED','DISPUTED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Contract_projectId_key` (`projectId`),
+  UNIQUE KEY `Contract_proposalId_key` (`proposalId`),
+  KEY `Contract_clientId_idx` (`clientId`),
+  KEY `Contract_freelancerId_idx` (`freelancerId`),
+  KEY `Contract_status_idx` (`status`),
+  CONSTRAINT `Contract_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Contract_freelancerId_fkey` FOREIGN KEY (`freelancerId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Contract_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Contract_proposalId_fkey` FOREIGN KEY (`proposalId`) REFERENCES `proposal` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract`
+--
+
+LOCK TABLES `contract` WRITE;
+/*!40000 ALTER TABLE `contract` DISABLE KEYS */;
+INSERT INTO `contract` VALUES (1,4,10,15,3,92000.00,'2026-08-10 09:00:00.000',NULL,'ACTIVE','2026-08-24 17:16:58.477','2026-08-24 17:16:58.477'),(2,10,26,38,3,46000.00,'2026-07-15 09:00:00.000','2026-08-05 18:00:00.000','COMPLETED','2026-08-24 17:16:58.489','2026-08-24 17:16:58.489'),(3,17,41,9,55,38000.00,'2026-08-10 09:00:00.000',NULL,'ACTIVE','2026-08-24 17:16:58.496','2026-08-24 17:16:58.496'),(4,18,44,14,55,27000.00,'2026-07-15 09:00:00.000','2026-08-05 18:00:00.000','COMPLETED','2026-08-24 17:16:58.501','2026-08-24 17:16:58.501'),(5,24,56,43,59,21000.00,'2026-07-15 09:00:00.000','2026-08-05 18:00:00.000','COMPLETED','2026-08-24 17:16:58.507','2026-08-24 17:16:58.507'),(6,25,58,28,59,17500.00,'2026-07-15 09:00:00.000','2026-08-05 18:00:00.000','COMPLETED','2026-08-24 17:16:58.515','2026-08-24 17:16:58.515'),(7,38,89,43,61,17000.00,'2026-07-15 09:00:00.000','2026-08-05 18:00:00.000','COMPLETED','2026-08-24 17:16:58.522','2026-08-24 17:16:58.522'),(8,46,105,7,67,23000.00,'2026-08-10 09:00:00.000',NULL,'ACTIVE','2026-08-24 17:16:58.528','2026-08-24 17:16:58.528'),(10,62,145,2,3,6000.00,'2026-10-11 18:26:35.399',NULL,'ACTIVE','2026-10-11 18:26:35.399','2026-10-11 18:26:35.399'),(11,64,146,2,3,2172.00,'2026-10-11 18:31:59.198',NULL,'ACTIVE','2026-10-11 18:31:59.198','2026-10-11 18:31:59.198');
+/*!40000 ALTER TABLE `contract` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `conversation`
+--
+
+DROP TABLE IF EXISTS `conversation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `conversation` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  `customerId` int DEFAULT NULL,
+  `freelancerId` int DEFAULT NULL,
+  `collabFreelancer1Id` int DEFAULT NULL,
+  `collabFreelancer2Id` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Conversation_customerId_freelancerId_key` (`customerId`,`freelancerId`),
+  UNIQUE KEY `Conversation_collabFreelancer1Id_collabFreelancer2Id_key` (`collabFreelancer1Id`,`collabFreelancer2Id`),
+  KEY `Conversation_customerId_idx` (`customerId`),
+  KEY `Conversation_freelancerId_idx` (`freelancerId`),
+  KEY `Conversation_collabFreelancer1Id_idx` (`collabFreelancer1Id`),
+  KEY `Conversation_collabFreelancer2Id_idx` (`collabFreelancer2Id`),
+  CONSTRAINT `Conversation_collabFreelancer1Id_fkey` FOREIGN KEY (`collabFreelancer1Id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Conversation_collabFreelancer2Id_fkey` FOREIGN KEY (`collabFreelancer2Id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Conversation_customerId_fkey` FOREIGN KEY (`customerId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Conversation_freelancerId_fkey` FOREIGN KEY (`freelancerId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `conversation`
+--
+
+LOCK TABLES `conversation` WRITE;
+/*!40000 ALTER TABLE `conversation` DISABLE KEYS */;
+INSERT INTO `conversation` VALUES (1,'2026-08-24 17:31:17.775','2026-09-25 07:12:15.376',38,3,NULL,NULL),(2,'2026-08-24 17:31:17.837','2026-09-25 07:12:15.382',15,3,NULL,NULL),(3,'2026-08-24 17:31:17.864','2026-09-25 07:12:15.385',14,55,NULL,NULL),(4,'2026-08-24 17:31:17.889','2026-09-25 07:12:15.389',9,55,NULL,NULL),(5,'2026-08-24 17:31:17.913','2026-09-25 07:12:15.393',43,59,NULL,NULL),(6,'2026-08-24 17:31:17.942','2026-09-25 07:12:15.396',28,59,NULL,NULL),(7,'2026-08-24 17:31:17.966','2026-09-25 07:12:15.399',43,61,NULL,NULL),(8,'2026-08-24 17:31:17.990','2026-09-25 07:12:15.404',7,67,NULL,NULL),(9,'2026-08-24 17:31:18.016','2026-09-25 07:12:15.408',20,57,NULL,NULL),(10,'2026-08-24 17:31:18.041','2026-09-25 07:12:15.411',13,69,NULL,NULL),(11,'2026-08-24 17:31:18.066','2026-09-25 07:12:15.415',31,58,NULL,NULL),(12,'2026-08-24 17:31:18.089','2026-09-25 07:12:15.418',19,64,NULL,NULL),(13,'2026-08-24 17:31:18.117','2026-09-25 07:12:15.423',12,66,NULL,NULL),(14,'2026-08-24 17:31:18.139','2026-09-25 07:12:15.428',39,62,NULL,NULL),(15,'2026-08-24 17:31:18.161','2026-09-25 07:12:15.432',34,63,NULL,NULL),(16,'2026-08-24 17:31:18.183','2026-09-25 07:12:15.436',17,70,NULL,NULL),(18,'2026-09-25 05:26:15.890','2026-10-11 18:24:34.009',2,3,NULL,NULL),(19,'2026-09-25 07:48:31.450','2026-09-25 08:58:53.868',NULL,NULL,3,74),(20,'2026-09-25 09:44:05.294','2026-09-25 09:44:05.344',NULL,NULL,3,54);
+/*!40000 ALTER TABLE `conversation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `conversationparticipant`
+--
+
+DROP TABLE IF EXISTS `conversationparticipant`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `conversationparticipant` (
+  `conversationId` int NOT NULL,
+  `userId` int NOT NULL,
+  `joinedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`conversationId`,`userId`),
+  KEY `ConversationParticipant_userId_idx` (`userId`),
+  KEY `ConversationParticipant_conversationId_idx` (`conversationId`),
+  CONSTRAINT `ConversationParticipant_conversationId_fkey` FOREIGN KEY (`conversationId`) REFERENCES `conversation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `ConversationParticipant_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `conversationparticipant`
+--
+
+LOCK TABLES `conversationparticipant` WRITE;
+/*!40000 ALTER TABLE `conversationparticipant` DISABLE KEYS */;
+INSERT INTO `conversationparticipant` VALUES (1,3,'2026-08-24 17:31:17.775'),(1,38,'2026-08-24 17:31:17.775'),(2,3,'2026-08-24 17:31:17.837'),(2,15,'2026-08-24 17:31:17.837'),(3,14,'2026-08-24 17:31:17.864'),(3,55,'2026-08-24 17:31:17.864'),(4,9,'2026-08-24 17:31:17.889'),(4,55,'2026-08-24 17:31:17.889'),(5,43,'2026-08-24 17:31:17.913'),(5,59,'2026-08-24 17:31:17.913'),(6,28,'2026-08-24 17:31:17.942'),(6,59,'2026-08-24 17:31:17.942'),(7,43,'2026-08-24 17:31:17.966'),(7,61,'2026-08-24 17:31:17.966'),(8,7,'2026-08-24 17:31:17.990'),(8,67,'2026-08-24 17:31:17.990'),(9,20,'2026-08-24 17:31:18.016'),(9,57,'2026-08-24 17:31:18.016'),(10,13,'2026-08-24 17:31:18.041'),(10,69,'2026-08-24 17:31:18.041'),(11,31,'2026-08-24 17:31:18.066'),(11,58,'2026-08-24 17:31:18.066'),(12,19,'2026-08-24 17:31:18.089'),(12,64,'2026-08-24 17:31:18.089'),(13,12,'2026-08-24 17:31:18.117'),(13,66,'2026-08-24 17:31:18.117'),(14,39,'2026-08-24 17:31:18.139'),(14,62,'2026-08-24 17:31:18.139'),(15,34,'2026-08-24 17:31:18.161'),(15,63,'2026-08-24 17:31:18.161'),(16,17,'2026-08-24 17:31:18.183'),(16,70,'2026-08-24 17:31:18.183'),(18,2,'2026-09-25 05:26:15.890'),(18,3,'2026-09-25 05:26:15.890'),(19,3,'2026-09-25 07:48:31.450'),(19,74,'2026-09-25 07:48:31.450'),(20,3,'2026-09-25 09:44:05.294'),(20,54,'2026-09-25 09:44:05.294');
+/*!40000 ALTER TABLE `conversationparticipant` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `customerprofile`
+--
+
+DROP TABLE IF EXISTS `customerprofile`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `customerprofile` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int NOT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `companyName` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `location` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profileImage` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  `organizationType` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `useCase` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `linkedinUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `CustomerProfile_userId_key` (`userId`),
+  KEY `CustomerProfile_userId_idx` (`userId`),
+  CONSTRAINT `CustomerProfile_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `customerprofile`
+--
+
+LOCK TABLES `customerprofile` WRITE;
+/*!40000 ALTER TABLE `customerprofile` DISABLE KEYS */;
+INSERT INTO `customerprofile` VALUES (1,2,'Tech entrepreneur from Pune building a SaaS HR product.','AherTech Solutions','mumbai maharashtra',NULL,'2026-08-24 16:02:38.692','2026-10-11 18:26:26.322','Individual / Personal','Software & app development',NULL,NULL),(2,4,'Co-founder of a Bengaluru-based edtech startup focused on vernacular learning.','BrightWave Edtech Pvt. Ltd.','Bengaluru, Karnataka',NULL,'2026-08-24 16:02:38.789','2026-08-24 16:02:38.789',NULL,NULL,NULL,NULL),(3,5,'Operations head at a logistics firm looking for ERP customisations.','InfraLogix India','Nagpur, Maharashtra',NULL,'2026-08-24 16:02:38.859','2026-08-24 16:02:38.859',NULL,NULL,NULL,NULL),(4,6,'Founder of an organic food brand expanding its D2C e-commerce presence.','GreenLeaf Organics','Kochi, Kerala',NULL,'2026-08-24 16:02:38.928','2026-08-24 16:02:38.928',NULL,NULL,NULL,NULL),(5,7,'Marketing head at a fast-growing fashion startup in Jaipur.','TrendSetters Fashion House','Jaipur, Rajasthan',NULL,'2026-08-24 16:02:38.997','2026-08-24 16:02:38.997',NULL,NULL,NULL,NULL),(6,8,'CEO of an Ayurvedic wellness brand looking for digital marketing support.','AyurWellness Pvt. Ltd.','Thrissur, Kerala',NULL,'2026-08-24 16:02:39.066','2026-08-24 16:02:39.066',NULL,NULL,NULL,NULL),(7,9,'Founder of a SEBI-registered investment advisory with 12 years in finance.','BlueChip Invest Advisory','Mumbai, Maharashtra',NULL,'2026-08-24 16:02:39.133','2026-08-24 16:02:39.133',NULL,NULL,NULL,NULL),(8,10,'Academic director at an online coaching institute for competitive exams.','SparkLearn Institute','Chennai, Tamil Nadu',NULL,'2026-08-24 16:02:39.201','2026-08-24 16:02:39.201',NULL,NULL,NULL,NULL),(9,11,'Real estate developer digitising property listings and lead management.','Nexus Properties Pvt. Ltd.','Ahmedabad, Gujarat',NULL,'2026-08-24 16:02:39.269','2026-08-24 16:02:39.269',NULL,NULL,NULL,NULL),(10,12,'Owner of a handloom and handicrafts export business seeking an e-commerce site.','CraftsByHand Exports','Varanasi, Uttar Pradesh',NULL,'2026-08-24 16:02:39.338','2026-08-24 16:02:39.338',NULL,NULL,NULL,NULL),(11,13,'Director at a pharma distribution firm upgrading their inventory management.','PharmaBridge Distributors','Hyderabad, Telangana',NULL,'2026-08-24 16:02:39.408','2026-08-24 16:02:39.408',NULL,NULL,NULL,NULL),(12,14,'Founder of a boutique interior design studio in Pune.','Studio Neha Designs','Pune, Maharashtra',NULL,'2026-08-24 16:02:39.477','2026-08-24 16:02:39.477',NULL,NULL,NULL,NULL),(13,15,'CTO of a cloud services startup seeking experienced DevOps freelancers.','CloudQube Technologies','Delhi, NCR',NULL,'2026-08-24 16:02:39.546','2026-08-24 16:02:39.546',NULL,NULL,NULL,NULL),(14,16,'Content production head at a regional OTT platform.','MediaWala Entertainment','Noida, Uttar Pradesh',NULL,'2026-08-24 16:02:39.615','2026-08-24 16:02:39.615',NULL,NULL,NULL,NULL),(15,17,'Co-founder of an agritech startup connecting farmers to urban buyers.','AgroLink Agritech','Lucknow, Uttar Pradesh',NULL,'2026-08-24 16:02:39.682','2026-08-24 16:02:39.682',NULL,NULL,NULL,NULL),(16,18,'Owner of a silk saree export firm seeking a bilingual website.','SilkRoute Exports Pvt. Ltd.','Mysuru, Karnataka',NULL,'2026-08-24 16:02:39.750','2026-08-24 16:02:39.750',NULL,NULL,NULL,NULL),(17,19,'Director of a diamond jewellery retail chain looking for an inventory app.','Diamond Display Jewellers','Surat, Gujarat',NULL,'2026-08-24 16:02:39.818','2026-08-24 16:02:39.818',NULL,NULL,NULL,NULL),(18,20,'Chef-entrepreneur running a cloud kitchen expanding to food delivery apps.','FlavourFusion Cloud Kitchen','Nashik, Maharashtra',NULL,'2026-08-24 16:02:39.887','2026-08-24 16:02:39.887',NULL,NULL,NULL,NULL),(19,21,'Product manager at a Kolkata-based fintech startup.','CalcuttaTech Finserv','Kolkata, West Bengal',NULL,'2026-08-24 16:02:39.955','2026-08-24 16:02:39.955',NULL,NULL,NULL,NULL),(20,22,'Operations manager at a port logistics company digitising their workflow.','Visakha Port Logistics','Visakhapatnam, Andhra Pradesh',NULL,'2026-08-24 16:02:40.023','2026-08-24 16:02:40.023',NULL,NULL,NULL,NULL),(21,23,'Owner of a marble and granite export business based in Rajasthan.','Royal Marble & Granite','Jodhpur, Rajasthan',NULL,'2026-08-24 16:02:40.091','2026-08-24 16:02:40.091',NULL,NULL,NULL,NULL),(22,24,'Nutritionist building a subscription wellness app for corporate employees.','HealthRoots Wellness','Pune, Maharashtra',NULL,'2026-08-24 16:02:40.159','2026-08-24 16:02:40.159',NULL,NULL,NULL,NULL),(23,25,'Real estate agent needing a CRM and automated lead follow-up system.','Edge Realty Services','Bhopal, Madhya Pradesh',NULL,'2026-08-24 16:02:40.227','2026-08-24 16:02:40.227',NULL,NULL,NULL,NULL),(24,26,'Founder of a south Indian textile brand expanding online.','TextileSouth Pvt. Ltd.','Coimbatore, Tamil Nadu',NULL,'2026-08-24 16:02:40.296','2026-08-24 16:02:40.296',NULL,NULL,NULL,NULL),(25,27,'Restaurateur managing five restaurant locations across Delhi NCR.','Delhi Dining Group','Delhi, NCR',NULL,'2026-08-24 16:02:40.363','2026-08-24 16:02:40.363',NULL,NULL,NULL,NULL),(26,28,'Founder of a handmade jewellery brand selling on Etsy and seeking a dedicated site.','Artisan & Craft','Kolkata, West Bengal',NULL,'2026-08-24 16:02:40.431','2026-08-24 16:02:40.431',NULL,NULL,NULL,NULL),(27,29,'Owner of a multi-brand car service centre building an online booking platform.','AutoCare Pune','Pune, Maharashtra',NULL,'2026-08-24 16:02:40.499','2026-08-24 16:02:40.499',NULL,NULL,NULL,NULL),(28,30,'Fashion blogger turned founder of a curated luxury fashion platform.','ModeHaus','Mumbai, Maharashtra',NULL,'2026-08-24 16:02:40.567','2026-08-24 16:02:40.567',NULL,NULL,NULL,NULL),(29,31,'IT head at a mid-size telecom infrastructure company.','India Telecom Infrastructure','Gurgaon, Haryana',NULL,'2026-08-24 16:02:40.635','2026-08-24 16:02:40.635',NULL,NULL,NULL,NULL),(30,32,'Director of a solar energy solutions company building a customer portal.','SolarPlus Energy Pvt. Ltd.','Vadodara, Gujarat',NULL,'2026-08-24 16:02:40.703','2026-08-24 16:02:40.703',NULL,NULL,NULL,NULL),(31,33,'Tour operator offering curated Kerala backwater and wildlife packages.','Kerala Horizon Tours','Thiruvananthapuram, Kerala',NULL,'2026-08-24 16:02:40.772','2026-08-24 16:02:40.772',NULL,NULL,NULL,NULL),(32,34,'Self-published author and content creator needing an author website.','Iyer Books & Content','Chennai, Tamil Nadu',NULL,'2026-08-24 16:02:40.839','2026-08-24 16:02:40.839',NULL,NULL,NULL,NULL),(33,35,'Co-founder of a regional B2B marketplace for MSME suppliers in UP.','UPBizz Marketplace','Kanpur, Uttar Pradesh',NULL,'2026-08-24 16:02:40.909','2026-08-24 16:02:40.909',NULL,NULL,NULL,NULL),(34,36,'Art gallery owner seeking a digital gallery and online sales platform.','Pintura Arts Gallery','Jaipur, Rajasthan',NULL,'2026-08-24 16:02:40.977','2026-08-24 16:02:40.977',NULL,NULL,NULL,NULL),(35,37,'Managing director of a chain of diagnostic labs wanting a patient portal.','MedPulse Diagnostics','Agra, Uttar Pradesh',NULL,'2026-08-24 16:02:41.046','2026-08-24 16:02:41.046',NULL,NULL,NULL,NULL),(36,38,'Owner of a boutique heritage hotel needing a direct booking engine.','LuxuryStay Hotels','Shimla, Himachal Pradesh',NULL,'2026-08-24 16:02:41.114','2026-08-24 16:02:41.114',NULL,NULL,NULL,NULL),(37,39,'Founder of a cybersecurity consulting firm seeking a client dashboard.','CyberSec India','Bengaluru, Karnataka',NULL,'2026-08-24 16:02:41.183','2026-08-24 16:02:41.183',NULL,NULL,NULL,NULL),(38,40,'Grain trader digitising commodity procurement and billing.','GrainMarket India','Guntur, Andhra Pradesh',NULL,'2026-08-24 16:02:41.252','2026-08-24 16:02:41.252',NULL,NULL,NULL,NULL),(39,41,'Creative director at a Kolkata-based branding agency.','Creative Kolkata Studio','Kolkata, West Bengal',NULL,'2026-08-24 16:02:41.320','2026-08-24 16:02:41.320',NULL,NULL,NULL,NULL),(40,42,'Head of product at a smart energy metering company.','SmartGrid Technologies','Gurgaon, Haryana',NULL,'2026-08-24 16:02:41.387','2026-08-24 16:02:41.387',NULL,NULL,NULL,NULL),(41,43,'Owner of an online gourmet spice brand with pan-India delivery.','Saffron Spice Co.','Mumbai, Maharashtra',NULL,'2026-08-24 16:02:41.454','2026-08-24 16:02:41.454',NULL,NULL,NULL,NULL),(42,44,'Founder of a startup pitching analytics and investor presentation tool.','PixelPitch Analytics','Delhi, NCR',NULL,'2026-08-24 16:02:41.523','2026-08-24 16:02:41.523',NULL,NULL,NULL,NULL),(43,45,'Floral designer expanding her event decoration business with an online booking system.','FloralFrame Events','Nashik, Maharashtra',NULL,'2026-08-24 16:02:41.591','2026-08-24 16:02:41.591',NULL,NULL,NULL,NULL),(44,46,'Fashion designer running a Punjabi ethnic wear brand.','Punjabi Couture House','Amritsar, Punjab',NULL,'2026-08-24 16:02:41.659','2026-08-24 16:02:41.659',NULL,NULL,NULL,NULL),(45,47,'Music producer and event organiser managing Baul and folk music tours.','BaulGuru Productions','Kolkata, West Bengal',NULL,'2026-08-24 16:02:41.729','2026-08-24 16:02:41.729',NULL,NULL,NULL,NULL),(46,48,'Founder of a digital print-on-demand platform for personalised gifting.','ePrintX','Delhi, NCR',NULL,'2026-08-24 16:02:41.801','2026-08-24 16:02:41.801',NULL,NULL,NULL,NULL),(47,49,'Owner of a traditional south Indian sweets brand expanding to e-commerce.','Southern Sweets Co.','Madurai, Tamil Nadu',NULL,'2026-08-24 16:02:41.869','2026-08-24 16:02:41.869',NULL,NULL,NULL,NULL),(48,50,'Gemstone dealer in Jaipur building an authenticated B2B trading platform.','GemstoneRaj','Jaipur, Rajasthan',NULL,'2026-08-24 16:02:41.937','2026-08-24 16:02:41.937',NULL,NULL,NULL,NULL),(49,51,'Certified yoga instructor launching a subscription-based online yoga platform.','YogaWave Online Studio','Rishikesh, Uttarakhand',NULL,'2026-08-24 16:02:42.006','2026-08-24 16:02:42.006',NULL,NULL,NULL,NULL),(50,52,'MD of a steel fabrication unit seeking a custom production-tracking app.','SteelFab Engineering','Nagpur, Maharashtra',NULL,'2026-08-24 16:02:42.116','2026-08-24 16:02:42.116',NULL,NULL,NULL,NULL),(51,53,'Children\'s book author and illustrator looking for a digital storefront.','StoryMint Publications','Lucknow, Uttar Pradesh',NULL,'2026-08-24 16:02:42.187','2026-08-24 16:02:42.187',NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `customerprofile` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `freelancerprofile`
+--
+
+DROP TABLE IF EXISTS `freelancerprofile`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `freelancerprofile` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int NOT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `hourlyRate` decimal(10,2) DEFAULT NULL,
+  `experienceLevel` enum('ENTRY','INTERMEDIATE','EXPERT') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ENTRY',
+  `location` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `availability` enum('FULL_TIME','PART_TIME','NOT_AVAILABLE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'FULL_TIME',
+  `profileImage` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  `linkedinUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `githubUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `websiteUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `yearsOfExperience` int DEFAULT NULL,
+  `experienceSummary` text COLLATE utf8mb4_unicode_ci,
+  `educationQualification` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `FreelancerProfile_userId_key` (`userId`),
+  KEY `FreelancerProfile_userId_idx` (`userId`),
+  KEY `FreelancerProfile_experienceLevel_idx` (`experienceLevel`),
+  KEY `FreelancerProfile_availability_idx` (`availability`),
+  KEY `FreelancerProfile_hourlyRate_idx` (`hourlyRate`),
+  KEY `FreelancerProfile_location_idx` (`location`),
+  CONSTRAINT `FreelancerProfile_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `freelancerprofile`
+--
+
+LOCK TABLES `freelancerprofile` WRITE;
+/*!40000 ALTER TABLE `freelancerprofile` DISABLE KEYS */;
+INSERT INTO `freelancerprofile` VALUES (1,3,'MERN stack developer with 4 years of experience building scalable web apps. Delivered 30+ projects for clients across India and Southeast Asia.',1800.00,'INTERMEDIATE','Pune, Maharashtra','FULL_TIME',NULL,'2026-08-24 16:02:42.193','2026-08-24 16:02:42.193',NULL,NULL,NULL,NULL,NULL,NULL),(2,54,'Updated bio for production testing.',1500.00,'INTERMEDIATE','Ahmedabad, Gujarat','FULL_TIME',NULL,'2026-08-24 16:02:42.264','2026-08-26 14:26:57.429',NULL,NULL,NULL,NULL,NULL,NULL),(3,55,'Google-certified UX designer focused on user research and information architecture. Prototyping expert in Figma and Adobe XD with 5 years experience.',1600.00,'INTERMEDIATE','Bengaluru, Karnataka','FULL_TIME',NULL,'2026-08-24 16:02:42.334','2026-08-24 16:02:42.334',NULL,NULL,NULL,NULL,NULL,NULL),(4,56,'Node.js and Python backend engineer with deep expertise in REST and GraphQL APIs, PostgreSQL, MongoDB. 6 years building high-throughput fintech systems.',2200.00,'EXPERT','Hyderabad, Telangana','PART_TIME',NULL,'2026-08-24 16:02:42.402','2026-08-24 16:02:42.402',NULL,NULL,NULL,NULL,NULL,NULL),(5,57,'Flutter and React Native developer building cross-platform apps. Published 8 apps on Play Store and App Store with combined 50k+ downloads.',2000.00,'INTERMEDIATE','Kochi, Kerala','FULL_TIME',NULL,'2026-08-24 16:02:42.470','2026-08-24 16:02:42.470',NULL,NULL,NULL,NULL,NULL,NULL),(6,58,'AWS Solutions Architect Associate certified. Specialises in serverless architectures, CI/CD pipelines, and infrastructure-as-code with Terraform.',2800.00,'EXPERT','Chennai, Tamil Nadu','PART_TIME',NULL,'2026-08-24 16:02:42.538','2026-08-24 16:02:42.538',NULL,NULL,NULL,NULL,NULL,NULL),(7,59,'Brand identity and visual communication designer with 7 years creating logos, packaging, and marketing collateral for Indian and global brands.',1200.00,'EXPERT','Mumbai, Maharashtra','FULL_TIME',NULL,'2026-08-24 16:02:42.607','2026-08-24 16:02:42.607',NULL,NULL,NULL,NULL,NULL,NULL),(8,60,'Data professional with expertise in Python, SQL, Power BI, and Tableau. Turned raw data into actionable insights for 15+ FMCG and retail companies.',1700.00,'INTERMEDIATE','Bengaluru, Karnataka','FULL_TIME',NULL,'2026-08-24 16:02:42.675','2026-08-24 16:02:42.675',NULL,NULL,NULL,NULL,NULL,NULL),(9,61,'Performance marketing specialist managing Google Ads, Meta Ads, and SEO for D2C brands. Managed ad budgets exceeding Rs. 50 lakh per month.',1300.00,'INTERMEDIATE','Delhi, NCR','FULL_TIME',NULL,'2026-08-24 16:02:42.744','2026-08-24 16:02:42.744',NULL,NULL,NULL,NULL,NULL,NULL),(10,62,'Kubernetes and Docker expert. Designed and managed multi-cluster EKS environments and automated deployments for SaaS products. CKA certified.',3000.00,'EXPERT','Noida, Uttar Pradesh','PART_TIME',NULL,'2026-08-24 16:02:42.813','2026-08-24 16:02:42.813',NULL,NULL,NULL,NULL,NULL,NULL),(11,63,'SEO-driven content strategist and long-form writer for SaaS, healthtech, and edtech sectors. 500+ published articles and white papers.',900.00,'INTERMEDIATE','Hyderabad, Telangana','FULL_TIME',NULL,'2026-08-24 16:02:42.881','2026-08-24 16:02:42.881',NULL,NULL,NULL,NULL,NULL,NULL),(12,64,'ML engineer with expertise in NLP, computer vision, and recommendation systems. Built production ML pipelines on GCP for major e-commerce clients.',3500.00,'EXPERT','Chennai, Tamil Nadu','PART_TIME',NULL,'2026-08-24 16:02:42.950','2026-08-24 16:02:42.950',NULL,NULL,NULL,NULL,NULL,NULL),(13,65,'Custom WordPress theme and plugin developer. Built 80+ websites for SMEs, NGOs, and educational institutions across India.',800.00,'ENTRY','Jaipur, Rajasthan','FULL_TIME',NULL,'2026-08-24 16:02:43.018','2026-08-24 16:02:43.018',NULL,NULL,NULL,NULL,NULL,NULL),(14,66,'Shopify and WooCommerce expert. Manages end-to-end store setup, product listings, payment integration, and conversion optimisation for retail brands.',1100.00,'INTERMEDIATE','Surat, Gujarat','FULL_TIME',NULL,'2026-08-24 16:02:43.087','2026-08-24 16:02:43.087',NULL,NULL,NULL,NULL,NULL,NULL),(15,67,'Premiere Pro and After Effects wizard creating reels, explainer videos, and branded content for YouTube channels and OTT productions.',1000.00,'INTERMEDIATE','Kolkata, West Bengal','FULL_TIME',NULL,'2026-08-24 16:02:43.156','2026-08-24 16:02:43.156',NULL,NULL,NULL,NULL,NULL,NULL),(16,68,'OSCP-certified penetration tester conducting VAPT for fintech and healthcare platforms. Helped 20+ firms achieve ISO 27001 compliance.',4000.00,'EXPERT','Bengaluru, Karnataka','PART_TIME',NULL,'2026-08-24 16:02:43.224','2026-08-24 16:02:43.224',NULL,NULL,NULL,NULL,NULL,NULL),(17,69,'Native Android developer (Kotlin/Java) building fintech and healthcare apps. 5 years experience with complex integrations including UPI and Aadhaar APIs.',2100.00,'INTERMEDIATE','Nashik, Maharashtra','FULL_TIME',NULL,'2026-08-24 16:02:43.291','2026-08-24 16:02:43.291',NULL,NULL,NULL,NULL,NULL,NULL),(18,70,'BA with 8 years bridging technical and business teams. Specialises in requirement gathering, user stories, and process mapping for ERP and CRM implementations.',2000.00,'EXPERT','Chennai, Tamil Nadu','PART_TIME',NULL,'2026-08-24 16:02:43.360','2026-08-24 16:02:43.360',NULL,NULL,NULL,NULL,NULL,NULL),(19,71,'Swift and SwiftUI developer with 4 apps on the App Store. Strong in MVVM architecture, Core Data, and HealthKit integrations.',2400.00,'INTERMEDIATE','Patna, Bihar','FULL_TIME',NULL,'2026-08-24 16:02:43.429','2026-08-24 16:02:43.429',NULL,NULL,NULL,NULL,NULL,NULL),(20,72,'Managed Instagram, LinkedIn, and Twitter growth for 30+ brands across lifestyle, food, and B2B SaaS niches. Grew accounts from 0 to 100k+ followers.',750.00,'ENTRY','Thiruvananthapuram, Kerala','FULL_TIME',NULL,'2026-08-24 16:02:43.497','2026-08-24 16:02:43.497',NULL,NULL,NULL,NULL,NULL,NULL),(21,73,'Oracle and MySQL DBA with 9 years managing mission-critical databases for banking and insurance sector clients. Expert in performance tuning and disaster recovery.',2600.00,'EXPERT','Lucknow, Uttar Pradesh','PART_TIME',NULL,'2026-08-24 16:02:43.565','2026-08-24 16:02:43.565',NULL,NULL,NULL,NULL,NULL,NULL),(22,74,NULL,NULL,'ENTRY',NULL,'FULL_TIME',NULL,'2026-09-25 07:35:39.761','2026-09-25 07:35:39.761',NULL,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `freelancerprofile` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `freelancerskill`
+--
+
+DROP TABLE IF EXISTS `freelancerskill`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `freelancerskill` (
+  `freelancerProfileId` int NOT NULL,
+  `skillId` int NOT NULL,
+  `assignedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`freelancerProfileId`,`skillId`),
+  KEY `FreelancerSkill_skillId_idx` (`skillId`),
+  KEY `FreelancerSkill_freelancerProfileId_idx` (`freelancerProfileId`),
+  CONSTRAINT `FreelancerSkill_freelancerProfileId_fkey` FOREIGN KEY (`freelancerProfileId`) REFERENCES `freelancerprofile` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FreelancerSkill_skillId_fkey` FOREIGN KEY (`skillId`) REFERENCES `skill` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `freelancerskill`
+--
+
+LOCK TABLES `freelancerskill` WRITE;
+/*!40000 ALTER TABLE `freelancerskill` DISABLE KEYS */;
+INSERT INTO `freelancerskill` VALUES (1,1,'2026-08-24 16:05:45.744'),(1,2,'2026-08-24 16:05:45.748'),(1,6,'2026-08-24 16:05:45.766'),(1,8,'2026-08-24 16:05:45.752'),(1,9,'2026-08-24 16:05:45.760'),(1,10,'2026-08-24 16:05:45.756'),(1,12,'2026-08-24 16:05:45.763'),(2,1,'2026-08-26 14:26:57.452'),(2,2,'2026-08-26 14:26:57.452'),(3,14,'2026-08-24 16:05:45.789'),(3,15,'2026-08-24 16:05:45.792'),(3,16,'2026-08-24 16:05:45.796'),(3,17,'2026-08-24 16:05:45.799'),(4,2,'2026-08-24 16:05:45.803'),(4,3,'2026-08-24 16:05:45.806'),(4,8,'2026-08-24 16:05:45.824'),(4,10,'2026-08-24 16:05:45.821'),(4,11,'2026-08-24 16:05:45.817'),(4,12,'2026-08-24 16:05:45.810'),(4,13,'2026-08-24 16:05:45.813'),(5,1,'2026-08-24 16:05:45.832'),(5,12,'2026-08-24 16:05:45.838'),(5,33,'2026-08-24 16:05:45.835'),(5,34,'2026-08-24 16:05:45.828'),(6,3,'2026-08-24 16:05:45.860'),(6,29,'2026-08-24 16:05:45.843'),(6,30,'2026-08-24 16:05:45.849'),(6,31,'2026-08-24 16:05:45.853'),(6,32,'2026-08-24 16:05:45.846'),(6,40,'2026-08-24 16:05:45.857'),(7,14,'2026-08-24 16:05:45.872'),(7,15,'2026-08-24 16:05:45.868'),(7,17,'2026-08-24 16:05:45.865'),(7,18,'2026-08-24 16:05:45.875'),(7,19,'2026-08-24 16:05:45.878'),(8,3,'2026-08-24 16:05:45.883'),(8,9,'2026-08-24 16:05:45.887'),(8,11,'2026-08-24 16:05:45.890'),(8,24,'2026-08-24 16:05:45.899'),(8,25,'2026-08-24 16:05:45.893'),(8,26,'2026-08-24 16:05:45.896'),(9,20,'2026-08-24 16:05:45.908'),(9,21,'2026-08-24 16:05:45.904'),(9,22,'2026-08-24 16:05:45.912'),(9,23,'2026-08-24 16:05:45.916'),(10,3,'2026-08-24 16:05:45.939'),(10,29,'2026-08-24 16:05:45.928'),(10,30,'2026-08-24 16:05:45.921'),(10,31,'2026-08-24 16:05:45.925'),(10,32,'2026-08-24 16:05:45.932'),(10,40,'2026-08-24 16:05:45.935'),(11,20,'2026-08-24 16:05:45.948'),(11,21,'2026-08-24 16:05:45.954'),(11,23,'2026-08-24 16:05:45.944'),(12,3,'2026-08-24 16:05:45.977'),(12,11,'2026-08-24 16:05:45.989'),(12,24,'2026-08-24 16:05:45.983'),(12,27,'2026-08-24 16:05:45.961'),(12,28,'2026-08-24 16:05:45.966'),(13,9,'2026-08-24 16:05:45.999'),(13,17,'2026-08-24 16:05:46.003'),(13,20,'2026-08-24 16:05:46.007'),(13,36,'2026-08-24 16:05:45.995'),(14,20,'2026-08-24 16:05:46.021'),(14,21,'2026-08-24 16:05:46.024'),(14,22,'2026-08-24 16:05:46.028'),(14,36,'2026-08-24 16:05:46.016'),(14,37,'2026-08-24 16:05:46.013'),(15,17,'2026-08-24 16:05:46.040'),(15,18,'2026-08-24 16:05:46.033'),(15,19,'2026-08-24 16:05:46.037'),(16,3,'2026-08-24 16:05:46.056'),(16,38,'2026-08-24 16:05:46.046'),(16,39,'2026-08-24 16:05:46.049'),(16,40,'2026-08-24 16:05:46.053'),(17,4,'2026-08-24 16:05:46.065'),(17,9,'2026-08-24 16:05:46.072'),(17,12,'2026-08-24 16:05:46.069'),(17,33,'2026-08-24 16:05:46.061'),(18,9,'2026-08-24 16:05:46.080'),(18,12,'2026-08-24 16:05:46.087'),(18,24,'2026-08-24 16:05:46.077'),(18,25,'2026-08-24 16:05:46.084'),(19,9,'2026-08-24 16:05:46.099'),(19,12,'2026-08-24 16:05:46.096'),(19,35,'2026-08-24 16:05:46.091'),(20,20,'2026-08-24 16:05:46.112'),(20,21,'2026-08-24 16:05:46.104'),(20,22,'2026-08-24 16:05:46.115'),(20,23,'2026-08-24 16:05:46.108'),(21,3,'2026-08-24 16:05:46.132'),(21,9,'2026-08-24 16:05:46.121'),(21,11,'2026-08-24 16:05:46.124'),(21,40,'2026-08-24 16:05:46.128');
+/*!40000 ALTER TABLE `freelancerskill` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `message`
+--
+
+DROP TABLE IF EXISTS `message`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `message` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `conversationId` int NOT NULL,
+  `senderId` int NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `isRead` tinyint(1) NOT NULL DEFAULT '0',
+  `sentAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  KEY `Message_conversationId_idx` (`conversationId`),
+  KEY `Message_senderId_idx` (`senderId`),
+  KEY `Message_sentAt_idx` (`sentAt`),
+  KEY `Message_isRead_idx` (`isRead`),
+  CONSTRAINT `Message_conversationId_fkey` FOREIGN KEY (`conversationId`) REFERENCES `conversation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Message_senderId_fkey` FOREIGN KEY (`senderId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `message`
+--
+
+LOCK TABLES `message` WRITE;
+/*!40000 ALTER TABLE `message` DISABLE KEYS */;
+INSERT INTO `message` VALUES (1,1,38,'Hi Shubham, we received your proposal for the direct booking engine. Can this handle multi-room selection and seasonal weekend pricing tariffs?',1,'2026-08-10 20:11:17.751'),(2,1,3,'Hello Ritika! Yes, absolutely. I have built custom dynamic pricing logic before. We can set weekend surge rules and seasonal discount tiers.',1,'2026-08-10 23:31:17.751'),(3,1,38,'That sounds great. We have accepted your proposal and initiated the milestone.',1,'2026-08-11 04:31:17.751'),(4,1,3,'Thank you! I have completed the Razorpay sandbox integration and room availability calendar. Please test via the staging link: staging.luxurystay.in/book',1,'2026-08-19 04:11:17.751'),(5,1,38,'Tested the end-to-end payment and booking flow. Everything is working smoothly!',1,'2026-08-21 06:11:17.751'),(6,1,3,'Awesome! Handed over the production credentials and documentation. Pleasure working with you!',1,'2026-08-21 09:31:17.751'),(7,2,15,'Hi Shubham, wanted to check if you have experience with Chart.js or Recharts for rendering API usage histograms?',1,'2026-08-18 11:31:17.751'),(8,2,3,'Hi Rahul, yes! I have used Recharts extensively with React and TypeScript for time-series aggregation.',1,'2026-08-18 14:51:17.751'),(9,2,15,'Perfect. We are glad to have you on board for this dashboard build.',1,'2026-08-18 19:51:17.751'),(10,2,3,'Sharing a quick progress update: Completed authentication, RBAC middleware, and the usage metrics endpoint. Working on dark mode charts next.',1,'2026-08-23 08:11:17.751'),(11,2,15,'Looks solid! Please ensure export to CSV is available for the billing breakdown table.',1,'2026-08-23 21:31:17.751'),(12,3,14,'Hi Sneha, loved your portfolio on design systems! We want a minimalist, earth-toned look for our interior studio website.',1,'2026-08-12 05:31:17.751'),(13,3,55,'Hi Neha, thank you! I would love to help. I envision large visual hero grids and an interactive project lookbook.',1,'2026-08-12 08:51:17.751'),(14,3,14,'That matches our brand vision completely. Contract approved!',1,'2026-08-12 13:51:17.751'),(15,3,55,'Here is the Figma link with complete wireframes, mood boards, and responsive prototypes.',1,'2026-08-20 13:31:17.751'),(16,3,14,'The design is breathtaking! Feedback incorporated and contract marked as completed. Left you a 5-star review!',1,'2026-08-21 22:51:17.751'),(17,4,9,'Hi Sneha, our investment advisory platform needs to build trust while displaying dense portfolio metrics.',1,'2026-08-19 04:11:17.751'),(18,4,55,'Hello Siddharth! I specialize in fintech UX. We should use clear visual hierarchy and collapsible risk indicator cards.',1,'2026-08-19 07:31:17.751'),(19,4,9,'Agreed. Let us kick off the project.',1,'2026-08-19 12:31:17.751'),(20,4,55,'I have shared the first draft of the portfolio breakdown screen on Figma. Please take a look at the asset allocation pie chart.',1,'2026-08-22 23:51:17.751'),(21,4,9,'Reviewing with the team now. The typography and color coding look very professional.',1,'2026-08-24 00:51:17.751'),(22,5,43,'Hi Aishwarya, we need premium pouch and tin packaging for 15 authentic Indian spice blends.',1,'2026-08-13 14:51:17.751'),(23,5,59,'Hello Rupali! I can design heritage botanical illustrations with gold-foil accents and print-ready die lines.',1,'2026-08-13 18:11:17.751'),(24,5,43,'Accepted your proposal. Can you start with the Garam Masala and Kashmiri Chilli pouches?',1,'2026-08-13 23:11:17.751'),(25,5,59,'Sharing the vector print files and 3D mockups for the first 5 SKUs. Die lines are calibrated for 100g and 250g pouches.',1,'2026-08-19 20:51:17.751'),(26,5,43,'Our packaging printer verified the vectors. Print quality is outstanding!',1,'2026-08-21 06:11:17.751'),(27,5,59,'Wonderful! Final files for all 15 SKUs have been uploaded to the drive.',1,'2026-08-21 14:31:17.751'),(28,6,28,'Hi Aishwarya, we are launching an artisan silver jewellery brand on Instagram and Etsy.',1,'2026-08-15 00:11:17.751'),(29,6,59,'Hi Nandini! I will design a modern luxury logo mark, typography guide, and product unboxing insert cards.',1,'2026-08-15 03:31:17.751'),(30,6,28,'Sounds perfect. Excited to work together!',1,'2026-08-15 08:31:17.751'),(31,6,59,'Here is the brand kit with vector logos, color palette, and editable Instagram story templates.',1,'2026-08-20 13:31:17.751'),(32,6,28,'The gold and ivory color palette is gorgeous! Completed the contract and left a review.',1,'2026-08-21 22:51:17.751'),(33,7,43,'Hi Priyanka, our Amazon spice listings have low organic discovery. Can you help optimize them?',1,'2026-08-14 07:31:17.751'),(34,7,61,'Hi Rupali! Yes, I will perform high-intent keyword research, optimize backend search terms, and structure A+ content copy.',1,'2026-08-14 10:51:17.751'),(35,7,43,'Let us proceed. Looking forward to ranking improvements.',1,'2026-08-14 15:51:17.751'),(36,7,61,'Uploaded the revised titles, bullet points, and backend search terms for all 15 ASINs. Also submitted the on-page SEO recommendations.',1,'2026-08-20 05:11:17.751'),(37,7,43,'We are already seeing our Kashmiri Chilli ranking in top 5 search results! Thank you for the great work.',1,'2026-08-22 07:11:17.751'),(38,8,7,'Hi Saurabh, we need 12 fast-paced fashion reels every month with trending audio for our ethnic wear launch.',1,'2026-08-19 20:51:17.751'),(39,8,67,'Hello Vikram! I can deliver beat-synced edits with dynamic text overlays, color grading, and vertical format optimization.',1,'2026-08-20 00:11:17.751'),(40,8,7,'Proposal accepted. Uploaded the raw 4K footage from our Jaipur shoot.',1,'2026-08-20 05:11:17.751'),(41,8,67,'Delivered the first batch of 4 reels via Vimeo review link. Please check the color grade and transitions.',1,'2026-08-23 11:31:17.751'),(42,8,7,'These look high-energy and trendy! Minor tweak on the price tag animation on reel #2, otherwise approved.',1,'2026-08-24 04:11:17.751'),(43,9,20,'Hi Pooja, we saw your Flutter mobile apps. Can you build live GPS order tracking with Google Maps SDK?',1,'2026-08-21 06:11:17.751'),(44,9,57,'Hi Pooja! Yes, I have built real-time rider tracking with WebSockets and Google Maps in Flutter for food delivery apps.',1,'2026-08-21 09:31:17.751'),(45,9,20,'What about push notifications for order status changes like Preparing and Out for delivery?',1,'2026-08-21 14:31:17.751'),(46,9,57,'We can use Firebase Cloud Messaging (FCM) for instant background and foreground push notifications.',1,'2026-08-21 19:31:17.751'),(47,10,13,'Hello Jayesh, our pharma distribution warehouse needs rapid barcode scanning even in poor lighting.',1,'2026-08-21 14:31:17.751'),(48,10,69,'Hi Kiran! We can use Google ML Kit Barcode Scanning API with camera torch toggle and batch scan mode.',1,'2026-08-21 17:51:17.751'),(49,10,13,'Will it work offline if warehouse Wi-Fi drops?',1,'2026-08-21 22:51:17.751'),(50,10,69,'Yes, all scan logs will save to local SQLite and auto-sync with your ERP REST API once connectivity resumes.',1,'2026-08-22 02:11:17.751'),(51,11,31,'Hi Vivek, we have 30 legacy on-premise services. What is your recommended phased migration strategy to AWS?',1,'2026-08-20 13:31:17.751'),(52,11,58,'Hello Tarun! I recommend Phase 1 lift-and-shift with AWS Application Migration Service, followed by containerizing core services on EKS.',1,'2026-08-20 16:51:17.751'),(53,11,31,'How do we ensure minimal downtime during the database cutover?',1,'2026-08-20 21:51:17.751'),(54,11,58,'We will use AWS DMS (Database Migration Service) with continuous CDC replication until final DNS cutover.',1,'2026-08-21 02:51:17.751'),(55,12,19,'Hi Karthik, our jewellery retail stores have heavy seasonal spikes during Diwali and wedding seasons.',1,'2026-08-21 09:31:17.751'),(56,12,64,'Hello Manish! We can build a hierarchical forecasting model in Python considering festival calendars, gold price index, and historical store footfalls.',1,'2026-08-21 12:51:17.751'),(57,12,19,'Can the output feed directly into our store managers weekly reorder sheets?',1,'2026-08-21 16:11:17.751'),(58,12,64,'Yes, we can generate automated CSV exports and an interactive Power BI dashboard for store-level recommendations.',1,'2026-08-21 21:11:17.751'),(59,13,12,'Hi Nilufar, we want to sell handloom rugs and textiles to US and UK buyers. Can Shopify handle multi-currency checkout?',1,'2026-08-21 02:51:17.751'),(60,13,66,'Hi Sunita! Yes, with Shopify Markets we can enable local currency pricing (USD, GBP, EUR) and automatic geo-IP redirection.',1,'2026-08-21 06:11:17.751'),(61,13,12,'What about DHL international shipping rate calculations at checkout?',1,'2026-08-21 11:11:17.751'),(62,13,66,'I will configure carrier-calculated shipping rates with DHL Express so customers see exact delivery costs and duties.',1,'2026-08-21 16:11:17.751'),(63,14,39,'Hi Mohit, we want to integrate automated container scanning into our GitHub Actions workflow.',1,'2026-08-21 19:31:17.751'),(64,14,62,'Hi Pranav! We can integrate Trivy and Grype to fail builds automatically if high/critical CVEs are detected.',1,'2026-08-21 22:51:17.751'),(65,14,39,'Can we also configure blue-green deployments on our AWS EKS cluster?',1,'2026-08-22 03:51:17.751'),(66,14,62,'Yes, using Argo Rollouts we can automate traffic shifting with instant automated rollbacks on error spike.',1,'2026-08-22 08:51:17.751'),(67,15,34,'Hi Swapna, I need 20 blog articles exploring themes in contemporary Indian historical fiction.',1,'2026-08-22 05:31:17.751'),(68,15,63,'Hello Shweta! As a long-form writer with a literary background, I would love to write in-depth essays with engaging storytelling.',1,'2026-08-22 08:51:17.751'),(69,15,34,'Could you share a sample outline for the first article on regional translation trends?',1,'2026-08-22 13:51:17.751'),(70,15,63,'Certainly! I will send over a detailed 3-part outline with proposed headings and reference sources by this evening.',1,'2026-08-22 18:51:17.751'),(71,16,17,'Hi Deepa, we need a Business Analyst to map our farmer onboarding and mandi price negotiation workflows.',1,'2026-08-22 12:11:17.751'),(72,16,70,'Hello Gaurav! I have extensive experience modeling B2B workflows in BPMN 2.0 and drafting functional specifications.',1,'2026-08-22 15:31:17.751'),(73,16,17,'We also need standard operating procedures (SOPs) for our field executive app.',1,'2026-08-22 20:31:17.751'),(74,16,70,'I can deliver end-to-end process maps, user stories for the engineering team, and illustrated field SOP manuals.',1,'2026-08-23 01:31:17.751'),(75,18,2,'Hello! I noticed your profile and wanted to discuss a project.',1,'2026-09-25 05:26:15.911'),(76,18,2,'Hello! I noticed your profile and wanted to discuss a project.',1,'2026-09-25 06:16:00.598'),(77,18,3,'yess',1,'2026-09-25 06:57:43.892'),(78,18,2,'where r u located ?',1,'2026-09-25 07:31:53.885'),(79,18,3,'mumbai',1,'2026-09-25 07:32:02.855'),(80,19,74,'hey',1,'2026-09-25 07:48:59.065'),(81,19,3,'hello',1,'2026-09-25 08:58:53.843'),(82,20,3,'Can you help with the React frontend portion?',1,'2026-09-25 09:44:05.329'),(83,20,54,'Yes, I can assist with that.',1,'2026-09-25 09:44:05.341'),(84,18,2,'Hello! I noticed your profile and wanted to discuss a project.',1,'2026-09-25 09:44:05.401'),(85,18,2,'Following up on the previous note.',1,'2026-09-25 09:44:05.442'),(86,18,2,'great',1,'2026-09-25 09:45:58.937'),(87,18,2,'hi',0,'2026-10-11 18:24:34.000');
+/*!40000 ALTER TABLE `message` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notification`
+--
+
+DROP TABLE IF EXISTS `notification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notification` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int NOT NULL,
+  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'INFO',
+  `link` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `isRead` tinyint(1) NOT NULL DEFAULT '0',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  KEY `Notification_userId_idx` (`userId`),
+  KEY `Notification_isRead_idx` (`isRead`),
+  KEY `Notification_createdAt_idx` (`createdAt`),
+  CONSTRAINT `Notification_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notification`
+--
+
+LOCK TABLES `notification` WRITE;
+/*!40000 ALTER TABLE `notification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notification` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payment`
+--
+
+DROP TABLE IF EXISTS `payment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payment` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contractId` int NOT NULL,
+  `payerId` int NOT NULL,
+  `receiverId` int NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` enum('PENDING','COMPLETED','FAILED','REFUNDED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Payment_contractId_key` (`contractId`),
+  KEY `Payment_contractId_idx` (`contractId`),
+  KEY `Payment_payerId_idx` (`payerId`),
+  KEY `Payment_receiverId_idx` (`receiverId`),
+  KEY `Payment_status_idx` (`status`),
+  CONSTRAINT `Payment_contractId_fkey` FOREIGN KEY (`contractId`) REFERENCES `contract` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Payment_payerId_fkey` FOREIGN KEY (`payerId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Payment_receiverId_fkey` FOREIGN KEY (`receiverId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payment`
+--
+
+LOCK TABLES `payment` WRITE;
+/*!40000 ALTER TABLE `payment` DISABLE KEYS */;
+INSERT INTO `payment` VALUES (1,1,15,3,92000.00,'PENDING','2026-08-10 09:00:00.000','2026-08-24 17:26:41.116'),(2,2,38,3,46000.00,'COMPLETED','2026-08-05 18:00:00.000','2026-08-24 17:26:41.126'),(3,3,9,55,38000.00,'PENDING','2026-08-10 09:00:00.000','2026-08-24 17:26:41.131'),(4,4,14,55,27000.00,'COMPLETED','2026-08-05 18:00:00.000','2026-08-24 17:26:41.135'),(5,5,43,59,21000.00,'COMPLETED','2026-08-05 18:00:00.000','2026-08-24 17:26:41.139'),(6,6,28,59,17500.00,'COMPLETED','2026-08-05 18:00:00.000','2026-08-24 17:26:41.144'),(7,7,43,61,17000.00,'COMPLETED','2026-08-05 18:00:00.000','2026-08-24 17:26:41.148'),(8,8,7,67,23000.00,'PENDING','2026-08-10 09:00:00.000','2026-08-24 17:26:41.153');
+/*!40000 ALTER TABLE `payment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `portfolioproject`
+--
+
+DROP TABLE IF EXISTS `portfolioproject`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `portfolioproject` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `freelancerProfileId` int NOT NULL,
+  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `projectUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `imageUrl` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `PortfolioProject_freelancerProfileId_idx` (`freelancerProfileId`),
+  CONSTRAINT `PortfolioProject_freelancerProfileId_fkey` FOREIGN KEY (`freelancerProfileId`) REFERENCES `freelancerprofile` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `portfolioproject`
+--
+
+LOCK TABLES `portfolioproject` WRITE;
+/*!40000 ALTER TABLE `portfolioproject` DISABLE KEYS */;
+INSERT INTO `portfolioproject` VALUES (1,1,'QuickMart - Hyperlocal Grocery Delivery Platform','Engineered a full-stack MERN hyperlocal grocery ordering platform for a Pune-based retail chain with real-time stock sync, Razorpay payment processing, and SMS delivery tracking.','https://github.com/shubham-dev/quickmart-platform','https://images.unsplash.com/photo-1542838132-92c53300491e','2026-08-24 16:21:38.941','2026-08-24 16:21:38.941'),(2,1,'ArogyaCare - Hospital OPD & Bed Management Portal','Built a hospital management portal for a multi-specialty clinic in Mumbai handling OPD token generation, doctor scheduling, and electronic health record storage with MySQL.','https://github.com/shubham-dev/arogyacare-portal','https://images.unsplash.com/photo-1505751172876-fa1923c5c528','2026-08-24 16:21:38.975','2026-08-24 16:21:38.975'),(3,2,'FinTrack - Personal Finance & Tax Planning Web App','Developed a high-performance Next.js web application for Indian taxpayers to calculate New vs Old regime liabilities, track mutual fund portfolios, and export ITR summaries.','https://github.com/aryantrivedi/fintrack-web','https://images.unsplash.com/photo-1551288049-bebda4e38f71','2026-08-24 16:21:38.993','2026-08-24 16:21:38.993'),(4,2,'CraftVibe - Handcrafted Decor Brand Front-End','Created a pixel-perfect, accessible e-commerce front-end in Next.js for an artisanal home decor studio in Ahmedabad featuring custom micro-interactions and fast page loads.','https://github.com/aryantrivedi/craftvibe-store','https://images.unsplash.com/photo-1513519245088-0e12902e5a38','2026-08-24 16:21:39.009','2026-08-24 16:21:39.009'),(5,3,'KisanMitra - Rural Banking App Design System','Designed a multilingual, high-contrast mobile banking interface and design system in Figma tailored for farmers and rural co-operative bank members across Maharashtra.','https://figma.com/@snehak/kisanmitra-app','https://images.unsplash.com/photo-1581291518857-4e27b48ff24e','2026-08-24 16:21:39.024','2026-08-24 16:21:39.024'),(6,3,'EduSpark - K-12 Gamified Learning App UX','End-to-end UX research, wireframing, and interactive prototyping for a Bengaluru edtech gamified science learning mobile app with custom badge and mascot illustrations.','https://figma.com/@snehak/eduspark-ux','https://images.unsplash.com/photo-1509062522246-3755977927d7','2026-08-24 16:21:39.038','2026-08-24 16:21:39.038'),(7,4,'PayBridge - UPI & BBPS Payment Gateway Microservice','Architected high-throughput Node.js microservices processing 5,000+ payment webhooks per minute with Redis caching, PostgreSQL sharding, and automated reconciliation.','https://github.com/rahulpandey/paybridge-api','https://images.unsplash.com/photo-1559526324-4b87b5e36e44','2026-08-24 16:21:39.050','2026-08-24 16:21:39.050'),(8,4,'FleetPulse - Real-time Vehicle Telematics API','Constructed a Python GraphQL API managing GPS streams and engine diagnostics for 10,000+ commercial trucks across western India with MongoDB storage.','https://github.com/rahulpandey/fleetpulse-telematics','https://images.unsplash.com/photo-1519003722824-194d4455a60c','2026-08-24 16:21:39.066','2026-08-24 16:21:39.066'),(9,5,'AyurVeda Connect - Doctor Consultation Flutter App','Built a cross-platform Flutter application for telemedicine consultations, prescription downloads, and herbal medicine delivery across Kerala and Karnataka.','https://github.com/poojamenon/ayurveda-connect-app','https://images.unsplash.com/photo-1576091160399-112ba8d25d1d','2026-08-24 16:21:39.081','2026-08-24 16:21:39.081'),(10,5,'FitKerala - Community Gym & Habit Tracker','Developed a React Native and Flutter mobile app featuring local gym class bookings, workout logging, and step-count leaderboard integration with Google Fit.','https://github.com/poojamenon/fitkerala-app','https://images.unsplash.com/photo-1517838277536-f5f99be501cd','2026-08-24 16:21:39.095','2026-08-24 16:21:39.095'),(11,6,'Terraform EKS Multi-Tier Banking Infrastructure','Provisioned multi-region AWS cloud infrastructure with Terraform IaC, Amazon EKS, AWS RDS PostgreSQL Multi-AZ, and strict PCI-DSS compliant IAM security policies.','https://github.com/viveknambiar/aws-banking-iac','https://images.unsplash.com/photo-1451187580459-43490279c0fa','2026-08-24 16:21:39.108','2026-08-24 16:21:39.108'),(12,6,'Automated Serverless Log Aggregation Pipeline','Built an automated Python serverless log parser using AWS Lambda, Kinesis Firehose, and OpenSearch to ingest and analyse 50GB+ daily access logs for a media platform.','https://github.com/viveknambiar/serverless-log-parser','https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5','2026-08-24 16:21:39.124','2026-08-24 16:21:39.124'),(13,7,'VedicPure - Organic Skincare Complete Brand Identity','Crafted complete visual branding for an organic skincare label in Mumbai, including minimalist botanical logo, sustainable packaging designs, and unboxing collateral.','https://behance.net/gallery/vedicpure-branding','https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9','2026-08-24 16:21:39.140','2026-08-24 16:21:39.140'),(14,7,'DesiBites - FMCG Snack Packaging & Animated Promo','Designed pouch packaging for 6 regional snack flavours and produced 3D-styled 15-second After Effects promotional bumper ads for social media launch.','https://behance.net/gallery/desibites-packaging','https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8','2026-08-24 16:21:39.152','2026-08-24 16:21:39.152'),(15,8,'RetailPulse - Multi-Outlet FMCG Sales Analytics','Built automated Power BI and SQL dashboards tracking SKU-level revenue, distributor margins, and stock-out alerts across 45 supermarkets in Bengaluru and Chennai.','https://github.com/tanmayiyer/retailpulse-bi','https://images.unsplash.com/photo-1551836022-d5d88e9218df','2026-08-24 16:21:39.165','2026-08-24 16:21:39.165'),(16,8,'OmniChannel Customer Segmentation & Churn Dashboard','Implemented RFM customer segmentation and churn hazard analysis in Python and Tableau for an Indian D2C apparel brand with 120,000 active customer records.','https://github.com/tanmayiyer/customer-churn-tableau','https://images.unsplash.com/photo-1460925895917-afdab827c52f','2026-08-24 16:21:39.180','2026-08-24 16:21:39.180'),(17,9,'NutriRoots - 4.2x ROAS Performance Marketing Campaign','Managed Google Search, Performance Max, and Meta Advantage+ shopping campaigns for a Delhi D2C health supplements brand, scaling monthly GMV from ₹12L to ₹52L.','https://priyankadubey.marketing/case-studies/nutriroots','https://images.unsplash.com/photo-1533750516457-a7f992034fec','2026-08-24 16:21:39.196','2026-08-24 16:21:39.196'),(18,9,'HomelySpaces - Organic Search Traffic Scaling (0 to 180k)','Devised comprehensive programmatic SEO and content strategy for an Indian home rental startup, ranking 350+ location keywords on Google page 1 in 7 months.','https://priyankadubey.marketing/case-studies/homelyspaces','https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a','2026-08-24 16:21:39.209','2026-08-24 16:21:39.209'),(19,10,'GitOps Kubernetes Deployment Pipeline with ArgoCD','Implemented production GitOps workflow using ArgoCD, Helm, and GitHub Actions on AWS EKS for an Indian logistics SaaS, slashing deployment rollback time to under 30 seconds.','https://github.com/mohitrajput/gitops-argocd-eks','https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9','2026-08-24 16:21:39.222','2026-08-24 16:21:39.222'),(20,10,'Automated Zero-Downtime Blue/Green Deployments','Architected Terraform modules and Docker container automation for zero-downtime Canary and Blue/Green releases supporting 20+ microservices.','https://github.com/mohitrajput/bluegreen-terraform','https://images.unsplash.com/photo-1618401471353-b98afee0b2eb','2026-08-24 16:21:39.238','2026-08-24 16:21:39.238'),(21,11,'Fintech India - 30-Part Demat & Algorithmic Trading Guide','Researched and authored a comprehensive 30-article educational pillar series on SEBI regulations, options trading strategies, and algo backtesting for a Hyderabad fintech.','https://swapnareddy.contently.com/fintech-trading-series','https://images.unsplash.com/photo-1455390582262-044cdead277a','2026-08-24 16:21:39.254','2026-08-24 16:21:39.254'),(22,11,'HealthFirst SaaS - B2B Case Studies & Whitepaper Series','Produced 8 detailed customer transformation case studies and an industry whitepaper on electronic medical records adoption in tier-2 Indian hospitals.','https://swapnareddy.contently.com/healthfirst-whitepapers','https://images.unsplash.com/photo-1516321318423-f06f85e504b3','2026-08-24 16:21:39.265','2026-08-24 16:21:39.265'),(23,12,'BhasaTranslate - Indic Language Neural Machine Translation','Fine-tuned Transformer models in TensorFlow and Python for Tamil, Telugu, and Hindi translation with 87% BLEU score for e-commerce customer support chat.','https://github.com/karthiksundar/indic-nmt-model','https://images.unsplash.com/photo-1677442136019-21780ecad995','2026-08-24 16:21:39.275','2026-08-24 16:21:39.275'),(24,12,'AgriYield - Computer Vision Crop Disease Detection','Trained a lightweight YOLOv8 computer vision model classifying 18 common paddy and cotton leaf diseases with 94.6% validation accuracy from mobile photos.','https://github.com/karthiksundar/crop-disease-cv','https://images.unsplash.com/photo-1586771107445-d3ca888129ff','2026-08-24 16:21:39.290','2026-08-24 16:21:39.290'),(25,13,'HeritageStays - Custom WordPress Hotel Booking Theme','Developed a bespoke Gutenberg-compatible WordPress theme for a heritage resort chain in Rajasthan with real-time room availability, seasonal tariffs, and Instamojo gateway.','https://github.com/vaibhavjoshi/heritagestays-theme','https://images.unsplash.com/photo-1566073771259-6a8506099945','2026-08-24 16:21:39.308','2026-08-24 16:21:39.308'),(26,13,'JaipurCrafts - WooCommerce Multi-Vendor Handicraft Hub','Engineered a lightweight WooCommerce store handling 1,500+ artisan handicraft products with speed optimisation achieving 95+ Google PageSpeed score.','https://github.com/vaibhavjoshi/jaipurcrafts-wc','https://images.unsplash.com/photo-1526772662000-3f88f10405ff','2026-08-24 16:21:39.324','2026-08-24 16:21:39.324'),(27,14,'SuratSilk - International Shopify Plus Storefront','Configured and launched an international Shopify Plus storefront for a Surat textile exporter with multi-currency checkout, DHL Express automated label printing, and WhatsApp cart recovery.','https://nilufar-ecommerce.com/case-studies/suratsilk','https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da','2026-08-24 16:21:39.337','2026-08-24 16:21:39.337'),(28,14,'GourmetMasala - D2C E-Commerce Conversion Optimization','Redesigned Shopify product landing pages and checkout funnel for a premium spice brand, boosting mobile conversion rate from 1.4% to 3.8% in 60 days.','https://nilufar-ecommerce.com/case-studies/gourmetmasala','https://images.unsplash.com/photo-1596040033229-a9821ebd058d','2026-08-24 16:21:39.355','2026-08-24 16:21:39.355'),(29,15,'Kolkata Chronicle - Documentary Web Series Editing','Lead video editor and colorist for a 4-episode documentary series on historic Kolkata architecture, featuring 4K multi-cam editing, audio sweetening, and archival restoration.','https://vimeo.com/saurabhghosh/kolkata-chronicle','https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d','2026-08-24 16:21:39.369','2026-08-24 16:21:39.369'),(30,15,'FinTech Explainer - Kinetic Typography & Motion Graphics','Created high-energy 60-second kinetic typography and 2D character animation explainer videos for an investment app ad campaign across Instagram Reels and YouTube.','https://vimeo.com/saurabhghosh/fintech-explainer','https://images.unsplash.com/photo-1536240478700-b869070f9279','2026-08-24 16:21:39.379','2026-08-24 16:21:39.379'),(31,16,'Fintech Core Banking API - Vulnerability Assessment & Pentest','Conducted comprehensive grey-box penetration testing and code review for a Bengaluru neo-banking API, identifying 4 critical business logic vulnerabilities before launch.','https://harinisecurity.io/reports/neobank-vapt','https://images.unsplash.com/photo-1550751827-4bd374c3f58b','2026-08-24 16:21:39.392','2026-08-24 16:21:39.392'),(32,16,'Automated DevSecOps Security Scanner Tool','Developed a custom Python and Linux CLI security auditing utility that checks cloud infrastructure and Docker images against OWASP Top 10 and CIS benchmarks.','https://github.com/harinic/cloud-sec-scanner','https://images.unsplash.com/photo-1563986768609-322da13575f3','2026-08-24 16:21:39.406','2026-08-24 16:21:39.406'),(33,17,'GramSeva - Offline-First Rural Panchayat Citizen App','Developed a native Android app (Java & Kotlin) with SQLite local caching enabling rural citizens to submit grievance petitions and check MNREGA muster rolls offline.','https://github.com/jayeshpatil/gramseva-android','https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c','2026-08-24 16:21:39.420','2026-08-24 16:21:39.420'),(34,17,'NashikAgri - Mandi Live Auction & Bidding App','Built a high-performance native Android application for onion and grape farmers in Nashik to participate in live Mandi price auctions with push notifications.','https://github.com/jayeshpatil/nashik-agri-mandi','https://images.unsplash.com/photo-1595079672139-545c02b2912c','2026-08-24 16:21:39.436','2026-08-24 16:21:39.436'),(35,18,'Hospitality ERP Transformation & Workflow BRD','Authored 120-page comprehensive Business Requirements Document (BRD) and BPMN 2.0 workflow maps for consolidating 14 hotel properties onto a centralized cloud ERP.','https://deepakrishnan-consulting.in/projects/hospitality-erp','https://images.unsplash.com/photo-1454165804606-c3d57bc86b40','2026-08-24 16:21:39.452','2026-08-24 16:21:39.452'),(36,18,'Supply Chain KPI Scorecard & BI Dashboard','Designed and delivered executive Power BI procurement analytics dashboard for a Chennai automotive ancillary manufacturer, reducing vendor lead time by 18%.','https://deepakrishnan-consulting.in/projects/supplychain-kpi','https://images.unsplash.com/photo-1551288049-bebda4e38f71','2026-08-24 16:21:39.466','2026-08-24 16:21:39.466'),(37,19,'YogaSutra - Guided Asana & Breathwork iOS App','Built an elegant SwiftUI and CoreData iOS application with HealthKit integration, customized audio player for guided meditation, and offline video playback.','https://github.com/ankursinha/yogasutra-ios','https://images.unsplash.com/photo-1545205597-3d9d02c29597','2026-08-24 16:21:39.479','2026-08-24 16:21:39.479'),(38,19,'PatnaBite - Restaurant Reservation & Table Ordering iOS App','Crafted a native Swift iOS app featuring interactive floor plan table booking, Apple Pay / UPI in-app payments, and kitchen order ticket sync.','https://github.com/ankursinha/patnabite-ios','https://images.unsplash.com/photo-1517248135467-4c7edcad34c4','2026-08-24 16:21:39.501','2026-08-24 16:21:39.501'),(39,20,'AyurRoots - 0 to 120k Followers Instagram Growth Campaign','Formulated and executed Instagram organic reels strategy for a Kerala Ayurvedic beauty brand, achieving 4.8M viral impressions and generating ₹18L direct affiliate sales.','https://rekhanair.social/case-studies/ayurroots','https://images.unsplash.com/photo-1611162617474-5b21e879e113','2026-08-24 16:21:39.521','2026-08-24 16:21:39.521'),(40,20,'KeralaTravels - Omnichannel Social Media & Influencer Push','Managed influencer trip activations and YouTube / Meta paid promotions for an eco-tourism retreat, doubling direct winter season website bookings.','https://rekhanair.social/case-studies/keralatravels','https://images.unsplash.com/photo-1469854523086-cc02fe5d8800','2026-08-24 16:21:39.545','2026-08-24 16:21:39.545'),(41,21,'High-Availability MySQL 8.0 InnoDB Cluster with ProxySQL','Designed and deployed a 3-node MySQL Group Replication cluster with ProxySQL query routing and automated failover handling 12,000 queries per second for an edtech platform.','https://github.com/sumitchaudhary/mysql-ha-proxysql','https://images.unsplash.com/photo-1544383835-bda2bc66a55d','2026-08-24 16:21:39.561','2026-08-24 16:21:39.561'),(42,21,'PostgreSQL Disaster Recovery & Automated WAL Archiving','Configured PostgreSQL Point-In-Time Recovery (PITR) using pgBackRest with encrypted Amazon S3 archiving and sub-5-minute RPO/RTO validation tests.','https://github.com/sumitchaudhary/pg-disaster-recovery','https://images.unsplash.com/photo-1558494949-ef010cbdcc31','2026-08-24 16:21:39.575','2026-08-24 16:21:39.575');
+/*!40000 ALTER TABLE `portfolioproject` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `portfolioprojectskill`
+--
+
+DROP TABLE IF EXISTS `portfolioprojectskill`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `portfolioprojectskill` (
+  `portfolioProjectId` int NOT NULL,
+  `skillId` int NOT NULL,
+  PRIMARY KEY (`portfolioProjectId`,`skillId`),
+  KEY `PortfolioProjectSkill_skillId_idx` (`skillId`),
+  KEY `PortfolioProjectSkill_portfolioProjectId_idx` (`portfolioProjectId`),
+  CONSTRAINT `PortfolioProjectSkill_portfolioProjectId_fkey` FOREIGN KEY (`portfolioProjectId`) REFERENCES `portfolioproject` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `PortfolioProjectSkill_skillId_fkey` FOREIGN KEY (`skillId`) REFERENCES `skill` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `portfolioprojectskill`
+--
+
+LOCK TABLES `portfolioprojectskill` WRITE;
+/*!40000 ALTER TABLE `portfolioprojectskill` DISABLE KEYS */;
+INSERT INTO `portfolioprojectskill` VALUES (1,1),(2,1),(3,1),(4,1),(10,1),(1,2),(2,2),(7,2),(8,3),(12,3),(15,3),(16,3),(23,3),(24,3),(32,3),(41,3),(42,3),(33,4),(34,4),(2,6),(3,6),(4,6),(3,7),(4,7),(1,8),(7,8),(2,9),(15,9),(25,9),(26,9),(33,9),(35,9),(36,9),(38,9),(41,9),(1,10),(8,10),(7,11),(16,11),(24,11),(42,11),(1,12),(2,12),(7,12),(8,12),(9,12),(10,12),(33,12),(34,12),(35,12),(37,12),(38,12),(8,13),(3,14),(5,14),(6,14),(13,14),(5,15),(13,15),(4,16),(5,16),(6,16),(6,17),(13,17),(14,17),(25,17),(30,17),(14,18),(29,18),(30,18),(14,19),(29,19),(30,19),(17,20),(18,20),(21,20),(26,20),(28,20),(39,20),(17,21),(18,21),(22,21),(27,21),(39,21),(40,21),(17,22),(27,22),(40,22),(18,23),(21,23),(22,23),(39,23),(40,23),(15,24),(16,24),(24,24),(35,24),(36,24),(15,25),(36,25),(16,26),(23,27),(24,27),(23,28),(11,29),(12,29),(19,29),(20,29),(12,30),(19,30),(20,30),(11,31),(19,31),(11,32),(20,32),(9,33),(33,33),(34,33),(9,34),(10,34),(37,35),(38,35),(25,36),(26,36),(28,36),(27,37),(28,37),(31,38),(32,38),(31,39),(11,40),(12,40),(19,40),(20,40),(31,40),(32,40),(41,40),(42,40);
+/*!40000 ALTER TABLE `portfolioprojectskill` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `project`
+--
+
+DROP TABLE IF EXISTS `project`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `project` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `clientId` int NOT NULL,
+  `categoryId` int DEFAULT NULL,
+  `title` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `budget` decimal(10,2) DEFAULT NULL,
+  `deadline` datetime(3) DEFAULT NULL,
+  `experienceLevel` enum('ENTRY','INTERMEDIATE','EXPERT') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ENTRY',
+  `status` enum('OPEN','IN_PROGRESS','COMPLETED','CANCELLED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OPEN',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `Project_clientId_idx` (`clientId`),
+  KEY `Project_categoryId_idx` (`categoryId`),
+  KEY `Project_status_idx` (`status`),
+  KEY `Project_budget_idx` (`budget`),
+  KEY `Project_experienceLevel_idx` (`experienceLevel`),
+  KEY `Project_deadline_idx` (`deadline`),
+  KEY `Project_status_categoryId_idx` (`status`,`categoryId`),
+  CONSTRAINT `Project_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `category` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Project_clientId_fkey` FOREIGN KEY (`clientId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `project`
+--
+
+LOCK TABLES `project` WRITE;
+/*!40000 ALTER TABLE `project` DISABLE KEYS */;
+INSERT INTO `project` VALUES (1,30,1,'Luxury Fashion E-commerce Portal','Build a full-featured luxury fashion e-commerce portal for ModeHaus with product catalogues, wishlists, Razorpay payment gateway integration, and a curated editorial blog section. The site must be mobile-first, support Hindi and English, and load within 2 seconds on Indian 4G networks.',85000.00,'2026-11-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.230','2026-08-24 16:12:39.230'),(2,29,1,'Online Vehicle Service Booking Platform','Develop a web platform for AutoCare Pune allowing customers to book car service slots, select service packages, receive SMS reminders, and track service status in real time. Admin panel required for managing appointments and technician assignments.',55000.00,'2026-10-30 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.253','2026-08-24 16:12:39.253'),(3,4,1,'Vernacular Learning Management System','Build a scalable LMS for BrightWave Edtech supporting live classes, recorded lessons, multilingual content in Hindi, Marathi and Tamil, student progress tracking, and certificate generation. Must integrate with Zoom API for live sessions.',120000.00,'2026-12-31 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.268','2026-08-24 16:12:39.268'),(4,15,1,'SaaS Customer Dashboard with Usage Analytics','Design and develop a multi-tenant SaaS dashboard for CloudQube Technologies showing API usage, billing summaries, service health metrics, and subscription management. Must support role-based access for end customers and internal admins.',95000.00,'2026-11-01 00:00:00.000','EXPERT','IN_PROGRESS','2026-08-24 16:12:39.287','2026-08-24 16:12:39.287'),(5,17,1,'Farmer-to-Buyer B2B Marketplace','Build a web marketplace for AgroLink Agritech connecting farmers in rural Maharashtra and UP with urban grocery wholesalers. Requires crop listing, bulk order management, MSP-aware pricing engine, and regional language support.',75000.00,'2026-11-20 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.305','2026-08-24 16:12:39.305'),(6,39,1,'Client Portal for Cybersecurity Firm','Develop a secure client portal for CyberSec India where clients can view VAPT reports, track remediation status, download compliance certificates, and raise support tickets. Must enforce 2FA and session timeout policies.',68000.00,'2026-10-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.321','2026-08-24 16:12:39.321'),(7,37,1,'Patient Portal for Diagnostic Chain','Build a web-based patient portal for MedPulse Diagnostics where patients can book tests online, view reports, receive WhatsApp notifications, and manage family health records. Aadhaar-based login preferred.',72000.00,'2026-12-01 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.336','2026-08-24 16:12:39.336'),(8,35,1,'B2B MSME Supplier Marketplace','Build a regional B2B web marketplace for UPBizz connecting MSME manufacturers in Kanpur and Agra with distributors. Features: supplier verification, RFQ system, logistics integration, GST invoice generation.',90000.00,'2026-12-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.351','2026-08-24 16:12:39.351'),(9,42,1,'Smart Energy Meter Management Portal','Develop a web portal for SmartGrid Technologies allowing utility companies to manage smart meter deployments, view consumption data, detect anomalies, and generate billing reports. Real-time data via WebSockets.',110000.00,'2027-01-31 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.369','2026-08-24 16:12:39.369'),(10,38,1,'Heritage Hotel Direct Booking Engine','Build a direct booking engine for LuxuryStay Hotels in Shimla with room availability calendar, seasonal pricing engine, Razorpay integration, automated confirmation emails, and an admin panel for reservation management.',48000.00,'2026-10-01 00:00:00.000','INTERMEDIATE','COMPLETED','2026-08-24 16:12:39.392','2026-08-24 16:12:39.392'),(11,20,2,'Cloud Kitchen Food Ordering App','Build a cross-platform mobile app for FlavourFusion Cloud Kitchen with live menu, real-time order tracking, loyalty points, and push notifications. Must integrate with Zomato-style delivery partner API and support UPI, card, and COD payment modes.',65000.00,'2026-11-10 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.405','2026-08-24 16:12:39.405'),(12,13,2,'Pharma Inventory Management Mobile App','Develop an Android app for PharmaBridge Distributors to manage drug inventory, scan barcodes, generate purchase orders, track expiry dates, and produce daily stock reports. Must sync with the existing ERP via REST APIs.',55000.00,'2026-10-25 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.418','2026-08-24 16:12:39.418'),(13,33,2,'Kerala Tourism Experience App','Build a travel app for Kerala Horizon Tours showcasing curated backwater and wildlife packages, offline maps, local guide booking, itinerary management, and multilingual support in Malayalam and English.',58000.00,'2026-11-30 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.437','2026-08-24 16:12:39.437'),(14,24,2,'Corporate Wellness Subscription App','Develop a mobile wellness app for HealthRoots Wellness offering personalised meal plans, hydration reminders, yoga videos, BMI tracking, and monthly health reports. Corporate HR dashboard for bulk employee management.',70000.00,'2026-12-15 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.452','2026-08-24 16:12:39.452'),(15,23,2,'B2B Marble Catalogue and Order App','Build an Android app for Royal Marble & Granite enabling export clients to browse high-resolution stone catalogues, request samples, place bulk orders, and track shipments. Offline mode required for trade show use.',42000.00,'2026-10-20 00:00:00.000','ENTRY','OPEN','2026-08-24 16:12:39.476','2026-08-24 16:12:39.476'),(16,51,2,'Subscription-Based Online Yoga App','Develop a cross-platform yoga app for YogaWave Online Studio with live class scheduling, session recordings library, guided meditation, instructor booking, subscription billing via Razorpay, and community chat.',62000.00,'2026-11-25 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.491','2026-08-24 16:12:39.491'),(17,9,3,'Investment Advisory App UI Redesign','Redesign the mobile and web UI for BlueChip Invest Advisory platform. Must convey trust and professionalism. Deliverables: user research report, wireframes, high-fidelity Figma prototype, design system, and developer handoff specs.',40000.00,'2026-10-10 00:00:00.000','EXPERT','IN_PROGRESS','2026-08-24 16:12:39.504','2026-08-24 16:12:39.504'),(18,14,3,'Interior Design Studio Website UX','Design the user experience for Studio Neha Designs website showcasing portfolio projects, enabling online consultations booking, and a mood-board creation tool. Aesthetic must reflect contemporary Indian interior design sensibilities.',28000.00,'2026-09-30 00:00:00.000','INTERMEDIATE','COMPLETED','2026-08-24 16:12:39.516','2026-08-24 16:12:39.516'),(19,6,3,'Organic Brand Mobile App UX Overhaul','Conduct a full UX audit and redesign of the GreenLeaf Organics mobile shopping app. Focus on reducing checkout abandonment, improving product discovery with AI-powered recommendations, and a fresh earth-toned visual identity.',35000.00,'2026-10-20 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.526','2026-08-24 16:12:39.526'),(20,16,3,'OTT Streaming Platform UI Design','Design the UI for MediaWala Entertainment OTT platform targeting tier-2 Indian cities. Requires homepage, content discovery page, video player, subscription flow, and responsive layouts for TV, tablet and mobile.',52000.00,'2026-11-05 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.540','2026-08-24 16:12:39.540'),(21,44,3,'Startup Analytics Dashboard UI Design','Design a clean, data-dense analytics dashboard UI for PixelPitch Analytics used by startup founders to visualise KPIs, investor metrics, and runway. Deliverables: Figma file with auto-layout components and interactive prototype.',32000.00,'2026-10-01 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.553','2026-08-24 16:12:39.553'),(22,46,4,'Ethnic Fashion Brand Identity Package','Create a complete brand identity for Punjabi Couture House: logo, colour palette, typography guide, swing tags, packaging, shopping bag design, and a social media template kit. Must reflect the vibrancy of Punjabi heritage and contemporary fashion.',25000.00,'2026-09-25 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.563','2026-08-24 16:12:39.563'),(23,48,4,'Print-on-Demand Product Templates Library','Design a library of 50 customisable product templates for ePrintX covering mugs, t-shirts, phone covers, notebooks, and posters. Templates must be export-ready in high resolution and follow Indian gifting occasions and festivals.',30000.00,'2026-10-30 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.573','2026-08-24 16:12:39.573'),(24,43,4,'Gourmet Spice Brand Packaging Design','Design premium packaging for Saffron Spice Co. product line covering 15 SKUs including spice pouches, gift boxes, and travel-size tins. Visual language should convey artisan quality and Indian origin. Print-ready files required.',22000.00,'2026-09-20 00:00:00.000','INTERMEDIATE','COMPLETED','2026-08-24 16:12:39.579','2026-08-24 16:12:39.579'),(25,28,4,'Handmade Jewellery Brand Visual Identity','Create a premium visual identity for Artisan & Craft handmade jewellery brand: logo, brand book, product photography style guide, Etsy banner templates, and Instagram highlight cover designs.',18000.00,'2026-09-15 00:00:00.000','ENTRY','COMPLETED','2026-08-24 16:12:39.586','2026-08-24 16:12:39.586'),(26,31,5,'Telecom Network Anomaly Detection System','Build an ML-powered anomaly detection system for India Telecom Infrastructure to identify network faults, predict outages 30 minutes in advance, and auto-escalate alerts. Must process 1 million events per hour from network probes.',150000.00,'2027-02-28 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.592','2026-08-24 16:12:39.592'),(27,19,5,'Jewellery Inventory Demand Forecasting','Develop a demand forecasting model for Diamond Display Jewellers to predict seasonal stock requirements across their 12 retail locations. Input: 3 years of POS data. Output: weekly restocking recommendations per store per SKU.',80000.00,'2026-12-01 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.608','2026-08-24 16:12:39.608'),(28,21,5,'Fintech Credit Risk Scoring Model','Build a credit risk scoring ML model for CalcuttaTech Finserv using alternative data sources including GST filing history, UPI transaction patterns, and social signals. Must output an explainable risk score with confidence intervals.',130000.00,'2027-01-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.624','2026-08-24 16:12:39.624'),(29,40,5,'Commodity Price Prediction Dashboard','Build a Power BI-backed dashboard with a Python ML model predicting wheat, rice, and maize price movements for GrainMarket India based on mandi arrival data, rainfall indices, and MSP notifications.',60000.00,'2026-11-01 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.641','2026-08-24 16:12:39.641'),(30,42,5,'Energy Consumption Pattern Analysis','Analyse energy consumption data from 50,000 smart meters for SmartGrid Technologies to identify peak load patterns, detect meter tampering, and segment consumers into behavioural clusters for targeted conservation programs.',70000.00,'2026-11-30 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.657','2026-08-24 16:12:39.657'),(31,15,6,'Multi-Region AWS Infrastructure Setup','Design and implement a multi-region AWS infrastructure for CloudQube Technologies covering Mumbai and Singapore regions. Deliverables: Terraform IaC scripts, VPC setup, EKS cluster, RDS Multi-AZ, CloudFront CDN, and full runbook.',100000.00,'2026-11-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.672','2026-08-24 16:12:39.672'),(32,39,6,'CI/CD Pipeline for Security Tool Suite','Set up a complete CI/CD pipeline for CyberSec India internal security tooling using GitHub Actions, Docker, and Kubernetes on AWS EKS. Must include automated SAST/DAST scans, secrets management via AWS Secrets Manager, and blue-green deployments.',75000.00,'2026-10-31 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.690','2026-08-24 16:12:39.690'),(33,31,6,'Telecom On-Premise to Cloud Migration','Migrate 30 legacy on-premise applications for India Telecom Infrastructure to AWS cloud with zero downtime. Strategy: lift-and-shift Phase 1, re-platforming Phase 2. Deliverables: migration assessment, execution runbooks, post-migration monitoring setup.',200000.00,'2027-03-31 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.708','2026-08-24 16:12:39.708'),(34,32,6,'IoT Device Management on AWS','Set up AWS IoT Core infrastructure for SolarPlus Energy to manage 10,000 solar inverter IoT devices. Includes device provisioning, MQTT message routing, time-series storage on DynamoDB, and CloudWatch alerting dashboard.',85000.00,'2026-12-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.723','2026-08-24 16:12:39.723'),(35,7,7,'Fashion Brand Google & Meta Ads Campaign','Plan and execute a 3-month paid marketing campaign for TrendSetters Fashion House covering Google Shopping Ads, Meta catalogue ads, and Instagram Reels promotions targeting urban Indian women aged 18–35. Budget: ₹8 lakh. KPI: 3x ROAS.',35000.00,'2026-10-01 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.739','2026-08-24 16:12:39.739'),(36,8,7,'Ayurveda Brand Digital Marketing Strategy','Develop a 6-month digital marketing strategy for AyurWellness Pvt. Ltd. covering SEO, content marketing, influencer outreach, YouTube channel launch, and WhatsApp Business campaigns. Focus on tier-2 cities in Kerala and Tamil Nadu.',28000.00,'2026-10-15 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.751','2026-08-24 16:12:39.751'),(37,49,7,'Festival Season E-commerce Marketing Push','Execute a Diwali and Christmas seasonal marketing campaign for Southern Sweets Co. covering Swiggy Instamart promotions, Google Local Ads, WhatsApp bulk messaging, and Instagram content calendar. Target: 40% revenue growth over last festive season.',22000.00,'2026-10-05 00:00:00.000','ENTRY','OPEN','2026-08-24 16:12:39.764','2026-08-24 16:12:39.764'),(38,43,7,'Spice Brand Amazon & Organic SEO Campaign','Improve Amazon product ranking and organic SEO for Saffron Spice Co. across 15 product pages. Deliverables: keyword research, Amazon A+ content, backend search terms, on-page SEO optimisation for the brand website, and monthly reporting.',18000.00,'2026-10-10 00:00:00.000','ENTRY','COMPLETED','2026-08-24 16:12:39.778','2026-08-24 16:12:39.778'),(39,36,7,'Art Gallery Online Presence Growth','Build and execute a digital presence strategy for Pintura Arts Gallery on Instagram, Pinterest, and Google. Includes gallery content calendar, influencer partnerships, Google My Business optimisation, and a monthly email newsletter.',15000.00,'2026-10-01 00:00:00.000','ENTRY','OPEN','2026-08-24 16:12:39.791','2026-08-24 16:12:39.791'),(40,34,8,'Author Website Blog Content - 20 Articles','Write 20 SEO-optimised blog articles (1000–1500 words each) for author Shweta Iyer covering topics in Indian fiction, creative writing tips, self-publishing, and Tamil literature. Tone: literary, warm, and conversational.',12000.00,'2026-10-20 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.804','2026-08-24 16:12:39.804'),(41,8,8,'Ayurveda Product Description Copywriting','Write compelling product descriptions for 40 Ayurvedic health products for AyurWellness Pvt. Ltd. Each description must include benefits, ingredients, usage instructions, and SEO-friendly keywords. Must comply with AYUSH advertising guidelines.',16000.00,'2026-09-30 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.814','2026-08-24 16:12:39.814'),(42,53,8,'Children\'s Book Series Content','Write 5 short illustrated children\'s stories (800–1200 words each) for StoryMint Publications targeting children aged 6–10. Themes: Indian festivals, folk tales, and STEM adventures. Stories must pass a Flesch-Kincaid grade level check.',20000.00,'2026-10-25 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.823','2026-08-24 16:12:39.823'),(43,47,8,'Folk Music Tour Press Kit & Web Copy','Write a full press kit and website copy for BaulGuru Productions including artist bios, tour programme descriptions, festival pitches, and a bilingual (English/Bengali) about page. Tone: poetic and culturally resonant.',10000.00,'2026-09-28 00:00:00.000','ENTRY','OPEN','2026-08-24 16:12:39.830','2026-08-24 16:12:39.830'),(44,16,9,'OTT Platform Promotional Trailer Package','Produce 5 promotional trailers (60–90 seconds each) for MediaWala Entertainment new original web series. Deliverables: motion graphics, colour grading, subtitle integration, and platform-specific exports for YouTube, Instagram and JioCinema.',45000.00,'2026-10-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.838','2026-08-24 16:12:39.838'),(45,47,9,'Folk Music Concert Highlight Reel','Edit a 5-minute concert highlight reel for BaulGuru Productions from 8 hours of multi-camera footage. Include colour grading, audio mixing, animated lower thirds with artist names, and a short 30-second Instagram cut.',18000.00,'2026-10-05 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.847','2026-08-24 16:12:39.847'),(46,7,9,'Fashion Brand Reels Content Package','Produce 12 short-form video reels (15–30 seconds) per month for TrendSetters Fashion House for Instagram and YouTube Shorts. Includes concept ideation, motion text overlays, trending audio integration, and branded end screens.',24000.00,'2026-10-01 00:00:00.000','INTERMEDIATE','IN_PROGRESS','2026-08-24 16:12:39.857','2026-08-24 16:12:39.857'),(47,4,9,'Explainer Videos for Edtech Platform','Produce 10 animated explainer videos (2–3 minutes each) for BrightWave Edtech courses. Topics range from mathematics to Indian history. Style: 2D motion graphics with voiceover. Deliverables: English and Hindi versions of each video.',60000.00,'2026-11-30 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.870','2026-08-24 16:12:39.870'),(48,12,10,'Handloom Export Shopify Store Setup','Set up and configure a Shopify store for CraftsByHand Exports with 200+ product listings, international shipping configuration, multi-currency support, export compliance pages, and SEO-optimised category pages for US and UK markets.',32000.00,'2026-10-15 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.886','2026-08-24 16:12:39.886'),(49,6,10,'Organic Food D2C WooCommerce Store','Build and optimise a WooCommerce store for GreenLeaf Organics with subscription boxes, auto-ship recurring orders, product review integration, loyalty points, and WhatsApp order confirmation. GST-compliant invoicing required.',40000.00,'2026-11-01 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.895','2026-08-24 16:12:39.895'),(50,26,10,'South Indian Textile Brand Online Store','Launch a WooCommerce store for TextileSouth Pvt. Ltd. with regional language support, saree draping video guides, virtual try-on mockup tool, cash-on-delivery option, and return management portal. PAN India delivery integration required.',38000.00,'2026-10-30 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.907','2026-08-24 16:12:39.907'),(51,18,10,'Silk Saree Export Bilingual Online Store','Build a bilingual (Kannada + English) Shopify store for SilkRoute Exports Pvt. Ltd. targeted at NRI customers. Includes high-resolution product zoom, fabric comparison tool, bulk order request form, and PayPal + Razorpay integration.',35000.00,'2026-10-20 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.919','2026-08-24 16:12:39.919'),(52,50,10,'Authenticated Gemstone B2B Trading Platform','Build a Shopify-based B2B platform for GemstoneRaj with gemologist certificate uploads, 360-degree stone videos, bulk pricing tiers, verified buyer onboarding, and wire-transfer payment workflows targeting international gem trade buyers.',55000.00,'2026-11-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.928','2026-08-24 16:12:39.928'),(53,5,11,'Logistics ERP Module Customisation','Customise the existing open-source ERP (Odoo) for InfraLogix India by building a custom Fleet Management module covering vehicle scheduling, route optimisation, fuel consumption tracking, and driver performance reports. Python/PostgreSQL backend.',90000.00,'2026-12-01 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.943','2026-08-24 16:12:39.943'),(54,52,11,'Production Tracking System for Steel Fabrication','Build a custom production tracking desktop + web application for SteelFab Engineering. Features: job order management, machine utilisation tracking, quality inspection checklists, raw material inventory, and daily production reports.',75000.00,'2026-11-30 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.956','2026-08-24 16:12:39.956'),(55,25,11,'Real Estate CRM with Automated Follow-Up','Develop a custom CRM for Edge Realty Services with automated lead capture from 99acres and MagicBricks, WhatsApp follow-up bot, site visit scheduling, deal pipeline management, and a commission tracker for agents.',65000.00,'2026-11-15 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:39.972','2026-08-24 16:12:39.972'),(56,22,11,'Port Logistics Workflow Digitisation','Digitise cargo clearance and vessel scheduling workflows for Visakha Port Logistics. Build a web app replacing paper-based processes with digital forms, role-based approval chains, document management, and EDI integration with shipping lines.',110000.00,'2027-01-15 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:39.987','2026-08-24 16:12:39.987'),(57,11,11,'Real Estate Property Listing & CRM System','Build a property listing platform and integrated CRM for Nexus Properties Pvt. Ltd. with geo-search, virtual tour embeds, lead scoring, email drip campaigns, and an interactive analytics dashboard for the sales team.',80000.00,'2026-12-01 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:40.002','2026-08-24 16:12:40.002'),(58,9,12,'Investment Platform Business Requirements Document','Prepare a comprehensive Business Requirements Document (BRD) for BlueChip Invest Advisory platform upgrade. Deliverables: as-is vs to-be process maps, functional and non-functional requirements, SEBI compliance checklist, and UAT test plan.',30000.00,'2026-10-01 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:40.018','2026-08-24 16:12:40.018'),(59,10,12,'Edtech Growth Strategy & Market Analysis','Conduct a market analysis and produce a 12-month growth strategy document for SparkLearn Institute covering competitive landscape, student acquisition cost benchmarks, geographic expansion plan, and revenue model optimisation recommendations.',25000.00,'2026-10-20 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:40.028','2026-08-24 16:12:40.028'),(60,32,12,'Solar Energy Project Financial Modelling','Build a detailed financial model in Excel/Python for SolarPlus Energy evaluating ROI for C&I rooftop solar projects across Gujarat. Model must include capex/opex breakdown, IRR, payback period, sensitivity analysis, and subsidy impact.',35000.00,'2026-10-25 00:00:00.000','EXPERT','OPEN','2026-08-24 16:12:40.037','2026-08-24 16:12:40.037'),(61,13,12,'Pharma Distribution Process Optimisation','Analyse current distribution processes for PharmaBridge Distributors and recommend optimisations to reduce order fulfilment time by 40%. Deliverables: process maps, root cause analysis, SOP documentation, and a KPI tracking dashboard.',28000.00,'2026-11-01 00:00:00.000','INTERMEDIATE','OPEN','2026-08-24 16:12:40.049','2026-08-24 16:12:40.049'),(62,2,11,'Build a customer insight dashboard','Great Skills',5000.00,'2026-09-30 00:00:00.000','INTERMEDIATE','COMPLETED','2026-09-10 16:35:25.410','2026-10-11 18:26:37.470'),(64,2,8,'afe','fawf',3310.00,NULL,'INTERMEDIATE','IN_PROGRESS','2026-10-11 18:29:14.285','2026-10-11 18:31:59.200');
+/*!40000 ALTER TABLE `project` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `projectprogressupdate`
+--
+
+DROP TABLE IF EXISTS `projectprogressupdate`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `projectprogressupdate` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `projectId` int NOT NULL,
+  `contractId` int DEFAULT NULL,
+  `updatedById` int NOT NULL,
+  `stage` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `progressPercentage` int NOT NULL DEFAULT '0',
+  `status` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'IN_PROGRESS',
+  `note` text COLLATE utf8mb4_unicode_ci,
+  `actionRequired` tinyint(1) NOT NULL DEFAULT '0',
+  `actionNote` text COLLATE utf8mb4_unicode_ci,
+  `expectedCompletion` datetime(3) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  KEY `ProjectProgressUpdate_projectId_idx` (`projectId`),
+  KEY `ProjectProgressUpdate_contractId_idx` (`contractId`),
+  KEY `ProjectProgressUpdate_updatedById_idx` (`updatedById`),
+  KEY `ProjectProgressUpdate_createdAt_idx` (`createdAt`),
+  CONSTRAINT `ProjectProgressUpdate_contractId_fkey` FOREIGN KEY (`contractId`) REFERENCES `contract` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `ProjectProgressUpdate_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `ProjectProgressUpdate_updatedById_fkey` FOREIGN KEY (`updatedById`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `projectprogressupdate`
+--
+
+LOCK TABLES `projectprogressupdate` WRITE;
+/*!40000 ALTER TABLE `projectprogressupdate` DISABLE KEYS */;
+/*!40000 ALTER TABLE `projectprogressupdate` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `projectskill`
+--
+
+DROP TABLE IF EXISTS `projectskill`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `projectskill` (
+  `projectId` int NOT NULL,
+  `skillId` int NOT NULL,
+  PRIMARY KEY (`projectId`,`skillId`),
+  KEY `ProjectSkill_skillId_idx` (`skillId`),
+  KEY `ProjectSkill_projectId_idx` (`projectId`),
+  CONSTRAINT `ProjectSkill_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `ProjectSkill_skillId_fkey` FOREIGN KEY (`skillId`) REFERENCES `skill` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `projectskill`
+--
+
+LOCK TABLES `projectskill` WRITE;
+/*!40000 ALTER TABLE `projectskill` DISABLE KEYS */;
+INSERT INTO `projectskill` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(54,1),(55,1),(56,1),(57,1),(1,2),(2,2),(3,2),(4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(10,2),(54,2),(55,2),(56,2),(57,2),(26,3),(27,3),(28,3),(29,3),(30,3),(34,3),(53,3),(60,3),(12,4),(15,4),(3,6),(4,6),(8,6),(9,6),(2,8),(1,9),(2,9),(5,9),(7,9),(8,9),(10,9),(11,9),(12,9),(13,9),(14,9),(16,9),(54,9),(55,9),(57,9),(3,11),(4,11),(6,11),(9,11),(26,11),(28,11),(30,11),(53,11),(56,11),(1,12),(3,12),(4,12),(5,12),(6,12),(7,12),(8,12),(9,12),(11,12),(12,12),(13,12),(14,12),(15,12),(16,12),(53,12),(54,12),(55,12),(56,12),(57,12),(58,12),(17,14),(18,14),(19,14),(20,14),(21,14),(17,15),(19,15),(20,15),(22,15),(17,16),(18,16),(19,16),(20,16),(21,16),(22,17),(23,17),(24,17),(25,17),(46,17),(47,17),(44,18),(45,18),(46,18),(47,18),(44,19),(45,19),(46,19),(47,19),(35,20),(36,20),(37,20),(38,20),(39,20),(40,20),(41,20),(48,20),(49,20),(50,20),(51,20),(52,20),(35,21),(36,21),(37,21),(38,21),(39,21),(50,21),(52,21),(35,22),(37,22),(36,23),(38,23),(39,23),(40,23),(41,23),(42,23),(43,23),(27,24),(28,24),(29,24),(30,24),(58,24),(59,24),(60,24),(61,24),(27,25),(29,25),(59,25),(60,25),(61,25),(26,27),(27,27),(28,27),(29,27),(30,27),(26,28),(28,28),(31,29),(32,29),(33,29),(34,29),(31,30),(32,30),(33,30),(31,31),(32,31),(31,32),(32,32),(33,32),(34,32),(12,33),(15,33),(62,33),(11,34),(13,34),(14,34),(16,34),(49,36),(50,36),(48,37),(49,37),(51,37),(52,37),(31,40),(32,40),(33,40),(34,40);
+/*!40000 ALTER TABLE `projectskill` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `proposal`
+--
+
+DROP TABLE IF EXISTS `proposal`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `proposal` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `projectId` int NOT NULL,
+  `freelancerProfileId` int NOT NULL,
+  `coverLetter` text COLLATE utf8mb4_unicode_ci,
+  `proposedPrice` decimal(10,2) NOT NULL,
+  `estimatedDays` int DEFAULT NULL,
+  `status` enum('PENDING','ACCEPTED','REJECTED','WITHDRAWN') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Proposal_projectId_freelancerProfileId_key` (`projectId`,`freelancerProfileId`),
+  KEY `Proposal_projectId_idx` (`projectId`),
+  KEY `Proposal_freelancerProfileId_idx` (`freelancerProfileId`),
+  KEY `Proposal_status_idx` (`status`),
+  KEY `Proposal_proposedPrice_idx` (`proposedPrice`),
+  CONSTRAINT `Proposal_freelancerProfileId_fkey` FOREIGN KEY (`freelancerProfileId`) REFERENCES `freelancerprofile` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Proposal_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=147 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `proposal`
+--
+
+LOCK TABLES `proposal` WRITE;
+/*!40000 ALTER TABLE `proposal` DISABLE KEYS */;
+INSERT INTO `proposal` VALUES (1,1,1,'I have 4+ years of experience building high-performance e-commerce platforms using React, Node.js, and MySQL. I can integrate Razorpay, ensure mobile responsiveness, and deliver a blazing-fast shopping experience.',82000.00,30,'PENDING','2026-08-24 16:24:51.848','2026-08-24 16:24:51.848'),(2,1,2,'As a Next.js and frontend specialist, I will craft an ultra-fast, visually stunning luxury fashion portal with smooth micro-interactions, bilingual support, and accessible UI.',86000.00,25,'PENDING','2026-08-24 16:24:51.854','2026-08-24 16:24:51.854'),(3,1,4,'I specialize in robust backend architecture, relational database design with MySQL, and secure RESTful API integration for payment gateways and order processing workflows.',80000.00,35,'PENDING','2026-08-24 16:24:51.858','2026-08-24 16:24:51.858'),(4,2,1,'I have built similar appointment and service booking platforms with real-time status updates, SMS integration, and admin scheduling panels in React and Express.',52000.00,20,'PENDING','2026-08-24 16:24:51.867','2026-08-24 16:24:51.867'),(5,2,13,'I can deliver a clean and intuitive service booking system with automated reminders, service package selectors, and an easy-to-use admin dashboard.',48000.00,22,'PENDING','2026-08-24 16:24:51.871','2026-08-24 16:24:51.871'),(6,2,2,'I will design and build a responsive, fast-loading booking interface with interactive calendar slot selection and customer notification flows.',54000.00,18,'PENDING','2026-08-24 16:24:51.874','2026-08-24 16:24:51.874'),(7,3,1,'Experienced in developing scalable edtech platforms with video streaming, multilingual content support (Hindi/Marathi/Tamil), and Zoom API integrations.',115000.00,45,'PENDING','2026-08-24 16:24:51.877','2026-08-24 16:24:51.877'),(8,3,4,'I will architect the backend using PostgreSQL and Node.js to handle high concurrency live streaming webhooks, student progress analytics, and automated certification.',118000.00,40,'PENDING','2026-08-24 16:24:51.881','2026-08-24 16:24:51.881'),(9,3,2,'I can build the full multilingual frontend with responsive video players, interactive quizzes, and offline course caching support.',120000.00,35,'PENDING','2026-08-24 16:24:51.884','2026-08-24 16:24:51.884'),(10,4,1,'I have built multi-tenant SaaS dashboards with role-based access control, subscription billing, and real-time usage graphs using React and TypeScript.',92000.00,30,'ACCEPTED','2026-08-24 16:24:51.887','2026-08-24 16:24:51.887'),(11,4,4,'Expert in designing multi-tenant database schemas in PostgreSQL, API rate limiting, and automated invoice generation microservices.',94000.00,28,'REJECTED','2026-08-24 16:24:51.891','2026-08-24 16:24:51.891'),(12,4,2,'I specialize in data-dense dashboard UI/UX with interactive charts, dark mode, and seamless export capabilities in Next.js.',90000.00,25,'WITHDRAWN','2026-08-24 16:24:51.894','2026-08-24 16:24:51.894'),(13,5,1,'I can build this B2B marketplace with crop listing workflows, bulk negotiation features, and regional language UI for agricultural buyers.',72000.00,28,'PENDING','2026-08-24 16:24:51.897','2026-08-24 16:24:51.897'),(14,5,4,'Experienced in developing high-throughput marketplace APIs with order escrow logic, mandi pricing sync, and GST billing integration.',70000.00,30,'PENDING','2026-08-24 16:24:51.900','2026-08-24 16:24:51.900'),(15,6,1,'I will develop a hardened client portal with 2FA, session timeout controls, encrypted report downloads, and ticket tracking.',65000.00,25,'PENDING','2026-08-24 16:24:51.903','2026-08-24 16:24:51.903'),(16,6,4,'I specialize in secure backend architecture, role-based authorization with JWT, and audit logging to meet enterprise security standards.',66000.00,22,'PENDING','2026-08-24 16:24:51.906','2026-08-24 16:24:51.906'),(17,6,16,'As a cybersecurity consultant and developer, I understand client reporting workflows and will ensure OWASP compliance and secure document vaults.',68000.00,20,'PENDING','2026-08-24 16:24:51.909','2026-08-24 16:24:51.909'),(18,7,1,'I have previously developed healthcare web apps with test report downloads, WhatsApp notifications, and online slot bookings.',70000.00,26,'PENDING','2026-08-24 16:24:51.912','2026-08-24 16:24:51.912'),(19,7,4,'I will build a HIPAA-aware backend with secure PDF report storage, automated lab result syncing, and family profile management.',69000.00,28,'PENDING','2026-08-24 16:24:51.916','2026-08-24 16:24:51.916'),(20,7,2,'I will deliver a clean, patient-friendly frontend that works seamlessly across low-end mobile devices and browsers.',71000.00,24,'PENDING','2026-08-24 16:24:51.919','2026-08-24 16:24:51.919'),(21,8,1,'I can build the supplier onboarding, RFQ bidding mechanism, and GST verification modules with a modern React and Node.js stack.',88000.00,35,'PENDING','2026-08-24 16:24:51.922','2026-08-24 16:24:51.922'),(22,8,4,'I will create scalable REST APIs for catalog management, quotation tracking, and automated PDF invoice generation.',85000.00,30,'PENDING','2026-08-24 16:24:51.925','2026-08-24 16:24:51.925'),(23,9,1,'Experienced in real-time WebSocket dashboards, time-series data visualizations, and device telemetry management portals.',105000.00,40,'PENDING','2026-08-24 16:24:51.928','2026-08-24 16:24:51.928'),(24,9,4,'I will design the PostgreSQL time-series schema, anomaly detection alerting triggers, and billing aggregation jobs.',108000.00,38,'PENDING','2026-08-24 16:24:51.931','2026-08-24 16:24:51.931'),(25,9,2,'I will build the reactive frontend with live energy consumption gauges, geographical heatmaps, and customizable alerts.',110000.00,35,'PENDING','2026-08-24 16:24:51.934','2026-08-24 16:24:51.934'),(26,10,1,'I will build a sleek direct booking engine with seasonal calendar pricing, Razorpay payment processing, and instant booking confirmations.',46000.00,18,'ACCEPTED','2026-08-24 16:24:51.937','2026-08-24 16:24:51.937'),(27,10,13,'Experienced in hotel booking integrations with room availability calendars, coupon codes, and email confirmation triggers.',45000.00,20,'REJECTED','2026-08-24 16:24:51.940','2026-08-24 16:24:51.940'),(28,11,5,'I have published food delivery and cloud kitchen Flutter apps with live order tracking, UPI integration, and push notifications.',62000.00,25,'PENDING','2026-08-24 16:24:51.943','2026-08-24 16:24:51.943'),(29,11,17,'Native Android developer with experience building high-speed ordering apps with menu caching, live GPS delivery tracking, and WhatsApp receipts.',60000.00,28,'PENDING','2026-08-24 16:24:51.946','2026-08-24 16:24:51.946'),(30,11,19,'I can deliver a smooth, performant mobile experience with real-time order status updates, loyalty point rewards, and seamless payment checkout.',64000.00,22,'PENDING','2026-08-24 16:24:51.949','2026-08-24 16:24:51.949'),(31,12,17,'I can build this native Android app with rapid barcode scanning, offline inventory adjustments, and automated sync with your backend ERP.',53000.00,21,'PENDING','2026-08-24 16:24:51.952','2026-08-24 16:24:51.952'),(32,12,5,'Experienced in building enterprise Flutter mobile tools with camera barcode scanners, expiry alerts, and stock reconciliation dashboards.',55000.00,20,'PENDING','2026-08-24 16:24:51.956','2026-08-24 16:24:51.956'),(33,13,5,'Based in Kerala, I understand tourism workflows and can build this app with offline backwater trail maps, Malayalam support, and tour booking.',56000.00,24,'PENDING','2026-08-24 16:24:51.959','2026-08-24 16:24:51.959'),(34,13,19,'I will build an intuitive, visually captivating travel mobile application with itinerary planning and interactive destination guides.',58000.00,22,'PENDING','2026-08-24 16:24:51.962','2026-08-24 16:24:51.962'),(35,14,5,'I have developed wellness and habit tracker apps with step counting, meal logging, and corporate employee team leaderboards.',68000.00,28,'PENDING','2026-08-24 16:24:51.965','2026-08-24 16:24:51.965'),(36,14,17,'Experienced in building Android health apps with local SQLite sync, push reminders, and daily progress charts.',66000.00,30,'PENDING','2026-08-24 16:24:51.968','2026-08-24 16:24:51.968'),(37,15,17,'I can deliver a lightweight offline-first catalogue app with high-resolution image caching for trade show sample inquiries.',40000.00,15,'PENDING','2026-08-24 16:24:51.971','2026-08-24 16:24:51.971'),(38,15,5,'I will build a responsive mobile catalogue with sample order request forms and direct WhatsApp sales chat integration.',42000.00,18,'PENDING','2026-08-24 16:24:51.974','2026-08-24 16:24:51.974'),(39,16,5,'I can develop this Flutter yoga app with custom audio/video player, live class scheduling, and Razorpay recurring subscription billing.',60000.00,25,'PENDING','2026-08-24 16:24:51.977','2026-08-24 16:24:51.977'),(40,16,19,'I will build a polished yoga and meditation app with offline session caching, streak counters, and seamless Apple/UPI payments.',61000.00,24,'PENDING','2026-08-24 16:24:51.981','2026-08-24 16:24:51.981'),(41,17,3,'Google-certified UX designer with 5 years experience in fintech and wealth management apps. I will provide wireframes, design system, and Figma prototypes.',38000.00,15,'ACCEPTED','2026-08-24 16:24:51.983','2026-08-24 16:24:51.983'),(42,17,2,'I will design a modern, trust-building financial UI with accessible data tables, portfolio charts, and clear risk visualization.',39000.00,14,'REJECTED','2026-08-24 16:24:51.986','2026-08-24 16:24:51.986'),(43,17,7,'I will deliver high-fidelity visual UI designs and an exhaustive design system with dark/light themes tailored for high-net-worth investors.',40000.00,16,'WITHDRAWN','2026-08-24 16:24:51.989','2026-08-24 16:24:51.989'),(44,18,3,'I will create a clean, elegant aesthetic reflecting contemporary Indian interior architecture with interactive project lookbooks.',27000.00,10,'ACCEPTED','2026-08-24 16:24:51.992','2026-08-24 16:24:51.992'),(45,18,2,'I will deliver a responsive UI prototype in Figma with interactive consultation booking workflows and mood-board components.',28000.00,12,'REJECTED','2026-08-24 16:24:51.996','2026-08-24 16:24:51.996'),(46,19,3,'I will conduct an in-depth UX audit, optimize the product discovery flow, and design an earthy, clean mobile shopping interface.',34000.00,14,'PENDING','2026-08-24 16:24:51.999','2026-08-24 16:24:51.999'),(47,19,7,'I can deliver a complete mobile design overhaul with custom icon sets, subscription flow wireframes, and developer-ready specs.',33000.00,15,'PENDING','2026-08-24 16:24:52.002','2026-08-24 16:24:52.002'),(48,20,3,'Experienced in media streaming UI design with dark mode ergonomics, content carousels, and responsive layouts across mobile and TV.',50000.00,20,'PENDING','2026-08-24 16:24:52.006','2026-08-24 16:24:52.006'),(49,20,2,'I will design a frictionless streaming experience with personalized watchlists, episode selectors, and regional language UI.',49000.00,18,'PENDING','2026-08-24 16:24:52.009','2026-08-24 16:24:52.009'),(50,21,3,'I specialize in data-dense dashboard UX design in Figma with auto-layout components, KPI summary cards, and runway projection charts.',30000.00,12,'PENDING','2026-08-24 16:24:52.013','2026-08-24 16:24:52.013'),(51,21,2,'I will create an intuitive dashboard design system with interactive charts, filter panels, and developer-ready handoff documentation.',31000.00,10,'PENDING','2026-08-24 16:24:52.016','2026-08-24 16:24:52.016'),(52,22,7,'I have 7+ years creating vibrant brand identities for Indian fashion houses with logos, swing tags, packaging, and social kits.',24000.00,10,'PENDING','2026-08-24 16:24:52.019','2026-08-24 16:24:52.019'),(53,22,3,'I will craft an elegant visual identity blending traditional motifs with contemporary minimalism across all brand touchpoints.',25000.00,12,'PENDING','2026-08-24 16:24:52.022','2026-08-24 16:24:52.022'),(54,23,7,'I will design 50 print-ready high-resolution templates for mugs, t-shirts, and posters themed for Indian festive and corporate gifting.',28000.00,15,'PENDING','2026-08-24 16:24:52.025','2026-08-24 16:24:52.025'),(55,23,15,'Experienced graphic designer capable of delivering vector and raster artwork optimized for direct-to-garment and sublimation printing.',29000.00,14,'PENDING','2026-08-24 16:24:52.028','2026-08-24 16:24:52.028'),(56,24,7,'I will design premium, heritage-inspired packaging for all 15 spice SKUs with print-ready die lines and regulatory compliance layouts.',21000.00,8,'ACCEPTED','2026-08-24 16:24:52.031','2026-08-24 16:24:52.031'),(57,24,3,'I will create an artisan packaging system with warm botanical color palettes and distinctive typography for modern retail shelves.',22000.00,10,'REJECTED','2026-08-24 16:24:52.034','2026-08-24 16:24:52.034'),(58,25,7,'I will create a luxury handcrafted brand identity including vector logo, brand guidelines, and Etsy/Instagram banner kits.',17500.00,7,'ACCEPTED','2026-08-24 16:24:52.038','2026-08-24 16:24:52.038'),(59,25,3,'I can deliver a delicate, typography-forward brand kit with Instagram highlight covers and product unboxing cards.',18000.00,8,'REJECTED','2026-08-24 16:24:52.041','2026-08-24 16:24:52.041'),(60,26,12,'ML engineer with experience in real-time time-series anomaly detection using TensorFlow and Python for high-frequency telematics.',145000.00,50,'PENDING','2026-08-24 16:24:52.044','2026-08-24 16:24:52.044'),(61,26,8,'I will build the automated data processing pipeline with PostgreSQL and Python to analyze network probe logs and trigger instant alerts.',140000.00,45,'PENDING','2026-08-24 16:24:52.047','2026-08-24 16:24:52.047'),(62,27,12,'I will build an ARIMA and XGBoost demand forecasting model analyzing 3 years of seasonal retail data to optimize stock per location.',78000.00,30,'PENDING','2026-08-24 16:24:52.050','2026-08-24 16:24:52.050'),(63,27,8,'I specialize in retail sales analytics and will deliver weekly automated restocking Power BI reports alongside Python models.',75000.00,28,'PENDING','2026-08-24 16:24:52.054','2026-08-24 16:24:52.054'),(64,27,18,'I will map the retail supply chain requirements, clean historical POS data, and structure actionable inventory replenishment dashboards.',79000.00,32,'PENDING','2026-08-24 16:24:52.057','2026-08-24 16:24:52.057'),(65,28,12,'Experienced in developing explainable AI credit risk models with SHAP values, alternative GST/UPI feature engineering, and ROC validation.',125000.00,45,'PENDING','2026-08-24 16:24:52.060','2026-08-24 16:24:52.060'),(66,28,8,'I will build the underlying feature store and risk scoring pipelines with PostgreSQL, Python, and automated credit tier reporting.',120000.00,40,'PENDING','2026-08-24 16:24:52.063','2026-08-24 16:24:52.063'),(67,29,8,'I will connect mandi price datasets into an interactive Power BI dashboard with automated daily refresh and trend forecasts.',58000.00,22,'PENDING','2026-08-24 16:24:52.066','2026-08-24 16:24:52.066'),(68,29,12,'I will train regression models on historical agricultural indices to forecast commodity price fluctuations with confidence intervals.',59000.00,20,'PENDING','2026-08-24 16:24:52.069','2026-08-24 16:24:52.069'),(69,30,8,'I will perform k-means customer clustering and peak-load anomaly detection on 50,000 smart meter feeds in Python and SQL.',67000.00,25,'PENDING','2026-08-24 16:24:52.072','2026-08-24 16:24:52.072'),(70,30,12,'I will develop automated tampering detection algorithms and load prediction models with PostgreSQL integration.',69000.00,24,'PENDING','2026-08-24 16:24:52.075','2026-08-24 16:24:52.075'),(71,31,6,'AWS Certified Solutions Architect with deep Terraform experience. I will set up multi-region EKS, RDS Multi-AZ, and Route 53 failover.',95000.00,25,'PENDING','2026-08-24 16:24:52.078','2026-08-24 16:24:52.078'),(72,31,10,'CKA certified DevOps engineer. I will automate the infrastructure deployment with modular Terraform and secure VPC peering.',98000.00,22,'PENDING','2026-08-24 16:24:52.081','2026-08-24 16:24:52.081'),(73,31,21,'I will configure the multi-region database replication, automated backups, and low-latency read replica routing on AWS.',92000.00,28,'PENDING','2026-08-24 16:24:52.088','2026-08-24 16:24:52.088'),(74,32,10,'I will implement a robust GitHub Actions and Kubernetes CI/CD pipeline with automated Docker image scanning and blue/green deploys.',72000.00,18,'PENDING','2026-08-24 16:24:52.091','2026-08-24 16:24:52.091'),(75,32,6,'I will configure AWS EKS pipeline automation with AWS Secrets Manager integration, automated linting, and rollbacks.',74000.00,20,'PENDING','2026-08-24 16:24:52.094','2026-08-24 16:24:52.094'),(76,32,16,'I will integrate SonarQube, Trivy container security scanners, and SAST/DAST checks directly into your deployment pipelines.',75000.00,15,'PENDING','2026-08-24 16:24:52.102','2026-08-24 16:24:52.102'),(77,33,6,'I have led multiple enterprise data center to AWS migrations with zero data loss, detailed cutover runbooks, and cost optimization.',190000.00,60,'PENDING','2026-08-24 16:24:52.105','2026-08-24 16:24:52.105'),(78,33,10,'I will containerize legacy workloads into Docker and Kubernetes on AWS with automated deployment testing and rollback plans.',195000.00,55,'PENDING','2026-08-24 16:24:52.108','2026-08-24 16:24:52.108'),(79,34,6,'I will configure AWS IoT Core, MQTT topic rules, DynamoDB time-series ingestion, and CloudWatch alerts for 10,000+ solar devices.',82000.00,28,'PENDING','2026-08-24 16:24:52.111','2026-08-24 16:24:52.111'),(80,34,10,'I will automate the IoT infrastructure provisioning with Terraform and configure containerized microservices for device telemetry.',84000.00,25,'PENDING','2026-08-24 16:24:52.114','2026-08-24 16:24:52.114'),(81,35,9,'Managed ₹50L+ monthly ad spends for Indian apparel brands. I will structure high-converting Google Shopping and Meta catalogue ad funnels.',33000.00,30,'PENDING','2026-08-24 16:24:52.117','2026-08-24 16:24:52.117'),(82,35,20,'I will pair paid Meta campaigns with viral Instagram Reels influencer seeding to maximize brand discovery and conversion.',32000.00,28,'PENDING','2026-08-24 16:24:52.122','2026-08-24 16:24:52.122'),(83,35,14,'I will optimize product catalogue feeds for Google Shopping and setup retargeting campaigns to lower customer acquisition cost.',34000.00,25,'PENDING','2026-08-24 16:24:52.126','2026-08-24 16:24:52.126'),(84,36,9,'I will develop an omnichannel growth roadmap combining SEO, Google Local Ads, and content marketing tailored for tier-2 Indian consumers.',27000.00,20,'PENDING','2026-08-24 16:24:52.129','2026-08-24 16:24:52.129'),(85,36,20,'Based in Kerala, I will drive an authentic Ayurvedic storytelling campaign across social channels with micro-influencer tie-ups.',26000.00,22,'PENDING','2026-08-24 16:24:52.132','2026-08-24 16:24:52.132'),(86,36,11,'I will write high-intent educational content and wellness pillar guides that rank organically on search engines.',25000.00,25,'PENDING','2026-08-24 16:24:52.135','2026-08-24 16:24:52.135'),(87,37,9,'I will execute a blitz festive campaign across Meta Ads and Google Local to boost direct sweet box gifting sales by 40%.',21000.00,15,'PENDING','2026-08-24 16:24:52.138','2026-08-24 16:24:52.138'),(88,37,20,'I will run localized WhatsApp marketing broadcasts, festival giveaway contests, and festive Instagram reels promotions.',20000.00,16,'PENDING','2026-08-24 16:24:52.141','2026-08-24 16:24:52.141'),(89,38,9,'I will optimize Amazon listing copy with high-volume backend search terms, A+ content guidelines, and on-page website SEO.',17000.00,14,'ACCEPTED','2026-08-24 16:24:52.144','2026-08-24 16:24:52.144'),(90,38,11,'I will write persuasive product bullet points, recipe blog posts, and keyword-rich meta descriptions to drive search traffic.',17500.00,15,'REJECTED','2026-08-24 16:24:52.147','2026-08-24 16:24:52.147'),(91,39,20,'I will curate an aesthetically stunning Instagram and Pinterest presence with artist spotlight reels and gallery virtual tours.',14000.00,14,'PENDING','2026-08-24 16:24:52.150','2026-08-24 16:24:52.150'),(92,39,9,'I will optimize your Google My Business profile, launch targeted local discovery ads, and establish monthly collector newsletters.',14500.00,12,'PENDING','2026-08-24 16:24:52.153','2026-08-24 16:24:52.153'),(93,40,11,'Experienced literary and SEO content writer. I will craft 20 deeply researched, warm articles on Indian literature and creative writing.',11500.00,15,'PENDING','2026-08-24 16:24:52.156','2026-08-24 16:24:52.156'),(94,40,9,'I will research keyword opportunities and write engaging, search-optimized literary blog posts to grow organic author traffic.',12000.00,14,'PENDING','2026-08-24 16:24:52.159','2026-08-24 16:24:52.159'),(95,41,11,'I have written AYUSH-compliant herbal product copy for multiple Indian wellness brands, highlighting ingredients and benefits persuasively.',15000.00,12,'PENDING','2026-08-24 16:24:52.163','2026-08-24 16:24:52.163'),(96,41,20,'I will deliver concise, engaging product descriptions with key benefits, usage tips, and clear call-to-actions for your 40 SKUs.',15500.00,10,'PENDING','2026-08-24 16:24:52.166','2026-08-24 16:24:52.166'),(97,42,11,'Published writer with experience in children\'s literature. I will write 5 heartwarming, culturally rich illustrated story manuscripts.',19000.00,18,'PENDING','2026-08-24 16:24:52.169','2026-08-24 16:24:52.169'),(98,42,9,'I will create engaging storylines combining STEM concepts and Indian folklore tailored for children aged 6 to 10.',19500.00,20,'PENDING','2026-08-24 16:24:52.172','2026-08-24 16:24:52.172'),(99,43,11,'I will write poetic, culturally resonant artist bios and press releases in English and Bengali for your upcoming concert tours.',9500.00,8,'PENDING','2026-08-24 16:24:52.175','2026-08-24 16:24:52.175'),(100,43,20,'I will deliver an impactful festival pitch package with engaging tour summaries and formatted press kit downloads.',9800.00,7,'PENDING','2026-08-24 16:24:52.178','2026-08-24 16:24:52.178'),(101,44,15,'Motion designer with experience editing web series trailers, cinematic color grading, kinetic titles, and multi-format video exports.',42000.00,18,'PENDING','2026-08-24 16:24:52.182','2026-08-24 16:24:52.182'),(102,44,7,'I will design high-energy animated lower thirds, title cards, and promotional teaser cuts for YouTube and OTT platforms.',44000.00,20,'PENDING','2026-08-24 16:24:52.184','2026-08-24 16:24:52.184'),(103,45,15,'I will edit multi-cam concert footage with balanced audio mixing, dynamic camera switches, and 4K color grading.',17000.00,10,'PENDING','2026-08-24 16:24:52.188','2026-08-24 16:24:52.188'),(104,45,7,'I will produce a 5-minute main highlight video and 30-second vertical social cutdowns with branded title overlays.',17500.00,12,'PENDING','2026-08-24 16:24:52.191','2026-08-24 16:24:52.191'),(105,46,15,'I will edit 12 trendy, fast-paced Instagram Reels with beat-synced transitions, text animations, and color grading per month.',23000.00,15,'ACCEPTED','2026-08-24 16:24:52.194','2026-08-24 16:24:52.194'),(106,46,7,'I will create stylish, high-fashion social video templates with bespoke animated stickers and branded intro/outro screens.',24000.00,16,'REJECTED','2026-08-24 16:24:52.197','2026-08-24 16:24:52.197'),(107,47,15,'I will create 10 clean 2D animated explainer lessons in After Effects with synchronized Hindi/English voiceover tracks.',56000.00,25,'PENDING','2026-08-24 16:24:52.201','2026-08-24 16:24:52.201'),(108,47,7,'I will design custom vector educational characters and diagram animations in Illustrator and After Effects for engaging learning.',58000.00,28,'PENDING','2026-08-24 16:24:52.204','2026-08-24 16:24:52.204'),(109,48,14,'Shopify expert with experience setting up international multi-currency checkout, DHL shipping rules, and SEO category pages.',30000.00,14,'PENDING','2026-08-24 16:24:52.208','2026-08-24 16:24:52.208'),(110,48,13,'I will configure your Shopify store with high-resolution image zoom, currency switchers, and custom responsive collection pages.',31000.00,16,'PENDING','2026-08-24 16:24:52.210','2026-08-24 16:24:52.210'),(111,49,13,'I will build a custom WooCommerce store with subscription box recurring orders, GST invoices, and WhatsApp order alerts.',38000.00,18,'PENDING','2026-08-24 16:24:52.214','2026-08-24 16:24:52.214'),(112,49,14,'I will optimize the WooCommerce checkout funnel, integrate loyalty rewards, and configure automated shipping rates.',39000.00,16,'PENDING','2026-08-24 16:24:52.217','2026-08-24 16:24:52.217'),(113,49,1,'I can deliver a high-speed e-commerce storefront with custom recurring billing integration and instant inventory sync.',40000.00,15,'PENDING','2026-08-24 16:24:52.220','2026-08-24 16:24:52.220'),(114,50,14,'I will set up your e-commerce storefront with saree draping video modules, cash-on-delivery management, and fast mobile browsing.',36000.00,16,'PENDING','2026-08-24 16:24:52.223','2026-08-24 16:24:52.223'),(115,50,13,'I will configure a lightweight WooCommerce store with regional language options and automated PAN-India courier tracking.',37000.00,18,'PENDING','2026-08-24 16:24:52.226','2026-08-24 16:24:52.226'),(116,51,14,'I will build a dual-language (Kannada + English) Shopify store with PayPal and Razorpay integration tailored for NRI customers.',33000.00,15,'PENDING','2026-08-24 16:24:52.229','2026-08-24 16:24:52.229'),(117,51,13,'I will configure high-definition fabric zoom, custom bulk inquiry forms, and international shipping calculation.',34000.00,16,'PENDING','2026-08-24 16:24:52.232','2026-08-24 16:24:52.232'),(118,52,14,'I will build a wholesale B2B Shopify portal with certificate attachment uploads, tiered pricing, and buyer verification gates.',52000.00,22,'PENDING','2026-08-24 16:24:52.235','2026-08-24 16:24:52.235'),(119,52,13,'I will customize the B2B store with 360-degree product video embeds and request-for-quote (RFQ) workflows.',53000.00,24,'PENDING','2026-08-24 16:24:52.239','2026-08-24 16:24:52.239'),(120,52,1,'I can deliver a custom web application portal with secure wire transfer invoicing and encrypted gemological certificates.',54000.00,20,'PENDING','2026-08-24 16:24:52.241','2026-08-24 16:24:52.241'),(121,53,4,'Experienced in Python and PostgreSQL ERP development. I will build custom fleet routing, fuel tracking, and maintenance logs.',86000.00,30,'PENDING','2026-08-24 16:24:52.244','2026-08-24 16:24:52.244'),(122,53,18,'I will map the fleet operations workflows, document technical specifications, and ensure data integrity across modules.',88000.00,35,'PENDING','2026-08-24 16:24:52.248','2026-08-24 16:24:52.248'),(123,53,21,'I will optimize the PostgreSQL database performance for high-frequency GPS telematics and driver trip log aggregation.',85000.00,32,'PENDING','2026-08-24 16:24:52.251','2026-08-24 16:24:52.251'),(124,54,1,'I will build a responsive web application for floor managers to track job orders, machine downtime, and raw material usage.',72000.00,28,'PENDING','2026-08-24 16:24:52.254','2026-08-24 16:24:52.254'),(125,54,4,'I will design the relational MySQL schema and REST API endpoints for batch quality inspection checklists and daily dispatch.',70000.00,30,'PENDING','2026-08-24 16:24:52.258','2026-08-24 16:24:52.258'),(126,54,18,'I will conduct requirement analysis with factory stakeholders and design intuitive dashboard views for production efficiency.',74000.00,26,'PENDING','2026-08-24 16:24:52.261','2026-08-24 16:24:52.261'),(127,55,1,'I will develop the custom CRM with automated portal lead webhooks, WhatsApp follow-up bots, and site visit calendar sync.',62000.00,24,'PENDING','2026-08-24 16:24:52.265','2026-08-24 16:24:52.265'),(128,55,4,'I will build the backend API managing lead stages, commission calculations, and automated SMS/email follow-up triggers.',63000.00,25,'PENDING','2026-08-24 16:24:52.267','2026-08-24 16:24:52.267'),(129,55,2,'I will craft an intuitive kanban pipeline frontend in React for agents to manage deals and track follow-up activities easily.',64000.00,20,'PENDING','2026-08-24 16:24:52.271','2026-08-24 16:24:52.271'),(130,56,4,'I will design secure REST APIs with role-based approval hierarchies for customs clearance documents and vessel schedules.',105000.00,38,'PENDING','2026-08-24 16:24:52.274','2026-08-24 16:24:52.274'),(131,56,1,'I will build the web application replacing paper manifests with digital forms, electronic sign-offs, and audit trails.',108000.00,40,'PENDING','2026-08-24 16:24:52.277','2026-08-24 16:24:52.277'),(132,56,18,'I will map the end-to-end port workflow, identify bottlenecks, and ensure smooth digital adoption across operations teams.',106000.00,35,'PENDING','2026-08-24 16:24:52.281','2026-08-24 16:24:52.281'),(133,57,1,'I can deliver a complete property listing platform with geo-search, virtual tour embeds, and integrated lead CRM.',76000.00,28,'PENDING','2026-08-24 16:24:52.284','2026-08-24 16:24:52.284'),(134,57,2,'I will design and build an ultra-responsive property discovery UI with interactive floor plan viewers and map filters.',78000.00,25,'PENDING','2026-08-24 16:24:52.288','2026-08-24 16:24:52.288'),(135,57,4,'I will implement the backend listing database with MySQL spatial indexing, lead assignment logic, and drip notification APIs.',75000.00,30,'PENDING','2026-08-24 16:24:52.291','2026-08-24 16:24:52.291'),(136,58,18,'Business analyst with 8 years experience in banking and fintech. I will draft comprehensive BRD, process maps, and SEBI compliance specs.',28000.00,12,'PENDING','2026-08-24 16:24:52.294','2026-08-24 16:24:52.294'),(137,58,8,'I will document data flow diagrams, reporting requirements, and database dictionary for the platform upgrade.',29000.00,14,'PENDING','2026-08-24 16:24:52.298','2026-08-24 16:24:52.298'),(138,59,18,'I will conduct detailed competitor benchmarking, student acquisition funnel analysis, and deliver an actionable growth roadmap.',24000.00,10,'PENDING','2026-08-24 16:24:52.301','2026-08-24 16:24:52.301'),(139,59,8,'I will analyze student enrollment data and regional educational trends to forecast expansion opportunities in Power BI.',23500.00,12,'PENDING','2026-08-24 16:24:52.304','2026-08-24 16:24:52.304'),(140,60,18,'I will build an institutional-grade financial model calculating project IRR, debt service coverage, and sensitivity matrices.',33000.00,14,'PENDING','2026-08-24 16:24:52.307','2026-08-24 16:24:52.307'),(141,60,8,'I will develop Python and Excel financial models with dynamic tariff structures, depreciation schedules, and visual dashboards.',34000.00,12,'PENDING','2026-08-24 16:24:52.311','2026-08-24 16:24:52.311'),(142,61,18,'I will conduct end-to-end supply chain value stream mapping, identify dispatch bottlenecks, and formulate standard operating procedures.',26500.00,14,'PENDING','2026-08-24 16:24:52.314','2026-08-24 16:24:52.314'),(143,61,8,'I will analyze historical warehouse picking and delivery turnaround data to pinpoint operational delays and design KPI dashboards.',27000.00,15,'PENDING','2026-08-24 16:24:52.317','2026-08-24 16:24:52.317'),(145,62,1,'i have the best soln regarding this and also ready with the demo',6000.00,6,'ACCEPTED','2026-09-24 20:07:49.273','2026-10-11 18:26:35.383'),(146,64,1,'afw',2172.00,12,'ACCEPTED','2026-10-11 18:31:51.391','2026-10-11 18:31:59.196');
+/*!40000 ALTER TABLE `proposal` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `report`
+--
+
+DROP TABLE IF EXISTS `report`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `report` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `reporterId` int NOT NULL,
+  `reportedUserId` int NOT NULL,
+  `resolvedById` int DEFAULT NULL,
+  `reason` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('PENDING','UNDER_REVIEW','RESOLVED','DISMISSED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PENDING',
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `resolvedAt` datetime(3) DEFAULT NULL,
+  `relatedConversationId` int DEFAULT NULL,
+  `relatedProjectId` int DEFAULT NULL,
+  `resolutionNotes` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  KEY `Report_reporterId_idx` (`reporterId`),
+  KEY `Report_reportedUserId_idx` (`reportedUserId`),
+  KEY `Report_status_idx` (`status`),
+  KEY `Report_resolvedById_idx` (`resolvedById`),
+  KEY `Report_relatedProjectId_idx` (`relatedProjectId`),
+  KEY `Report_relatedConversationId_idx` (`relatedConversationId`),
+  CONSTRAINT `Report_relatedConversationId_fkey` FOREIGN KEY (`relatedConversationId`) REFERENCES `conversation` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `Report_relatedProjectId_fkey` FOREIGN KEY (`relatedProjectId`) REFERENCES `project` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `Report_reportedUserId_fkey` FOREIGN KEY (`reportedUserId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Report_reporterId_fkey` FOREIGN KEY (`reporterId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Report_resolvedById_fkey` FOREIGN KEY (`resolvedById`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `report`
+--
+
+LOCK TABLES `report` WRITE;
+/*!40000 ALTER TABLE `report` DISABLE KEYS */;
+INSERT INTO `report` VALUES (1,31,62,1,'Potential plagiarism in architectural documentation','The submitted architecture design document contains verbatim excerpts copied from public AWS whitepapers without project-specific customizations.','UNDER_REVIEW','2026-08-17 13:55:32.113',NULL,NULL,NULL,NULL),(2,38,58,1,'Quality dispute on initial prototype','Initial wireframes did not match the agreed luxury hotel theme. Admin mediated a revision session and milestone requirements were realigned.','RESOLVED','2026-08-10 13:55:32.113','2026-08-12 13:55:32.113',NULL,NULL,NULL),(3,43,69,1,'Inappropriate tone during design review','Unprofessional remarks made during feedback exchange. Admin issued a formal conduct warning to the freelancer.','RESOLVED','2026-08-07 13:55:32.113','2026-08-09 13:55:32.113',NULL,NULL,NULL),(4,9,64,1,'Dispute over design color scheme','Client filed complaint claiming color palette was unsatisfactory. Admin found the colors strictly followed the client-provided branding guidelines document.','DISMISSED','2026-08-05 13:55:32.113','2026-08-06 13:55:32.113',NULL,NULL,NULL),(5,14,66,1,'Alleged missed deadline','Client claimed project was late, but audit log confirmed client provided required asset bundle 4 days after the scheduled kickoff date.','DISMISSED','2026-08-03 13:55:32.113','2026-08-04 13:55:32.113',NULL,NULL,NULL),(6,55,15,NULL,'Excessive out-of-scope revision demands','Client is requesting a complete UI rewrite for 8 additional admin screens not included in the original project specification.','PENDING','2026-08-23 13:55:32.113',NULL,NULL,NULL,NULL),(7,59,28,NULL,'Milestone approval delay','Completed brand asset package was submitted 10 days ago with zero feedback or milestone approval from the client.','PENDING','2026-08-22 13:55:32.113',NULL,NULL,NULL,NULL),(8,61,19,1,'Demanding uncompensated urgent turnaround','Client changed product launch date and demanded 24-hour delivery of 15 SEO campaigns without agreed rush-order compensation.','UNDER_REVIEW','2026-08-20 13:55:32.113',NULL,NULL,NULL,NULL),(9,67,12,1,'Unresponsive client holding up video rendering','High-resolution brand raw footage requested 6 days ago. Without these files, video color grading and rendering cannot proceed.','UNDER_REVIEW','2026-08-18 13:55:32.113',NULL,NULL,NULL,NULL),(10,57,39,1,'Scope creep on mobile app APIs','Client requested 4 extra third-party SDK integrations. Admin mediated a change request resulting in a ₹15,000 budget addition.','RESOLVED','2026-08-11 13:55:32.113','2026-08-13 13:55:32.113',NULL,NULL,NULL),(11,63,34,1,'Delayed review on submitted manuscripts','Client was traveling and did not review submitted articles for 2 weeks. Admin contacted client and review was completed within 24 hours.','RESOLVED','2026-08-09 13:55:32.113','2026-08-10 13:55:32.113',NULL,NULL,NULL),(12,70,17,1,'Dispute over requirement clarification meetings','Freelancer complained about having 2 weekly standup calls. Admin noted that project terms agreed to weekly sync meetings.','DISMISSED','2026-08-01 13:55:32.113','2026-08-02 13:55:32.113',NULL,NULL,NULL),(13,21,3,NULL,'Unresponsive freelancer after initial milestone','The freelancer has not responded to chat inquiries for 4 days after accepting the initial milestone scope.','PENDING','2026-08-22 13:56:10.802',NULL,NULL,NULL,NULL),(14,7,54,NULL,'Off-platform payment and communication solicitation','Freelancer requested in direct messages to move communication to personal WhatsApp and settle payments via Google Pay outside FreelanceHub.','PENDING','2026-08-23 13:56:10.802',NULL,NULL,NULL,NULL),(15,20,56,NULL,'Delayed milestone delivery without prior notice','Delivery deadline for Phase 1 backend APIs passed 3 days ago without any extension request or code commits.','PENDING','2026-08-21 13:56:10.802',NULL,NULL,NULL,NULL),(16,13,65,1,'Incomplete source code delivery in repository','The submitted repository is missing build configuration files and database seed scripts required for deployment.','UNDER_REVIEW','2026-08-19 13:56:10.802',NULL,NULL,NULL,NULL),(17,2,3,1,'Suspicious profile information','Profile lists external contact requests that might violate platform guidelines.','RESOLVED','2026-09-25 05:26:16.012','2026-09-25 05:26:16.044',18,NULL,'Reviewed profile and conversation logs. Profile compliant; notified user of policy.'),(18,2,3,1,'Suspicious profile information','Profile lists external contact requests that might violate platform guidelines.','RESOLVED','2026-09-25 06:16:00.647','2026-09-25 06:16:00.661',18,NULL,'Reviewed profile and conversation logs. Profile compliant; notified user of policy.');
+/*!40000 ALTER TABLE `report` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `review`
+--
+
+DROP TABLE IF EXISTS `review`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `review` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `projectId` int NOT NULL,
+  `contractId` int NOT NULL,
+  `reviewerId` int NOT NULL,
+  `reviewedUserId` int NOT NULL,
+  `rating` int NOT NULL,
+  `comment` text COLLATE utf8mb4_unicode_ci,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Review_projectId_key` (`projectId`),
+  UNIQUE KEY `Review_contractId_key` (`contractId`),
+  KEY `Review_reviewedUserId_idx` (`reviewedUserId`),
+  KEY `Review_reviewerId_idx` (`reviewerId`),
+  KEY `Review_rating_idx` (`rating`),
+  KEY `Review_projectId_idx` (`projectId`),
+  KEY `Review_contractId_idx` (`contractId`),
+  CONSTRAINT `Review_contractId_fkey` FOREIGN KEY (`contractId`) REFERENCES `contract` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Review_projectId_fkey` FOREIGN KEY (`projectId`) REFERENCES `project` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Review_reviewedUserId_fkey` FOREIGN KEY (`reviewedUserId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `Review_reviewerId_fkey` FOREIGN KEY (`reviewerId`) REFERENCES `user` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `review`
+--
+
+LOCK TABLES `review` WRITE;
+/*!40000 ALTER TABLE `review` DISABLE KEYS */;
+INSERT INTO `review` VALUES (1,10,2,38,3,5,'Shubham did a stellar job building our hotel booking engine. The room availability calendar and Razorpay integration work seamlessly. Completed well within the agreed timeframe.','2026-08-24 17:22:07.176'),(2,18,4,14,55,5,'Sneha is a fantastic designer. She deeply understood our aesthetic requirements and delivered an intuitive, elegant website prototype that our clients love.','2026-08-24 17:22:07.196'),(3,24,5,43,59,5,'Aishwarya created gorgeous packaging for our entire 15-SKU spice line. The print-ready die lines were flawless and vendors had zero issues during production.','2026-08-24 17:22:07.200'),(4,25,6,28,59,4,'Great communication and creative execution. The brand identity and social media templates elevated our jewellery line significantly.','2026-08-24 17:22:07.205'),(5,38,7,43,61,5,'Priyanka helped boost our Amazon organic ranking and optimized all our product listings. We saw a noticeable uptick in organic sales within 3 weeks.','2026-08-24 17:22:07.210');
+/*!40000 ALTER TABLE `review` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `skill`
+--
+
+DROP TABLE IF EXISTS `skill`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `skill` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Skill_name_key` (`name`),
+  KEY `Skill_name_idx` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `skill`
+--
+
+LOCK TABLES `skill` WRITE;
+/*!40000 ALTER TABLE `skill` DISABLE KEYS */;
+INSERT INTO `skill` VALUES (1,'React.js','2026-08-24 16:05:45.605'),(2,'Node.js','2026-08-24 16:05:45.610'),(3,'Python','2026-08-24 16:05:45.613'),(4,'Java','2026-08-24 16:05:45.616'),(5,'C++','2026-08-24 16:05:45.620'),(6,'TypeScript','2026-08-24 16:05:45.623'),(7,'Next.js','2026-08-24 16:05:45.626'),(8,'Express.js','2026-08-24 16:05:45.629'),(9,'MySQL','2026-08-24 16:05:45.632'),(10,'MongoDB','2026-08-24 16:05:45.636'),(11,'PostgreSQL','2026-08-24 16:05:45.639'),(12,'REST API Design','2026-08-24 16:05:45.642'),(13,'GraphQL','2026-08-24 16:05:45.645'),(14,'Figma','2026-08-24 16:05:45.648'),(15,'Adobe XD','2026-08-24 16:05:45.651'),(16,'UI/UX Design','2026-08-24 16:05:45.660'),(17,'Graphic Design','2026-08-24 16:05:45.663'),(18,'Video Editing','2026-08-24 16:05:45.666'),(19,'After Effects','2026-08-24 16:05:45.670'),(20,'SEO','2026-08-24 16:05:45.673'),(21,'Digital Marketing','2026-08-24 16:05:45.676'),(22,'Google Ads','2026-08-24 16:05:45.679'),(23,'Content Writing','2026-08-24 16:05:45.682'),(24,'Data Analysis','2026-08-24 16:05:45.685'),(25,'Power BI','2026-08-24 16:05:45.688'),(26,'Tableau','2026-08-24 16:05:45.691'),(27,'Machine Learning','2026-08-24 16:05:45.694'),(28,'TensorFlow','2026-08-24 16:05:45.697'),(29,'AWS','2026-08-24 16:05:45.700'),(30,'Docker','2026-08-24 16:05:45.703'),(31,'Kubernetes','2026-08-24 16:05:45.706'),(32,'Terraform','2026-08-24 16:05:45.708'),(33,'Android Development','2026-08-24 16:05:45.714'),(34,'Flutter','2026-08-24 16:05:45.717'),(35,'Swift','2026-08-24 16:05:45.720'),(36,'WordPress','2026-08-24 16:05:45.723'),(37,'Shopify','2026-08-24 16:05:45.726'),(38,'Cybersecurity','2026-08-24 16:05:45.729'),(39,'Penetration Testing','2026-08-24 16:05:45.731'),(40,'Linux','2026-08-24 16:05:45.734');
+/*!40000 ALTER TABLE `skill` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `supportticket`
+--
+
+DROP TABLE IF EXISTS `supportticket`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `supportticket` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userId` int NOT NULL,
+  `subject` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` enum('ACCOUNT','PAYMENTS','PROJECT','FREELANCER','CUSTOMER','CONTRACT','TECHNICAL','OTHER') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OTHER',
+  `priority` enum('LOW','MEDIUM','HIGH','URGENT') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'MEDIUM',
+  `status` enum('OPEN','IN_PROGRESS','WAITING_FOR_USER','RESOLVED','CLOSED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OPEN',
+  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `relatedProjectId` int DEFAULT NULL,
+  `adminNotes` text COLLATE utf8mb4_unicode_ci,
+  `resolvedById` int DEFAULT NULL,
+  `resolvedAt` datetime(3) DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `SupportTicket_userId_idx` (`userId`),
+  KEY `SupportTicket_status_idx` (`status`),
+  KEY `SupportTicket_category_idx` (`category`),
+  KEY `SupportTicket_priority_idx` (`priority`),
+  KEY `SupportTicket_resolvedById_idx` (`resolvedById`),
+  KEY `SupportTicket_relatedProjectId_idx` (`relatedProjectId`),
+  CONSTRAINT `SupportTicket_relatedProjectId_fkey` FOREIGN KEY (`relatedProjectId`) REFERENCES `project` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `SupportTicket_resolvedById_fkey` FOREIGN KEY (`resolvedById`) REFERENCES `user` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `SupportTicket_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `supportticket`
+--
+
+LOCK TABLES `supportticket` WRITE;
+/*!40000 ALTER TABLE `supportticket` DISABLE KEYS */;
+INSERT INTO `supportticket` VALUES (1,2,'Inquiry regarding milestone payment clarification','PAYMENTS','MEDIUM','RESOLVED','Could you clarify the settlement window for completed contract payments?',NULL,'Payment timelines clarified directly. Standard window is 2-3 business days.',1,'2026-09-25 05:26:15.994','2026-09-25 05:26:15.965','2026-09-25 05:26:15.995'),(2,2,'Inquiry regarding milestone payment clarification','PAYMENTS','MEDIUM','RESOLVED','Could you clarify the settlement window for completed contract payments?',NULL,'Payment timelines clarified directly. Standard window is 2-3 business days.',1,'2026-09-25 06:16:00.638','2026-09-25 06:16:00.623','2026-09-25 06:16:00.639'),(3,2,'Inquiry regarding milestone payment clarification','PAYMENTS','MEDIUM','RESOLVED','Could you clarify the settlement window for completed contract payments?',NULL,'Payment timelines clarified directly. Standard window is 2-3 business days.',1,'2026-09-25 09:44:05.502','2026-09-25 09:44:05.468','2026-09-25 09:44:05.503');
+/*!40000 ALTER TABLE `supportticket` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user`
+--
+
+DROP TABLE IF EXISTS `user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `passwordHash` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('CUSTOMER','FREELANCER','ADMIN') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'CUSTOMER',
+  `status` enum('ACTIVE','BLOCKED') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
+  `professionalTitle` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updatedAt` datetime(3) NOT NULL,
+  `isProfileCompleted` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `User_email_key` (`email`),
+  KEY `User_role_idx` (`role`),
+  KEY `User_status_idx` (`status`),
+  KEY `User_role_status_idx` (`role`,`status`)
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user`
+--
+
+LOCK TABLES `user` WRITE;
+/*!40000 ALTER TABLE `user` DISABLE KEYS */;
+INSERT INTO `user` VALUES (1,'System Administrator','admin@freelancehub.com','$2a$10$g2iMEueWAR7AttzGvaPol.krcdIuIUcBIs.lS.s1JR7P6Hn/h.ffC','ADMIN','ACTIVE',NULL,'2026-08-20 17:51:08.815','2026-08-20 17:51:08.815',0),(2,'Yash Aher','yash@gmail.com','$2a$10$8rH0Ok96h6EFSqSsBSUQ6.zqSjhzeWKC.hLuzdgOk23uNnk1yryB.','CUSTOMER','ACTIVE',NULL,'2026-08-20 17:57:10.979','2026-10-11 18:26:26.325',1),(3,'Shubham Shinde','shubham@gmail.com','$2a$10$/V6y1xFAGO3q00DIWIMjeObDMxctL2EvZpBDh2tGrFUQGQKpnzTCC','FREELANCER','ACTIVE','Website Developer','2026-08-20 17:59:58.419','2026-09-25 10:08:44.537',1),(4,'Ananya Krishnamurthy','ananya.krishnamurthy@brightwave.in','$2a$10$Za/QvmW5aGDq63KarAPfUuYFU6Shu7R50.qIvCKV.43sPAbIdYSoW','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:38.782','2026-08-24 16:02:38.782',1),(5,'Rohit Deshmukh','rohit.deshmukh@infralogix.in','$2a$10$zZsuMuVy09G/gtk5QtlvAuEq.RzQ8KJEN1yF96aJ1YGntll3LghoS','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:38.854','2026-08-24 16:02:38.854',1),(6,'Priya Nair','priya.nair@greenleaf.co.in','$2a$10$kZ/PhN9hMASwN0SonIRZaeEOWnRHJLeVY7mSc6g/y0On4Dta8Oy4K','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:38.924','2026-08-24 16:02:38.924',1),(7,'Vikram Choudhary','vikram.choudhary@trendsetters.in','$2a$10$44o1WP7hyuf1ubX.FtIIreZD2yl7J6ebx0lE4l0OeaI5p7mOi097K','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:38.993','2026-08-24 16:02:38.993',1),(8,'Meera Pillai','meera.pillai@ayurwellness.in','$2a$10$/bq5uKJcu0K7zIXtXafFw.bgqakQYz/MAFipsLasA.mrgtDW5lmxW','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.062','2026-08-24 16:02:39.062',1),(9,'Siddharth Kapoor','siddharth.kapoor@bluechipinvest.co.in','$2a$10$UjEwPAcrRt8eR0/OjgRDuOITOs48JuZlVAnmqakLkMz/OldPS0e.e','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.129','2026-08-24 16:02:39.129',1),(10,'Divya Ramachandran','divya.ramachandran@sparklearn.in','$2a$10$jHGX0/fr.poUOuPznZFUguqnNkxajkwpc6B2tTKBeIFTjD6hXN32m','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.197','2026-08-24 16:02:39.197',1),(11,'Arjun Mehta','arjun.mehta@nexusprop.in','$2a$10$pBGprMyEA9mYEwPqVfVkB.0TvckUr0hTDTH9t50.bhAYDE1QhGAeS','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.265','2026-08-24 16:02:39.265',1),(12,'Sunita Agarwal','sunita.agarwal@craftsbyhand.in','$2a$10$LYTEzMdBzfOUIB2U0ja4He01zFS.7MeQqqAptv4s5Lnjdl7lX2m/W','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.334','2026-08-24 16:02:39.334',1),(13,'Kiran Reddy','kiran.reddy@pharmabridge.in','$2a$10$oemMQo6rTPshdh7w4zay8ux0NWcLuIrWQP/zmQzL2aHsg3ZTxUep2','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.405','2026-08-24 16:02:39.405',1),(14,'Neha Joshi','neha.joshi@studioneha.in','$2a$10$h5AY/x5RWNAaHagtVei/teDGVrWiY.pLU37FJPFmGL5k0FHtVYTGy','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.473','2026-08-24 16:02:39.473',1),(15,'Rahul Bhatia','rahul.bhatia@cloudqube.in','$2a$10$fP2v.P6HyRDpnK.P1ywAO.4yo4Qhd80oUk9mDxydzOPy7WGg7oiIu','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.542','2026-08-24 16:02:39.542',1),(16,'Anjali Sharma','anjali.sharma@mediawala.in','$2a$10$i/ldweoBuIWF8GRRO5QYbe4E9VAML.oYrloFFxEYzgVnafMubivQ6','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.611','2026-08-24 16:02:39.611',1),(17,'Gaurav Tiwari','gaurav.tiwari@agritech.farm','$2a$10$5HViGsaaCea2ErAJHcO89.ZYwwpXPaJ6HPOLqOXUiQYVJJ6BKQqS2','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.679','2026-08-24 16:02:39.679',1),(18,'Lakshmi Venkatesh','lakshmi.venkatesh@silkroute.in','$2a$10$xc2SaCLq99FoDI89z6FO7u5jcK9zElvkzd/uIFiuEIxp43oN9OHyC','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.747','2026-08-24 16:02:39.747',1),(19,'Manish Shah','manish.shah@diamonddisplay.in','$2a$10$DevzbGs5hwjiqw3durdUXu3EhMaD3sRppiZNa0UV67UJojhEyv8WO','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.814','2026-08-24 16:02:39.814',1),(20,'Pooja Kulkarni','pooja.kulkarni@flavourfusion.in','$2a$10$2kzbcYjobsI3M6axfTlxmOIYTdjBNBEYFCHqTv.hjvE/zJ/Jl.80C','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.883','2026-08-24 16:02:39.883',1),(21,'Amit Banerjee','amit.banerjee@calcuttatech.in','$2a$10$yDXqurbccdgZK3xI5DGoYu4qEMY8raDnW4Fg.kGZidMwtlwCrmn4i','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:39.951','2026-08-24 16:02:39.951',1),(22,'Surekha Rao','surekha.rao@visakhalogistics.in','$2a$10$bfO.MzqquunCw9HAxoBgGOzLM6qdfBcZU7m/7vrlbLx5fPZRq5b86','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.019','2026-08-24 16:02:40.019',1),(23,'Deepak Singhania','deepak.singhania@royalmarble.in','$2a$10$LhqeMxgeYZR60FuHkO7Sc.sggOTdA2X5NSwh9LFY4IqPPROikbF4e','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.087','2026-08-24 16:02:40.087',1),(24,'Smita Patil','smita.patil@healthroots.in','$2a$10$9brI.KPZUo7bkLVQoMFxTey3RoBP7fCKQsT9vzrr3jTkqcR7lCYHy','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.156','2026-08-24 16:02:40.156',1),(25,'Vishal Mishra','vishal.mishra@edgerealty.in','$2a$10$3JlD6WtQhE9zOp5Vw1chneLw0pBBIL0co6tyJzXv9wPd5FAPusLpe','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.223','2026-08-24 16:02:40.223',1),(26,'Kavitha Subramanian','kavitha.sub@textilesouth.in','$2a$10$H8xBOyGb2T2W7J4ZCqMLge9fHYyqsw6Usx4c.FitFosAaR95IELX6','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.293','2026-08-24 16:02:40.293',1),(27,'Rajat Khanna','rajat.khanna@delhidining.in','$2a$10$Gd6awS8cvKvibB.YfNt.U.AYgwWZ8uC3xw.7eD4Um3.qI6vHfASta','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.360','2026-08-24 16:02:40.360',1),(28,'Nandini Bose','nandini.bose@artisancraft.in','$2a$10$LMZLvkfrn1V6.Hadr6Zn9uloAha3Ca4qfLnPudmbIXkOzstA6u6GS','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.428','2026-08-24 16:02:40.428',1),(29,'Suraj Deshpande','suraj.deshpande@autocarepune.in','$2a$10$Uxghch6w14jD16nu.xmw7uOujUt2tZGwiB5ndfaC9WwvXOFuyMSvG','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.496','2026-08-24 16:02:40.496',1),(30,'Riya Malhotra','riya.malhotra@modehaus.in','$2a$10$imljUeq.zAVXpAhD.ihRaOwnxHnNbUI1BfUU6332xnLlzVGGhZMiK','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.563','2026-08-24 16:02:40.563',1),(31,'Tarun Gupta','tarun.gupta@indiatelecom.in','$2a$10$orv2YueBr9hv5upgnjE4BODMB0eDB73D1p3ZqQbe5HTOM/Kgf3qfe','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.631','2026-08-24 16:02:40.631',1),(32,'Bhavna Patel','bhavna.patel@solarplus.in','$2a$10$IRciehQEIAuZghov/KXEmua70JZ7IEI.o6cM251.u0.u5CjhdNxYy','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.700','2026-08-24 16:02:40.700',1),(33,'Chetan Nayak','chetan.nayak@tourismkerala.in','$2a$10$dmvEMNf2AVtdt5679AzVLen7l.7BlaErMQ0QKfbbry0V1QHbmUe8u','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.768','2026-08-24 16:02:40.768',1),(34,'Shweta Iyer','shweta.iyer@iyerbooks.in','$2a$10$bE2FEMI9tD5HJuqyoRc0qOQd6BGcYJaf/F3bEsc3.FbJYmN0IL4ei','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.836','2026-08-24 16:02:40.836',1),(35,'Abhishek Srivastava','abhishek.srivastava@upbizz.in','$2a$10$XZpygonFKdZamYZMEYHvr.C2lDWOnJdcrkf6dt8twG9J3KubORUzq','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.904','2026-08-24 16:02:40.904',1),(36,'Monika Saini','monika.saini@pinturaarts.in','$2a$10$3eNjoCBB2RPfXnNMw5vMG.bbBktKfRrB6ZEiDVQGmIaWCX1R5ecn2','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:40.973','2026-08-24 16:02:40.973',1),(37,'Sandeep Verma','sandeep.verma@medpulse.in','$2a$10$l/WmQcR8YVrwgr8KVTMAju1QbNXnpJmP1SRf54W8uZfHA7pfTTO9e','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.042','2026-08-24 16:02:41.042',1),(38,'Ritika Bahl','ritika.bahl@luxurystay.in','$2a$10$H/gI.Zzz7To2/7s96r5.I.xc1.FKxwzg0Nt9pIQijnrHNZBfhoNXS','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.110','2026-08-24 16:02:41.110',1),(39,'Pranav Kulkarni','pranav.kulkarni@cybersecin.in','$2a$10$U.UsVXHTBaX8xPVSd.9iluZtzVS.cH6mMQmMb0D0t13E8oHiD3kJi','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.179','2026-08-24 16:02:41.179',1),(40,'Harsha Reddy','harsha.reddy@grainmarket.in','$2a$10$lcDYNHS7Na1kVYKud2J0YuksIxGwatECfZSlxmeWpUwEZp.d11v.i','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.248','2026-08-24 16:02:41.248',1),(41,'Pallavi Ghosh','pallavi.ghosh@creativekolkata.in','$2a$10$cI42Eb3uHxqWR.FO0rW.0.ndabhJucSegCWWr8fSVCV.yqwzRRdtu','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.316','2026-08-24 16:02:41.316',1),(42,'Vivek Kapila','vivek.kapila@smartgrid.in','$2a$10$ToKr3WOt3C6QDltGGmzrAuMbHg6SJNIP5mWjZbzrRbZ/bkRq3H9NO','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.384','2026-08-24 16:02:41.384',1),(43,'Rupali Tendulkar','rupali.tendulkar@saffronspice.in','$2a$10$VsjZsrluAncoUDmlf1Cwxu.927AS5bUSqjGIrZJCo0s37w6rzZ9hS','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.451','2026-08-24 16:02:41.451',1),(44,'Kunal Saxena','kunal.saxena@pixelpitch.in','$2a$10$0WyUb3dT5eGzEr9GGLuwXeWCVWwRNMJItvHd0T9zo0Hvj054722YW','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.519','2026-08-24 16:02:41.519',1),(45,'Swati Naik','swati.naik@floralframe.in','$2a$10$BQ.T3bv0k35pz3Gg3MRZvOFEEsH39uxeFDzSEDdR3.66Voy7KS02G','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.587','2026-08-24 16:02:41.587',1),(46,'Yuvraj Singh','yuvraj.singh@punjabicouture.in','$2a$10$NvFAxFr/wY01xOZCX74wkuOV83bataYiwF8oWmVRwrqD3eYmTYYCO','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.655','2026-08-24 16:02:41.655',1),(47,'Charulata Mukherjee','charulata.mukherjee@baulguru.in','$2a$10$QiMww53YbQjPvw7cXvswBu5cEkzFrZTj4qWmgTPSr05WcBjwh4JBK','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.724','2026-08-24 16:02:41.724',1),(48,'Mohit Aggarwal','mohit.aggarwal@eprintx.in','$2a$10$cghZM.oK1nCzUoMkYC6LuOwkoZjhNiyNf6uAkSXezF2nnw9wGTheK','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.797','2026-08-24 16:02:41.797',1),(49,'Deeksha Rajan','deeksha.rajan@southernsweets.in','$2a$10$qm0.bloZR9poXtIQ96SoZee5r6jxZys03A55IJApWG0g4mpsVSOWW','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.866','2026-08-24 16:02:41.866',1),(50,'Nikhil Jain','nikhil.jain@gemstoneraj.in','$2a$10$L.IxcM2Lqv1OsOoCJgHhveqCnCj7PjYA5UhRpN7FO328kSzHOMK/i','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:41.934','2026-08-24 16:02:41.934',1),(51,'Tanya Mehrotra','tanya.mehrotra@yogawave.in','$2a$10$GYsjXt5ClNTpegVqbr4ksOP5mtODxS2wMltm7r.LLD0.aayyKlkxC','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:42.001','2026-08-24 16:02:42.001',1),(52,'Prashant Dange','prashant.dange@steelfab.in','$2a$10$.SKDXEDR231SCAKd/JlAR.WJwX05uPi95INJxX./HPWgKV24ssEpy','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:42.072','2026-08-24 16:02:42.072',1),(53,'Aditi Saxena','aditi.saxena@storymint.in','$2a$10$OeilsU14vUWlKOXahCjqvuQDe1k6fthE4.MB4f/2PWoMT1Jt1Qhm2','CUSTOMER','ACTIVE',NULL,'2026-08-24 16:02:42.183','2026-08-24 16:02:42.183',1),(54,'Aryan Trivedi','aryan.trivedi@freelancehub.dev','$2a$10$mypCjQLG/6u3dDMztcjyCeIsuIBKMgMjLiB2Umr.9upeCp0zsJLfO','FREELANCER','ACTIVE','Frontend Developer','2026-08-24 16:02:42.260','2026-08-26 14:26:58.166',1),(55,'Sneha Kulkarni','sneha.kulkarni@freelancehub.dev','$2a$10$XtasmhJ.EcMFlZkx/jZIle10mbEg5XSFwf.Z96eHGFla/Kce8yCFK','FREELANCER','ACTIVE','UI/UX Designer','2026-08-24 16:02:42.329','2026-08-24 16:02:42.329',1),(56,'Rahul Pandey','rahul.pandey@freelancehub.dev','$2a$10$RGnjeFke3UdUUC6PTXBSjOIOX6bLy2jUrRb9weZj/ZfoNUdfuqPmu','FREELANCER','ACTIVE','Backend Developer','2026-08-24 16:02:42.399','2026-08-24 16:02:42.399',1),(57,'Pooja Menon','pooja.menon@freelancehub.dev','$2a$10$6eDwLB237XbUXLJsR6OxJexZFYwgQbT4qHYtcNrMjFJVS63yv.0jm','FREELANCER','ACTIVE','Mobile App Developer','2026-08-24 16:02:42.466','2026-08-24 16:02:42.466',1),(58,'Vivek Nambiar','vivek.nambiar@freelancehub.dev','$2a$10$nDm79cFAFJj.Yp16Qjog2.uIoLfDEXgvu2yvdt7zsNprsZCOIyFOi','FREELANCER','ACTIVE','Cloud Engineer','2026-08-24 16:02:42.534','2026-08-24 16:02:42.534',1),(59,'Aishwarya Bhatt','aishwarya.bhatt@freelancehub.dev','$2a$10$Jv4cav7kmvsTlPwl2aBKc.WWnpKqUyzrRTFjY0roAI7zcI/rggf62','FREELANCER','ACTIVE','Graphic Designer','2026-08-24 16:02:42.602','2026-08-24 16:02:42.602',1),(60,'Tanmay Iyer','tanmay.iyer@freelancehub.dev','$2a$10$K/eVYx95AG9onoQCDcQsh.asr6IXuO3Evt3PW9LncxDYMCq2OAR9q','FREELANCER','ACTIVE','Data Analyst','2026-08-24 16:02:42.671','2026-08-24 16:02:42.671',1),(61,'Priyanka Dubey','priyanka.dubey@freelancehub.dev','$2a$10$ZK2UOdXEK2gP5bZtpkcNxezk3e9c3GxQUypbKPxlJVcfnAdSjt26C','FREELANCER','ACTIVE','Digital Marketer','2026-08-24 16:02:42.741','2026-08-24 16:02:42.741',1),(62,'Mohit Rajput','mohit.rajput@freelancehub.dev','$2a$10$/JibD6cBn6rzHBT07A9MwerLeoaYFmy2T6h6kSsqn2aIQJH23p11.','FREELANCER','ACTIVE','DevOps Engineer','2026-08-24 16:02:42.809','2026-08-24 16:02:42.809',1),(63,'Swapna Reddy','swapna.reddy@freelancehub.dev','$2a$10$wfXUx2j76KXsYm.YeYbDQuRbGtwupt3KAPbVXoYdw2ZwLhIsIH0Qq','FREELANCER','ACTIVE','Content Writer','2026-08-24 16:02:42.877','2026-08-24 16:02:42.877',1),(64,'Karthik Sundar','karthik.sundar@freelancehub.dev','$2a$10$6mlycnF5NTY3WcrTFGRaUOXTPgPDcYrdtdfdZ6iO7sttvd44HjbCa','FREELANCER','ACTIVE','Machine Learning Engineer','2026-08-24 16:02:42.946','2026-08-24 16:02:42.946',1),(65,'Vaibhav Joshi','vaibhav.joshi@freelancehub.dev','$2a$10$DbAlE/.mEEdPr3kvdlCDPORsaBUx.GnGvZ9zlQ6QW.aX2qVO9MY4W','FREELANCER','ACTIVE','WordPress Developer','2026-08-24 16:02:43.015','2026-08-24 16:02:43.015',1),(66,'Nilufar Shaikh','nilufar.shaikh@freelancehub.dev','$2a$10$ysejx/Dz0/NStYwBPEsWAOQFjt8kavfWhYi0C4m2akfNZV/FD09Gm','FREELANCER','ACTIVE','E-commerce Specialist','2026-08-24 16:02:43.083','2026-08-24 16:02:43.083',1),(67,'Saurabh Ghosh','saurabh.ghosh@freelancehub.dev','$2a$10$KG0bDrAueIGL2icwTvgvGOdBWdvL5JxNS6t3CRkSGyHQIb3GhltNC','FREELANCER','ACTIVE','Video Editor','2026-08-24 16:02:43.152','2026-08-24 16:02:43.152',1),(68,'Harini Chandrasekaran','harini.chandrasekaran@freelancehub.dev','$2a$10$BhmurZiryofjEcT46UBN5ORY3DnHa5F/ecIO7FFVrszbtgQciPYkq','FREELANCER','ACTIVE','Cybersecurity Consultant','2026-08-24 16:02:43.220','2026-08-24 16:02:43.220',1),(69,'Jayesh Patil','jayesh.patil@freelancehub.dev','$2a$10$6OmPVemOi0d2vhUWzBfyZe6gemef9ISSTIf6PikaHRyKOqN8saJ7a','FREELANCER','ACTIVE','Android Developer','2026-08-24 16:02:43.288','2026-08-24 16:02:43.288',1),(70,'Deepa Krishnan','deepa.krishnan@freelancehub.dev','$2a$10$E/2kiSa5klcETIaiufn4ruUEk9B.FYxqvtc9ZxOujD0Tl7lCsrbpi','FREELANCER','ACTIVE','Business Analyst','2026-08-24 16:02:43.356','2026-08-24 16:02:43.356',1),(71,'Ankur Sinha','ankur.sinha@freelancehub.dev','$2a$10$Fya1dyjbvWRFcOOGRDenC.QtbX3XBRAk.bXZAnTnZYhoY2MGeEyWW','FREELANCER','ACTIVE','iOS Developer','2026-08-24 16:02:43.424','2026-08-24 16:02:43.424',1),(72,'Rekha Nair','rekha.nair@freelancehub.dev','$2a$10$QkZBUW6GrXhJyQXrwV/vvuKJb.70YP.X2PS8yxaFOBTuBiFyxrM2C','FREELANCER','ACTIVE','Social Media Manager','2026-08-24 16:02:43.492','2026-08-24 16:02:43.492',1),(73,'Sumit Chaudhary','sumit.chaudhary@freelancehub.dev','$2a$10$49u1.TxE/38U5UY7vJsfR.IMWmcEF0.lwFlrYHt3BsFasjinQSDwC','FREELANCER','ACTIVE','Database Administrator','2026-08-24 16:02:43.561','2026-08-24 16:02:43.561',1),(74,'Vedant Dhadve','vedant@gmail.com','$2a$10$pp022IGuACusQ8tvNv2Awek8Tx6hmNjPBR1eAs1oOe5tETRZgLpw2','FREELANCER','ACTIVE','Software Developer','2026-09-25 07:35:39.761','2026-09-25 07:35:39.761',0);
+/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `verifiedcollaboration`
+--
+
+DROP TABLE IF EXISTS `verifiedcollaboration`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `verifiedcollaboration` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `freelancerId` int NOT NULL,
+  `collaboratorId` int NOT NULL,
+  `opportunityId` int NOT NULL,
+  `applicationId` int DEFAULT NULL,
+  `projectTitle` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `skills` text COLLATE utf8mb4_unicode_ci,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `duration` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `compensationType` enum('UNPAID','PAID','NEGOTIABLE') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UNPAID',
+  `compensation` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `isVerified` tinyint(1) NOT NULL DEFAULT '1',
+  `completedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `createdAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `VerifiedCollaboration_applicationId_key` (`applicationId`),
+  KEY `VerifiedCollaboration_freelancerId_idx` (`freelancerId`),
+  KEY `VerifiedCollaboration_collaboratorId_idx` (`collaboratorId`),
+  KEY `VerifiedCollaboration_opportunityId_idx` (`opportunityId`),
+  CONSTRAINT `VerifiedCollaboration_applicationId_fkey` FOREIGN KEY (`applicationId`) REFERENCES `collaborationapplication` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `VerifiedCollaboration_collaboratorId_fkey` FOREIGN KEY (`collaboratorId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `VerifiedCollaboration_freelancerId_fkey` FOREIGN KEY (`freelancerId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `VerifiedCollaboration_opportunityId_fkey` FOREIGN KEY (`opportunityId`) REFERENCES `collaborationopportunity` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `verifiedcollaboration`
+--
+
+LOCK TABLES `verifiedcollaboration` WRITE;
+/*!40000 ALTER TABLE `verifiedcollaboration` DISABLE KEYS */;
+INSERT INTO `verifiedcollaboration` VALUES (1,54,3,1,1,'React & Tailwind Dashboard Collaboration','Junior Frontend Collaborator','React, TailwindCSS, Chart.js','Building an interactive analytics dashboard for our client engagement. Looking for an enthusiastic developer or intern to collaborate on charting components.','3 weeks','PAID','₹12,000 stipend',1,'2026-09-25 05:26:15.841','2026-09-25 05:26:15.842'),(2,54,3,2,2,'React & Tailwind Dashboard Collaboration','Junior Frontend Collaborator','React, TailwindCSS, Chart.js','Building an interactive analytics dashboard for our client engagement. Looking for an enthusiastic developer or intern to collaborate on charting components.','3 weeks','PAID','₹12,000 stipend',1,'2026-09-25 06:16:00.571','2026-09-25 06:16:00.573'),(3,54,3,4,4,'React & Tailwind Dashboard Collaboration','Junior Frontend Collaborator','React, TailwindCSS, Chart.js','Building an interactive analytics dashboard for our client engagement. Looking for an enthusiastic developer or intern to collaborate on charting components.','3 weeks','PAID','₹12,000 stipend',1,'2026-09-25 09:44:05.376','2026-09-25 09:44:05.378');
+/*!40000 ALTER TABLE `verifiedcollaboration` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping events for database 'freelancehub'
+--
+
+--
+-- Dumping routines for database 'freelancehub'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-10-12  9:39:10

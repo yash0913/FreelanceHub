@@ -2384,9 +2384,9 @@ function RouteView({ path }) {
   if (path === '/freelancer/my-projects' && user?.role === 'FREELANCER') return <FreelancerMyProjectsPage />
   if (path === '/freelancer/collaborations' && user?.role === 'FREELANCER') return <FreelancerCollaborationsPage />
 
-  // Customer project progress tracker
+  // Customer project progress tracker (read-only for CUSTOMER role only)
   const customerProgressMatch = path.match(/^\/customer\/projects\/([^/]+)\/progress$/)
-  if (customerProgressMatch) {
+  if (customerProgressMatch && user?.role === 'CUSTOMER') {
     return <ProjectProgressTracker projectId={customerProgressMatch[1]} user={user} />
   }
 
